@@ -214,25 +214,10 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonBody<T, LIMIT> {
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{
-        http::{header, StatusCode},
-        test::TestRequest,
-        web::Bytes,
-    };
+    use actix_web::{http::header, test::TestRequest, web::Bytes};
     use serde::{Deserialize, Serialize};
 
     use super::*;
-
-    macro_rules! assert_body_eq {
-        ($res:ident, $expected:expr) => {
-            assert_eq!(
-                ::actix_web::body::to_bytes($res.into_body())
-                    .await
-                    .expect("error reading test response body"),
-                ::actix_web::web::Bytes::from_static($expected),
-            )
-        };
-    }
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct MyObject {
@@ -250,22 +235,6 @@ mod tests {
             JsonPayloadError::ContentType => matches!(other, JsonPayloadError::ContentType),
             _ => false,
         }
-    }
-
-    #[actix_web::test]
-    async fn test_responder() {
-        let req = TestRequest::default().to_http_request();
-
-        let j = Json::<_, DEFAULT_LIMIT>(MyObject {
-            name: "test".to_string(),
-        });
-        let res = j.respond_to(&req);
-        assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(
-            res.headers().get(header::CONTENT_TYPE).unwrap(),
-            header::HeaderValue::from_static("application/json")
-        );
-        assert_body_eq!(res, b"{\"name\":\"test\"}");
     }
 
     #[actix_web::test]
