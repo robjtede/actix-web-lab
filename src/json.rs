@@ -8,17 +8,14 @@ use std::{
 };
 
 use derive_more::{Deref, DerefMut, Display};
-use futures_core::{ready, stream::Stream as _};
-use serde::{de::DeserializeOwned, Serialize};
+use futures_core::{ready, Stream as _};
+use serde::de::DeserializeOwned;
 
 // #[cfg(feature = "__compress")]
 // use crate::dev::Decompress;
 use actix_web::{
-    body::EitherBody,
-    dev::Payload,
-    error::{Error, JsonPayloadError},
-    http::header,
-    web, FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder,
+    dev::Payload, error::JsonPayloadError, http::header, web, Error, FromRequest, HttpMessage,
+    HttpRequest,
 };
 
 pub const DEFAULT_LIMIT: usize = 2_097_152; // 2MiB
@@ -31,10 +28,11 @@ pub const DEFAULT_LIMIT: usize = 2_097_152; // 2MiB
 /// To extract typed data from a request body, the inner type `T` must implement the
 /// [`serde::Deserialize`] trait.
 ///
-/// Use [`JsonConfig`] to configure extraction options.
+/// Use the `LIMIT` const generic parameter to control the payload size limit.
 ///
 /// ```
-/// use actix_web::{post, web, App};
+/// use actix_web::{post, App};
+/// use actix_web_lab::json::{DEFAULT_LIMIT, Json};
 /// use serde::Deserialize;
 ///
 /// #[derive(Deserialize)]
@@ -44,30 +42,8 @@ pub const DEFAULT_LIMIT: usize = 2_097_152; // 2MiB
 ///
 /// /// deserialize `Info` from request's body
 /// #[post("/")]
-/// async fn index(info: web::Json<Info>) -> String {
+/// async fn index(info: Json<Info, DEFAULT_LIMIT>) -> String {
 ///     format!("Welcome {}!", info.username)
-/// }
-/// ```
-///
-/// # Responder
-/// The `Json` type  JSON formatted responses. A handler may return a value of type
-/// `Json<T>` where `T` is the type of a structure to serialize into JSON. The type `T` must
-/// implement [`serde::Serialize`].
-///
-/// ```
-/// use actix_web::{post, web, HttpRequest};
-/// use serde::Serialize;
-///
-/// #[derive(Serialize)]
-/// struct Info {
-///     name: String,
-/// }
-///
-/// #[post("/{name}")]
-/// async fn index(req: HttpRequest) -> web::Json<Info> {
-///     web::Json(Info {
-///         name: req.match_info().get("name").unwrap().to_owned(),
-///     })
 /// }
 /// ```
 #[derive(Debug, Deref, DerefMut, Display)]
@@ -77,29 +53,6 @@ impl<T, const LIMIT: usize> Json<T, LIMIT> {
     /// Unwrap into inner `T` value.
     pub fn into_inner(self) -> T {
         self.0
-    }
-}
-
-/// Creates response with OK status code, correct content type header, and serialized JSON payload.
-///
-/// If serialization failed
-impl<T: Serialize, const LIMIT: usize> Responder for Json<T, LIMIT> {
-    type Body = EitherBody<String>;
-
-    fn respond_to(self, _: &HttpRequest) -> HttpResponse<Self::Body> {
-        match serde_json::to_string(&self.0) {
-            Ok(body) => match HttpResponse::Ok()
-                .content_type(mime::APPLICATION_JSON)
-                .message_body(body)
-            {
-                Ok(res) => res.map_into_left_body(),
-                Err(err) => HttpResponse::from_error(err).map_into_right_body(),
-            },
-
-            Err(err) => {
-                HttpResponse::from_error(JsonPayloadError::Serialize(err)).map_into_right_body()
-            }
-        }
     }
 }
 
@@ -161,9 +114,9 @@ pub enum JsonBody<T, const LIMIT: usize> {
     Body {
         /// Length as reported by `Content-Length` header, if present.
         length: Option<usize>,
-        #[cfg(feature = "__compress")]
-        payload: Decompress<Payload>,
-        #[cfg(not(feature = "__compress"))]
+        // #[cfg(feature = "__compress")]
+        // payload: Decompress<Payload>,
+        // #[cfg(not(feature = "__compress"))]
         payload: Payload,
         buf: web::BytesMut,
         _res: PhantomData<T>,
@@ -174,7 +127,7 @@ impl<T, const LIMIT: usize> Unpin for JsonBody<T, LIMIT> {}
 
 impl<T: DeserializeOwned, const LIMIT: usize> JsonBody<T, LIMIT> {
     /// Create a new future to decode a JSON request payload.
-    #[allow(clippy::borrow_interior_mutable_const)]
+    // #[allow(clippy::borrow_interior_mutable_const)]
     pub fn new(req: &HttpRequest, payload: &mut Payload) -> Self {
         // check content-type
         let can_parse_json = if let Ok(Some(mime)) = req.mime_type() {
@@ -262,7 +215,6 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonBody<T, LIMIT> {
 #[cfg(test)]
 mod tests {
     use actix_web::{
-        body,
         http::{header, StatusCode},
         test::TestRequest,
         web::Bytes,
