@@ -13,9 +13,9 @@
 //!   version of this crate.
 //! - It will often be as easy as dropping the `_lab` suffix from imports when items graduate.
 
+pub mod guard;
 pub mod json;
-pub mod redirect;
+mod redirect;
 pub mod web;
 
-pub use json::Json;
 pub use redirect::Redirect;

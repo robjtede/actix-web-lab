@@ -2,6 +2,7 @@
 
 use std::borrow::Cow;
 
+pub use crate::json::Json;
 use crate::Redirect;
 
 /// Create a relative or absolute redirect.

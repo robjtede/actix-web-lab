@@ -1,4 +1,4 @@
-//! For JSON helper documentation, see [`Json`].
+//! JSON extractor with const-generic payload size limit.
 
 use std::{
     future::Future,
@@ -20,15 +20,19 @@ use actix_web::{
 
 pub const DEFAULT_LIMIT: usize = 2_097_152; // 2MiB
 
-/// JSON extractor and responder.
+/// JSON extractor with const-generic payload size limit.
 ///
-/// `Json` has two uses: JSON responses, and extracting typed data from JSON request payloads.
+/// `Json` is used to extract typed data from JSON request payloads.
 ///
 /// # Extractor
 /// To extract typed data from a request body, the inner type `T` must implement the
 /// [`serde::Deserialize`] trait.
 ///
-/// Use the `LIMIT` const generic parameter to control the payload size limit.
+/// Use the `LIMIT` const generic parameter to control the payload size limit. The default limit
+/// that is exported (`DEFAULT_LIMIT`) is 2MiB.
+///
+/// When const generics defaults are supported (due for Rust 1.59) it will be possible to omit the
+/// default limit.
 ///
 /// ```
 /// use actix_web::{post, App};
@@ -40,9 +44,15 @@ pub const DEFAULT_LIMIT: usize = 2_097_152; // 2MiB
 ///     username: String,
 /// }
 ///
-/// /// deserialize `Info` from request's body
+/// /// Deserialize `Info` from request's body.
 /// #[post("/")]
 /// async fn index(info: Json<Info, DEFAULT_LIMIT>) -> String {
+///     format!("Welcome {}!", info.username)
+/// }
+///
+/// /// Deserialize payload with a higher 32MiB limit.
+/// #[post("/big-payload")]
+/// async fn big_payload(info: Json<Info, 33_554_432>) -> String {
 ///     format!("Welcome {}!", info.username)
 /// }
 /// ```
