@@ -9,10 +9,15 @@ jobs:
       - run: cargo --version
       - run: cargo clippy
   
-  build:
+  test:
     docker:
       - image: cimg/rust:1.57.0
     steps:
       - checkout
       - run: cargo --version
       - run: cargo test
+
+workflows:
+  version: 2
+  all_checks:
+    jobs: [clippy, test]
