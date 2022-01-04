@@ -1,0 +1,26 @@
+[package]
+name = "actix-web-lab"
+version = "0.1.0"
+authors = ["Rob Ede <robjtede@icloud.com>"]
+description = "In-progress extractors and middleware for Actix Web."
+keywords = ["actix", "http", "web", "framework", "async"]
+categories = [
+    "network-programming",
+    "asynchronous",
+    "web-programming::http-server",
+    "web-programming::websocket"
+]
+homepage = "https://actix.rs"
+repository = "https://github.com/robjtede/actix-web-lab.git"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+rust-version = "1.56"
+
+[dependencies]
+actix-web = "4.0.0-beta.18"
+derive_more = "0.99.5"
+futures-core = "0.3.7"
+log = "0.4"
+mime = "0.3"
+serde = "1"
+serde_json = "1"

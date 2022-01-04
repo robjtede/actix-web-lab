@@ -1,0 +1,22 @@
+version: 2.1
+
+jobs:
+  clippy:
+    docker:
+      - image: cimg/rust:1.57.0
+    steps:
+      - checkout
+      - run: cargo --version
+      - run:
+          name: Run Tests
+          command: cargo clippy
+  
+  build:
+    docker:
+      - image: cimg/rust:1.57.0
+    steps:
+      - checkout
+      - run: cargo --version
+      - run:
+          name: Run Tests
+          command: cargo test
