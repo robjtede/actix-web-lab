@@ -1,3 +1,5 @@
+//! Analogous to the `web` module in Actix Web.
+
 use std::borrow::Cow;
 
 use crate::Redirect;

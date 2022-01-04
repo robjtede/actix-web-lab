@@ -2,7 +2,7 @@
 name = "actix-web-lab"
 version = "0.1.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
-description = "In-progress extractors and middleware for Actix Web."
+description = "In-progress extractors and middleware for Actix Web"
 keywords = ["actix", "http", "web", "framework", "async"]
 categories = [
     "network-programming",
