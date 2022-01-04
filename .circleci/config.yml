@@ -7,9 +7,7 @@ jobs:
     steps:
       - checkout
       - run: cargo --version
-      - run:
-          name: Run Tests
-          command: cargo clippy
+      - run: cargo clippy
   
   build:
     docker:
@@ -17,6 +15,4 @@ jobs:
     steps:
       - checkout
       - run: cargo --version
-      - run:
-          name: Run Tests
-          command: cargo test
+      - run: cargo test
