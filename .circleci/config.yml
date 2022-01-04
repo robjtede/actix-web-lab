@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run: cargo --version
-      - run: cargo clippy
+      - run: cargo clippy --tests --examples
   
   test:
     docker:
@@ -15,7 +15,7 @@ jobs:
     steps:
       - checkout
       - run: cargo --version
-      - run: cargo test
+      - run: cargo test --all-features
 
 workflows:
   version: 2
