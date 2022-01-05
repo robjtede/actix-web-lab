@@ -7,15 +7,29 @@ jobs:
     steps:
       - checkout
       - run: cargo --version
+      - restore_cache:
+          key: clippy-cache
       - run: cargo clippy --tests --examples
-  
+      - save_cache:
+          key: clippy-cache
+          paths:
+            - "~/.cargo"
+            - "./target"
+
   test:
     docker:
       - image: cimg/rust:1.57.0
     steps:
       - checkout
       - run: cargo --version
+      - restore_cache:
+          key: test-cache
       - run: cargo test --all-features
+      - save_cache:
+          key: test-cache
+          paths:
+            - "~/.cargo"
+            - "./target"
 
 workflows:
   version: 2
