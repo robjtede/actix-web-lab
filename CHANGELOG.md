@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.2.1 - 2022-01-05
 - Added `LazyData` extractor.
 
 ## 0.2.0 - 2022-01-04

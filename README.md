@@ -3,10 +3,10 @@
 > Experimental extractors, middleware, and other extras for possible inclusion in Actix Web.
 
 [![crates.io](https://img.shields.io/crates/v/actix-web-lab?label=latest)](https://crates.io/crates/actix-web-lab)
-[![Documentation](https://docs.rs/actix-web-lab/badge.svg)](https://docs.rs/actix-web-lab/0.2.0)
+[![Documentation](https://docs.rs/actix-web-lab/badge.svg)](https://docs.rs/actix-web-lab/0.2.1)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/actix-web-lab.svg)
 <br />
-[![dependency status](https://deps.rs/crate/actix-web-lab/0.2.0/status.svg)](https://deps.rs/crate/actix-web-lab/0.2.0)
+[![dependency status](https://deps.rs/crate/actix-web-lab/0.2.1/status.svg)](https://deps.rs/crate/actix-web-lab/0.2.1)
 [![Download](https://img.shields.io/crates/d/actix-web-lab.svg)](https://crates.io/crates/actix-web-lab)
 [![CircleCI](https://circleci.com/gh/robjtede/actix-web-lab/tree/main.svg?style=shield)](https://circleci.com/gh/robjtede/actix-web-lab/tree/main)
 
