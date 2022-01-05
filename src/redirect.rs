@@ -30,7 +30,7 @@ use actix_web::{
 ///     );
 /// ```
 ///
-/// [mdn-redirects]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#temporary_redirections
+/// [mdn-redirects]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#permanent_redirections
 #[derive(Debug, Clone)]
 pub struct Redirect {
     from: Cow<'static, str>,
