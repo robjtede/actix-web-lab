@@ -15,6 +15,7 @@
 
 pub mod guard;
 pub mod json;
+pub mod lazy_data;
 mod redirect;
 pub mod web;
 

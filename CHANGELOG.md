@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
-
+- Added `LazyData` extractor.
 
 ## 0.2.0 - 2022-01-04
 - Added reduced `Json` extractor with const generic size limit.
