@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.2.2 - 2022-01-05
 - Fix exports.
 - Exclude default Actix Web features.
 
