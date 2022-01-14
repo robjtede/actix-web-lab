@@ -3,6 +3,10 @@
 ## Unreleased - 2021-xx-xx
 
 
+## 0.2.3 - 2022-01-14
+- No significant changes since `0.2.2`.
+
+
 ## 0.2.2 - 2022-01-05
 - Fix exports.
 - Exclude default Actix Web features.

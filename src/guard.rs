@@ -2,8 +2,7 @@
 
 use actix_web::{
     guard::{Guard, GuardContext},
-    http::header::{Accept, Header, ACCEPT},
-    test::TestRequest,
+    http::header::Accept,
 };
 
 /// A guard that verifies that an `Accept` header is present and it contains a compatible mime type.
@@ -45,18 +44,9 @@ impl Acceptable {
 
 impl Guard for Acceptable {
     fn check(&self, ctx: &GuardContext) -> bool {
-        let headers = ctx.head().headers().get_all(ACCEPT);
-
-        // HACK: guard context could do with a way to parse typed headers
-        let req = headers
-            .fold(TestRequest::default(), |req, hdr| {
-                req.append_header((ACCEPT, hdr))
-            })
-            .to_http_request();
-
-        let accept = match Accept::parse(&req) {
-            Ok(hdr) => hdr,
-            Err(_) => return false,
+        let accept = match ctx.header::<Accept>() {
+            Some(hdr) => hdr,
+            None => return false,
         };
 
         let target_type = self.mime.type_();
