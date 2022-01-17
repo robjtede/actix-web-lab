@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+- Add `NdJson` responder.
 
 
 ## 0.2.3 - 2022-01-14

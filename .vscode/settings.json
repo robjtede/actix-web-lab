@@ -1,6 +1,9 @@
 {
     "cSpell.words": [
         "actix",
-        "clippy"
+        "clippy",
+        "deque",
+        "Expiremental",
+        "ndjson"
     ]
 }
