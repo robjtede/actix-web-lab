@@ -35,3 +35,4 @@ tokio = { version = "1.13.1", features = ["sync"] }
 env_logger = "0.9"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 rand = "0.8"
+static_assertions = "1.1"

@@ -64,7 +64,7 @@ impl Guard for Acceptable {
 }
 
 #[cfg(test)]
-mod acceptable_tests {
+mod tests {
     use actix_web::http::header;
     use actix_web::test::TestRequest;
 

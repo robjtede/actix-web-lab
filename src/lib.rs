@@ -15,6 +15,7 @@
 
 mod acceptable;
 mod buffered_serializing_stream;
+mod channel_body;
 mod csv;
 mod display_stream;
 mod json;
@@ -25,6 +26,7 @@ mod redirect;
 mod utils;
 
 // public API
+pub mod body;
 pub mod extract;
 pub mod guard;
 pub mod middleware;

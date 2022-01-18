@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+- Add `channel` body type.
 
 
 ## 0.6.1 - 2022-01-18
