@@ -2,6 +2,7 @@
 
 ## Unreleased - 2021-xx-xx
 - Add `DisplayStream` responder.
+- Add `from_fn` middleware.
 
 
 ## 0.5.0 - 2022-01-18

@@ -17,6 +17,7 @@ rust-version = "1.57"
 
 [dependencies]
 actix-web = { version = "4.0.0-beta.20", default-features = false }
+actix-service = "2"
 
 csv = "1.1"
 bytes = "1"

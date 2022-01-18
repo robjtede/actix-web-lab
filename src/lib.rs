@@ -18,6 +18,7 @@ mod csv;
 mod display_stream;
 mod json;
 mod lazy_data;
+mod middleware_from_fn;
 mod ndjson;
 mod redirect;
 mod utils;
@@ -25,5 +26,6 @@ mod utils;
 // public API
 pub mod extract;
 pub mod guard;
+pub mod middleware;
 pub mod respond;
 pub mod web;
