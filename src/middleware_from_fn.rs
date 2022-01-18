@@ -15,6 +15,44 @@ use actix_web::{
 };
 use futures_core::Future;
 
+/// Wraps an async function to be used as a middleware.
+///
+/// The wrapped function should have the following form:
+/// ```ignore
+/// use actix_web_lab::middleware::Next;
+///
+/// async fn my_mw(
+///     req: ServiceRequest,
+///     next: Next<impl MessageBody>,
+/// ) -> Result<ServiceResponse<impl MessageBody>, Error> {
+///     // pre-processing
+///     next.call(req).await
+///     // post-processing
+/// }
+/// ```
+///
+/// Then use in an app builder like this:
+/// ```
+/// use actix_web::{
+///     App, Error,
+///     dev::{ServiceRequest, ServiceResponse, Service as _},
+/// };
+/// use actix_web_lab::middleware::from_fn;
+/// # use actix_web_lab::middleware::Next;
+/// # async fn my_mw<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {
+/// #     next.call(req).await
+/// # }
+///
+/// App::new()
+///     .wrap(from_fn(my_mw))
+/// # ;
+/// ```
+pub fn from_fn<F>(mw_fn: F) -> MiddlewareFn<F> {
+    MiddlewareFn {
+        mw_fn: Rc::new(mw_fn),
+    }
+}
+
 /// Middleware transform for [`from_fn`].
 pub struct MiddlewareFn<F> {
     mw_fn: Rc<F>,
@@ -51,7 +89,7 @@ pub struct MiddlewareFnService<F, B> {
 
 impl<F, Fut, B, B2> Service<ServiceRequest> for MiddlewareFnService<F, B>
 where
-    F: Fn(ServiceRequest, Next<B>) -> Fut + 'static,
+    F: Fn(ServiceRequest, Next<B>) -> Fut,
     Fut: Future<Output = Result<ServiceResponse<B2>, Error>>,
     B2: MessageBody,
 {
@@ -76,6 +114,13 @@ pub struct Next<B> {
     service: RcService<ServiceRequest, ServiceResponse<B>, Error>,
 }
 
+impl<B> Next<B> {
+    /// Equivalent to `Service::call(self, req)`.
+    pub fn call(&self, req: ServiceRequest) -> <Self as Service<ServiceRequest>>::Future {
+        Service::call(self, req)
+    }
+}
+
 impl<B> Service<ServiceRequest> for Next<B> {
     type Response = ServiceResponse<B>;
     type Error = Error;
@@ -85,41 +130,6 @@ impl<B> Service<ServiceRequest> for Next<B> {
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         self.service.call(req)
-    }
-}
-
-/// Wraps an async function to be used as a middleware.
-///
-/// The wrapped function should have the following form:
-/// ```ignore
-/// use actix_web_lab::middleware::Next;
-///
-/// async fn my_mw(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {
-///     // pre-processing
-///     next.call(req).await
-///     // post-processing
-/// }
-/// ```
-///
-/// Then use in an app builder like this:
-/// ```
-/// use actix_web::{
-///     App, Error,
-///     dev::{ServiceRequest, ServiceResponse, Service as _},
-/// };
-/// use actix_web_lab::middleware::from_fn;
-/// # use actix_web_lab::middleware::Next;
-/// # async fn my_mw<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {
-/// #     next.call(req).await
-/// # }
-///
-/// App::new()
-///     .wrap(from_fn(my_mw))
-/// # ;
-/// ```
-pub fn from_fn<F>(mw_fn: F) -> MiddlewareFn<F> {
-    MiddlewareFn {
-        mw_fn: Rc::new(mw_fn),
     }
 }
 
