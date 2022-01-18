@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+- Add `Csv` responder.
 
 
 ## 0.3.0 - 2022-01-17

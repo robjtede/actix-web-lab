@@ -1,5 +1,4 @@
 use std::{
-    io::Write as _,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -11,26 +10,23 @@ use actix_web::{
 };
 use futures_core::Stream;
 use mime::Mime;
-use once_cell::sync::Lazy;
 use pin_project_lite::pin_project;
 use serde::Serialize;
 
 use crate::utils::MutWriter;
 
-static NDJSON_MIME: Lazy<Mime> = Lazy::new(|| "application/x-ndjson".parse().unwrap());
-
 pin_project! {
-    /// A buffered [NDJSON] serializing stream.
+    /// A buffered CSV serializing stream.
     ///
-    /// This has significant memory efficiency advantages over returning an array of JSON objects
+    /// This has significant memory efficiency advantages over returning an array of CSV objects
     /// when the data set is very large because it avoids buffering the entire response.
     ///
     /// # Examples
     /// ```
     /// # use actix_web::Responder;
-    /// # use actix_web_lab::respond::NdJson;
+    /// # use actix_web_lab::respond::Csv;
     /// # use futures_core::Stream;
-    /// fn streaming_data_source() -> impl Stream<Item = serde_json::Value> {
+    /// fn streaming_data_source() -> impl Stream<Item = [String, String]> {
     ///     // get item stream from source
     ///     # futures_util::stream::empty()
     /// }
@@ -38,33 +34,31 @@ pin_project! {
     /// async fn handler() -> impl Responder {
     ///     let data_stream = streaming_data_source();
     ///
-    ///     NdJson::new(data_stream)
+    ///     Csv::new(data_stream)
     ///         .into_responder()
     /// }
     /// ```
-    ///
-    /// [NDJSON]: https://ndjson.org/
-    pub struct NdJson<S> {
+    pub struct Csv<S> {
         // The wrapped item stream.
         #[pin]
         stream: S,
     }
 }
 
-impl NdJson<()> {
-    /// Returns the NDJSON MIME type (`application/x-ndjson`).
+impl Csv<()> {
+    /// Returns the CSV MIME type (`text/csv; charset=utf-8`).
     pub fn mime() -> Mime {
-        NDJSON_MIME.clone()
+        mime::TEXT_CSV_UTF_8
     }
 }
 
-impl<S> NdJson<S> {
-    /// Constructs a new `NdJson` from a stream of items.
+impl<S> Csv<S> {
+    /// Constructs a new `Csv` from a stream of rows.
     pub fn new(stream: S) -> Self {
         Self { stream }
     }
 
-    /// Creates a chunked body stream that serializes as NDJSON on-the-fly.
+    /// Creates a chunked body stream that serializes as CSV on-the-fly.
     pub fn into_body_stream(self) -> impl MessageBody
     where
         S: Stream,
@@ -80,13 +74,13 @@ impl<S> NdJson<S> {
         S::Item: Serialize,
     {
         HttpResponse::Ok()
-            .content_type(NDJSON_MIME.clone())
+            .content_type(mime::TEXT_CSV_UTF_8)
             .message_body(self.into_body_stream())
             .unwrap()
     }
 }
 
-impl<S> Stream for NdJson<S>
+impl<S> Stream for Csv<S>
 where
     S: Stream,
     S::Item: Serialize,
@@ -125,10 +119,8 @@ where
             };
 
             // serialize JSON line to buffer
-            serde_json::to_writer(&mut wrt, &item).unwrap();
-
-            // add line break to buffer
-            let _ = wrt.write(b"\n").unwrap();
+            let mut csv_wrt = csv::Writer::from_writer(&mut wrt);
+            csv_wrt.serialize(&item).unwrap();
         }
 
         debug_assert!(!buf.is_empty(), "buffer should not yield an empty chunk");
@@ -143,7 +135,6 @@ mod tests {
 
     use actix_web::body;
     use futures_util::{future::poll_fn, pin_mut, stream, task::noop_waker, StreamExt as _};
-    use serde_json::json;
 
     use super::*;
 
@@ -182,7 +173,7 @@ mod tests {
 
     #[actix_web::test]
     async fn empty_stream() {
-        let mut value_stream = NdJson::new(stream::empty::<()>());
+        let mut value_stream = Csv::new(stream::empty::<()>());
         assert!(value_stream.next().await.is_none());
         // test that stream is fused
         assert!(value_stream.next().await.is_none());
@@ -191,19 +182,19 @@ mod tests {
     #[actix_web::test]
     async fn serializes_chunks() {
         let mut poll_seq = VecDeque::from([
-            Poll::Ready(Some(json!(null))),
+            Poll::Ready(Some([123, 456])),
             Poll::Pending,
-            Poll::Ready(Some(json!(null))),
-            Poll::Ready(Some(json!(1u32))),
+            Poll::Ready(Some([789, 12])),
+            Poll::Ready(Some([345, 678])),
             Poll::Pending,
             Poll::Pending,
-            Poll::Ready(Some(json!("123"))),
-            Poll::Ready(Some(json!({ "abc": "123" }))),
+            Poll::Ready(Some([901, 234])),
+            Poll::Ready(Some([456, 789])),
             Poll::Pending,
-            Poll::Ready(Some(json!(["abc", 123u32]))),
+            Poll::Ready(Some([123, 456])),
         ]);
 
-        let stream = NdJson::new(stream::poll_fn(|_cx| match poll_seq.pop_front() {
+        let stream = Csv::new(stream::poll_fn(|_cx| match poll_seq.pop_front() {
             Some(item) => item,
             None => Poll::Ready(None),
         }));
@@ -213,11 +204,11 @@ mod tests {
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);
 
-        assert_poll_next!(stream, cx, Bytes::from("null\n"));
-        assert_poll_next!(stream, cx, Bytes::from("null\n1\n"));
+        assert_poll_next!(stream, cx, Bytes::from("123,456\n"));
+        assert_poll_next!(stream, cx, Bytes::from("789,12\n345,678\n"));
         assert_poll_is_pending!(stream, cx);
-        assert_poll_next!(stream, cx, Bytes::from("\"123\"\n{\"abc\":\"123\"}\n"));
-        assert_poll_next!(stream, cx, Bytes::from("[\"abc\",123]\n"));
+        assert_poll_next!(stream, cx, Bytes::from("901,234\n456,789\n"));
+        assert_poll_next!(stream, cx, Bytes::from("123,456\n"));
         assert_poll_is_none!(stream, cx);
     }
 
@@ -232,7 +223,7 @@ mod tests {
             Poll::Ready(Some(ten_kb_str.clone())),
         ]);
 
-        let stream = NdJson::new(stream::poll_fn(|_cx| match poll_seq.pop_front() {
+        let stream = Csv::new(stream::poll_fn(|_cx| match poll_seq.pop_front() {
             Some(item) => item,
             None => Poll::Ready(None),
         }));
@@ -241,13 +232,13 @@ mod tests {
 
         // only yields two of the chunks because the limit is 16 KiB
         let chunk1 = next_stream_chunk!(stream);
-        // len + 2 quote parks per msg + 1 line break per msg
-        let exp_len = (ten_kb_str.len() + 2 + 1) * 2;
+        // len + 1 line break per msg
+        let exp_len = (ten_kb_str.len() + 1) * 2;
         assert_eq!(chunk1.len(), exp_len);
 
         let chunk2 = next_stream_chunk!(stream);
-        // len + 2 quote parks per msg + 1 line break per msg
-        assert_eq!(chunk2.len(), ten_kb_str.len() + 2 + 1);
+        // len + 1 line break per msg
+        assert_eq!(chunk2.len(), ten_kb_str.len() + 1);
 
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);
@@ -256,12 +247,12 @@ mod tests {
 
     #[actix_web::test]
     async fn serializes_into_body() {
-        let ndjson_body = NdJson::new(stream::iter(vec![
-            json!(null),
-            json!(1u32),
-            json!("123"),
-            json!({ "abc": "123" }),
-            json!(["abc", 123u32]),
+        let ndjson_body = Csv::new(stream::iter([
+            [123, 456],
+            [789, 12],
+            [345, 678],
+            [901, 234],
+            [456, 789],
         ]))
         .into_body_stream();
 
@@ -270,11 +261,11 @@ mod tests {
             .map_err(Into::<Box<dyn StdError>>::into)
             .unwrap();
 
-        const EXP_BYTES: &str = "null\n\
-            1\n\
-            \"123\"\n\
-            {\"abc\":\"123\"}\n\
-            [\"abc\",123]\n";
+        const EXP_BYTES: &str = "123,456\n\
+        789,12\n\
+        345,678\n\
+        901,234\n\
+        456,789\n";
 
         assert_eq!(body_bytes, EXP_BYTES);
     }
