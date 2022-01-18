@@ -15,6 +15,9 @@
 - `Csv`: efficient CSV streaming [(docs)](https://docs.rs/actix-web-lab/latest/actix_web_lab/respond/struct.Csv.html)
 - `NdJson`: efficient NDJSON streaming [(docs)](https://docs.rs/actix-web-lab/latest/actix_web_lab/respond/struct.NdJson.html)
 
+### Middleware
+- `from_fn`: use an async function as a middleware [(docs)](https://docs.rs/actix-web-lab/latest/actix_web_lab/middleware/fn.from_fn.html)
+
 ### Extractors
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/latest/actix_web_lab/extract/struct.LazyData.html)
 - `Json`: simplified JSON extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/latest/actix_web_lab/extract/struct.Json.html)
