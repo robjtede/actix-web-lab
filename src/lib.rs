@@ -15,6 +15,7 @@
 
 mod buffered_serializing_stream;
 mod csv;
+mod display_stream;
 mod json;
 mod lazy_data;
 mod ndjson;

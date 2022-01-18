@@ -13,10 +13,10 @@ use serde::Serialize;
 use crate::{buffered_serializing_stream::BufferedSerializingStream, utils::MutWriter};
 
 pin_project! {
-    /// A buffered CSV serializing stream.
+    /// A buffered CSV serializing body stream.
     ///
-    /// This has significant memory efficiency advantages over returning an array of CSV objects
-    /// when the data set is very large because it avoids buffering the entire response.
+    /// This has significant memory efficiency advantages over returning an array of CSV rows when
+    /// the data set is very large because it avoids buffering the entire response.
     ///
     /// # Examples
     /// ```
@@ -56,10 +56,7 @@ where
 {
     /// Creates a chunked body stream that serializes as CSV on-the-fly.
     pub fn into_body_stream(self) -> impl MessageBody {
-        BodyStream::new(BufferedSerializingStream::new(
-            self.stream,
-            serialize_csv_row,
-        ))
+        BodyStream::new(self.into_chunk_stream())
     }
 
     /// Creates a `Responder` type with a serializing stream and correct Content-Type header.

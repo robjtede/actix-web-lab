@@ -8,7 +8,6 @@ use actix_web::Error;
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
 use pin_project_lite::pin_project;
-use serde::Serialize;
 
 use crate::utils::MutWriter;
 
@@ -25,7 +24,6 @@ pin_project! {
 impl<S, F> BufferedSerializingStream<S, F>
 where
     S: Stream,
-    S::Item: Serialize,
     F: FnMut(&mut MutWriter<BytesMut>, &S::Item) -> io::Result<()>,
 {
     pub fn new(stream: S, serialize_fn: F) -> Self {
@@ -39,7 +37,6 @@ where
 impl<S, F> Stream for BufferedSerializingStream<S, F>
 where
     S: Stream,
-    S::Item: Serialize,
     F: FnMut(&mut MutWriter<BytesMut>, &S::Item) -> io::Result<()>,
 {
     type Item = Result<Bytes, Error>;
@@ -86,7 +83,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::VecDeque, future::Future as _};
+    use std::{collections::VecDeque, fmt::Display, future::Future as _, io::Write};
 
     use futures_util::{future::poll_fn, pin_mut, stream, task::noop_waker, StreamExt as _};
 
@@ -125,17 +122,14 @@ mod tests {
         }};
     }
 
-    fn serialize_csv_row<T: Serialize>(wrt: &mut MutWriter<BytesMut>, item: &T) -> io::Result<()> {
-        // serialize CSV row to buffer
-        let mut csv_wrt = csv::Writer::from_writer(wrt);
-        csv_wrt.serialize(&item).unwrap();
-        csv_wrt.flush()
+    fn serialize_display<T: Display>(wrt: &mut MutWriter<BytesMut>, item: &T) -> io::Result<()> {
+        writeln!(wrt, "{}", item)
     }
 
     #[actix_web::test]
     async fn empty_stream() {
         let mut value_stream =
-            BufferedSerializingStream::new(stream::empty::<()>(), serialize_csv_row);
+            BufferedSerializingStream::new(stream::empty::<u32>(), serialize_display);
         assert!(value_stream.next().await.is_none());
         // test that stream is fused
         assert!(value_stream.next().await.is_none());
@@ -144,16 +138,16 @@ mod tests {
     #[actix_web::test]
     async fn serializes_chunks() {
         let mut poll_seq = VecDeque::from([
-            Poll::Ready(Some([123, 456])),
+            Poll::Ready(Some(123)),
             Poll::Pending,
-            Poll::Ready(Some([789, 12])),
-            Poll::Ready(Some([345, 678])),
+            Poll::Ready(Some(789)),
+            Poll::Ready(Some(345)),
             Poll::Pending,
             Poll::Pending,
-            Poll::Ready(Some([901, 234])),
-            Poll::Ready(Some([456, 789])),
+            Poll::Ready(Some(901)),
+            Poll::Ready(Some(456)),
             Poll::Pending,
-            Poll::Ready(Some([123, 456])),
+            Poll::Ready(Some(123)),
         ]);
 
         let inner_stream = stream::poll_fn(|_cx| match poll_seq.pop_front() {
@@ -161,18 +155,18 @@ mod tests {
             None => Poll::Ready(None),
         });
 
-        let stream = BufferedSerializingStream::new(inner_stream, serialize_csv_row);
+        let stream = BufferedSerializingStream::new(inner_stream, serialize_display);
 
         pin_mut!(stream);
 
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);
 
-        assert_poll_next!(stream, cx, Bytes::from("123,456\n"));
-        assert_poll_next!(stream, cx, Bytes::from("789,12\n345,678\n"));
+        assert_poll_next!(stream, cx, Bytes::from("123\n"));
+        assert_poll_next!(stream, cx, Bytes::from("789\n345\n"));
         assert_poll_is_pending!(stream, cx);
-        assert_poll_next!(stream, cx, Bytes::from("901,234\n456,789\n"));
-        assert_poll_next!(stream, cx, Bytes::from("123,456\n"));
+        assert_poll_next!(stream, cx, Bytes::from("901\n456\n"));
+        assert_poll_next!(stream, cx, Bytes::from("123\n"));
         assert_poll_is_none!(stream, cx);
     }
 
@@ -192,7 +186,7 @@ mod tests {
             None => Poll::Ready(None),
         });
 
-        let stream = BufferedSerializingStream::new(inner_stream, serialize_csv_row);
+        let stream = BufferedSerializingStream::new(inner_stream, serialize_display);
 
         pin_mut!(stream);
 

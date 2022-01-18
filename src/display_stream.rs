@@ -1,5 +1,5 @@
 use std::{
-    convert::Infallible,
+    fmt,
     io::{self, Write as _},
 };
 
@@ -9,27 +9,25 @@ use actix_web::{
 };
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
-use mime::Mime;
-use once_cell::sync::Lazy;
 use pin_project_lite::pin_project;
-use serde::Serialize;
 
 use crate::{buffered_serializing_stream::BufferedSerializingStream, utils::MutWriter};
 
-static NDJSON_MIME: Lazy<Mime> = Lazy::new(|| "application/x-ndjson".parse().unwrap());
-
 pin_project! {
-    /// A buffered [NDJSON] serializing body stream.
+    /// A buffered line formatting body stream.
     ///
-    /// This has significant memory efficiency advantages over returning an array of JSON objects
-    /// when the data set is very large because it avoids buffering the entire response.
+    /// Each item yielded by the stream will be written to the response body using its
+    /// `Display` implementation.
+    ///
+    /// This has significant memory efficiency advantages over returning an array of lines when the
+    /// data set is very large because it avoids buffering the entire response.
     ///
     /// # Examples
     /// ```
     /// # use actix_web::Responder;
-    /// # use actix_web_lab::respond::NdJson;
+    /// # use actix_web_lab::respond::DisplayStream;
     /// # use futures_core::Stream;
-    /// fn streaming_data_source() -> impl Stream<Item = serde_json::Value> {
+    /// fn streaming_data_source() -> impl Stream<Item = u32> {
     ///     // get item stream from source
     ///     # futures_util::stream::empty()
     /// }
@@ -37,32 +35,30 @@ pin_project! {
     /// async fn handler() -> impl Responder {
     ///     let data_stream = streaming_data_source();
     ///
-    ///     NdJson::new(data_stream)
+    ///     DisplayStream::new(data_stream)
     ///         .into_responder()
     /// }
     /// ```
-    ///
-    /// [NDJSON]: https://ndjson.org/
-    pub struct NdJson<S> {
+    pub struct DisplayStream<S> {
         // The wrapped item stream.
         #[pin]
         stream: S,
     }
 }
 
-impl<S> NdJson<S> {
-    /// Constructs a new `NdJson` from a stream of items.
+impl<S> DisplayStream<S> {
+    /// Constructs a new `DisplayStream` from a stream of lines.
     pub fn new(stream: S) -> Self {
         Self { stream }
     }
 }
 
-impl<S> NdJson<S>
+impl<S> DisplayStream<S>
 where
     S: Stream,
-    S::Item: Serialize,
+    S::Item: fmt::Display,
 {
-    /// Creates a chunked body stream that serializes as NDJSON on-the-fly.
+    /// Creates a chunked body stream that serializes as CSV on-the-fly.
     pub fn into_body_stream(self) -> impl MessageBody {
         BodyStream::new(self.into_chunk_stream())
     }
@@ -73,33 +69,19 @@ where
         S: 'static,
     {
         HttpResponse::Ok()
-            .content_type(NDJSON_MIME.clone())
+            .content_type(mime::TEXT_PLAIN_UTF_8)
             .message_body(self.into_body_stream())
             .unwrap()
     }
 
     /// Creates a stream of serialized chunks.
     pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, Error>> {
-        BufferedSerializingStream::new(self.stream, serialize_json_line)
+        BufferedSerializingStream::new(self.stream, write_display)
     }
 }
 
-impl NdJson<Infallible> {
-    /// Returns the NDJSON MIME type (`application/x-ndjson`).
-    pub fn mime() -> Mime {
-        NDJSON_MIME.clone()
-    }
-}
-
-fn serialize_json_line<T: Serialize>(
-    mut wrt: &mut MutWriter<BytesMut>,
-    item: &T,
-) -> io::Result<()> {
-    // serialize JSON line to buffer
-    serde_json::to_writer(&mut wrt, &item)?;
-
-    // add line break to buffer
-    wrt.write_all(b"\n")
+fn write_display<T: fmt::Display>(wrt: &mut MutWriter<BytesMut>, item: &T) -> io::Result<()> {
+    writeln!(wrt, "{}", item)
 }
 
 #[cfg(test)]
@@ -108,31 +90,24 @@ mod tests {
 
     use actix_web::body;
     use futures_util::stream;
-    use serde_json::json;
 
     use super::*;
 
     #[actix_web::test]
     async fn serializes_into_body() {
-        let ndjson_body = NdJson::new(stream::iter(vec![
-            json!(null),
-            json!(1u32),
-            json!("123"),
-            json!({ "abc": "123" }),
-            json!(["abc", 123u32]),
-        ]))
-        .into_body_stream();
+        let ndjson_body =
+            DisplayStream::new(stream::iter([123, 789, 345, 901, 456])).into_body_stream();
 
         let body_bytes = body::to_bytes(ndjson_body)
             .await
             .map_err(Into::<Box<dyn StdError>>::into)
             .unwrap();
 
-        const EXP_BYTES: &str = "null\n\
-            1\n\
-            \"123\"\n\
-            {\"abc\":\"123\"}\n\
-            [\"abc\",123]\n";
+        const EXP_BYTES: &str = "123\n\
+        789\n\
+        345\n\
+        901\n\
+        456\n";
 
         assert_eq!(body_bytes, EXP_BYTES);
     }
