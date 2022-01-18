@@ -164,4 +164,54 @@ mod tests {
         let res = test::call_service(&app, req).await;
         assert!(res.headers().contains_key(header::WARNING));
     }
+
+    #[actix_web::test]
+    async fn closure_capture_and_return_from_fn() {
+        struct MyMw(bool);
+
+        impl MyMw {
+            async fn mw_cb(
+                self: Rc<Self>,
+                req: ServiceRequest,
+                next: Next<impl MessageBody + 'static>,
+            ) -> Result<ServiceResponse<impl MessageBody>, Error> {
+                let mut res = match self.0 {
+                    true => req.into_response("short-circuited").map_into_right_body(),
+                    false => next.call(req).await?.map_into_left_body(),
+                };
+                res.headers_mut()
+                    .insert(header::WARNING, HeaderValue::from_static("42"));
+                Ok(res)
+            }
+
+            pub fn into_middleware<S, B>(
+                self,
+            ) -> impl Transform<
+                S,
+                ServiceRequest,
+                Response = ServiceResponse<impl MessageBody>,
+                Error = Error,
+                InitError = (),
+            >
+            where
+                S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+                B: MessageBody + 'static,
+            {
+                let this = Rc::new(self);
+                from_fn(move |req, next| Self::mw_cb(Rc::clone(&this), req, next))
+            }
+        }
+
+        let app = test::init_service(
+            App::new()
+                .wrap(Logger::default())
+                .wrap(MyMw(true).into_middleware())
+                .wrap(Logger::default()),
+        )
+        .await;
+
+        let req = test::TestRequest::default().to_request();
+        let res = test::call_service(&app, req).await;
+        assert!(res.headers().contains_key(header::WARNING));
+    }
 }
