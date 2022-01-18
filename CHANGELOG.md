@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.7.0 - 2022-01-18
 - Add `channel` body type.
 - `from_fn` middleware can now alter the body type.
 - `Next<B>` has an inherent `call` method so that the `Service` doesn't need importing.
