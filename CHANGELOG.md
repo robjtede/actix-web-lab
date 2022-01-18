@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.6.0 - 2022-01-18
 - Add `DisplayStream` responder.
 - Add `from_fn` middleware.
 
