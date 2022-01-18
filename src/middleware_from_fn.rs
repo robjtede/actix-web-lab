@@ -94,6 +94,8 @@ impl<B> Service<ServiceRequest> for Next<B> {
 ///
 /// The wrapped function should have the following form:
 /// ```ignore
+/// use actix_web_lab::middleware::Next;
+///
 /// async fn my_mw(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {
 ///     // pre-processing
 ///     next.call(req).await
@@ -107,7 +109,8 @@ impl<B> Service<ServiceRequest> for Next<B> {
 ///     App, Error,
 ///     dev::{ServiceRequest, ServiceResponse, Service as _},
 /// };
-/// use actix_web_lab::middleware::{from_fn, Next};
+/// use actix_web_lab::middleware::from_fn;
+/// # use actix_web_lab::middleware::Next;
 /// # async fn my_mw<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {
 /// #     next.call(req).await
 /// # }
