@@ -18,7 +18,7 @@ use actix_web::{
     HttpRequest,
 };
 
-pub const DEFAULT_LIMIT: usize = 2_097_152; // 2MiB
+pub const DEFAULT_JSON_LIMIT: usize = 2_097_152; // 2MiB
 
 /// JSON extractor with const-generic payload size limit.
 ///
@@ -36,7 +36,7 @@ pub const DEFAULT_LIMIT: usize = 2_097_152; // 2MiB
 ///
 /// ```
 /// use actix_web::{post, App};
-/// use actix_web_lab::json::{DEFAULT_LIMIT, Json};
+/// use actix_web_lab::extract::{DEFAULT_JSON_LIMIT, Json};
 /// use serde::Deserialize;
 ///
 /// #[derive(Deserialize)]
@@ -46,7 +46,7 @@ pub const DEFAULT_LIMIT: usize = 2_097_152; // 2MiB
 ///
 /// /// Deserialize `Info` from request's body.
 /// #[post("/")]
-/// async fn index(info: Json<Info, DEFAULT_LIMIT>) -> String {
+/// async fn index(info: Json<Info, DEFAULT_JSON_LIMIT>) -> String {
 ///     format!("Welcome {}!", info.username)
 /// }
 ///
@@ -258,7 +258,7 @@ mod tests {
             .set_payload(Bytes::from_static(b"{\"name\": \"test\"}"))
             .to_http_parts();
 
-        let s = Json::<MyObject, DEFAULT_LIMIT>::from_request(&req, &mut pl)
+        let s = Json::<MyObject, DEFAULT_JSON_LIMIT>::from_request(&req, &mut pl)
             .await
             .unwrap();
         assert_eq!(s.name, "test");
@@ -306,7 +306,7 @@ mod tests {
     #[actix_web::test]
     async fn test_json_body() {
         let (req, mut pl) = TestRequest::default().to_http_parts();
-        let json = JsonBody::<MyObject, DEFAULT_LIMIT>::new(&req, &mut pl).await;
+        let json = JsonBody::<MyObject, DEFAULT_JSON_LIMIT>::new(&req, &mut pl).await;
         assert!(json_eq(json.unwrap_err(), JsonPayloadError::ContentType));
 
         let (req, mut pl) = TestRequest::default()
@@ -315,7 +315,7 @@ mod tests {
                 header::HeaderValue::from_static("application/text"),
             ))
             .to_http_parts();
-        let json = JsonBody::<MyObject, DEFAULT_LIMIT>::new(&req, &mut pl).await;
+        let json = JsonBody::<MyObject, DEFAULT_JSON_LIMIT>::new(&req, &mut pl).await;
         assert!(json_eq(json.unwrap_err(), JsonPayloadError::ContentType));
 
         let (req, mut pl) = TestRequest::default()
@@ -356,7 +356,7 @@ mod tests {
             .set_payload(Bytes::from_static(b"{\"name\": \"test\"}"))
             .to_http_parts();
 
-        let json = JsonBody::<MyObject, DEFAULT_LIMIT>::new(&req, &mut pl).await;
+        let json = JsonBody::<MyObject, DEFAULT_JSON_LIMIT>::new(&req, &mut pl).await;
         assert_eq!(
             json.ok().unwrap(),
             MyObject {

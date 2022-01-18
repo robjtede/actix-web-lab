@@ -19,11 +19,11 @@ use actix_web::{
 /// # Examples
 /// ```
 /// use actix_web::{web, App};
-/// use actix_web_lab::{web as web_lab, Redirect};
+/// use actix_web_lab::web as web_lab;
 ///
 /// App::new()
 ///     // redirect "/duck" to DuckDuckGo
-///     .service(Redirect::new("/duck", "https://duckduckgo.com/"))
+///     .service(web_lab::Redirect::new("/duck", "https://duckduckgo.com/"))
 ///     .service(
 ///         // redirect "/api/old" to "/api/new" using `web::redirect` helper
 ///         web::scope("/api").service(web_lab::redirect("/old", "/new"))
@@ -53,7 +53,7 @@ impl Redirect {
     ///
     /// # Examples
     /// ```
-    /// # use actix_web_lab::Redirect;
+    /// # use actix_web_lab::web::Redirect;
     /// // redirects "/oh/hi/mark" to "/oh/bye/mark"
     /// Redirect::new("/oh/hi/mark", "../../bye/mark");
     /// ```
@@ -93,7 +93,7 @@ impl Redirect {
     ///
     /// ```
     /// # use actix_web::http::StatusCode;
-    /// # use actix_web_lab::Redirect;
+    /// # use actix_web_lab::web::Redirect;
     /// // redirects would use "301 Moved Permanently" status code
     /// Redirect::new("/old", "/new")
     ///     .using_status_code(StatusCode::MOVED_PERMANENTLY);
