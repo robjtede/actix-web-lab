@@ -1,5 +1,7 @@
 //! How to use `NdJson` as an efficient streaming response type.
 //!
+//! The same techniques can also be used for `Csv`.
+//!
 //! Select the number of NDJSON items to return using the query string. Example: `/users?n=100`.
 //!
 //! Also includes a low-efficiency route to demonstrate the difference.
