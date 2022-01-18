@@ -15,13 +15,14 @@
 
 mod buffered_serializing_stream;
 mod csv;
-pub mod guard;
-pub mod json;
+mod json;
 mod lazy_data;
 mod ndjson;
 mod redirect;
-pub mod respond;
 mod utils;
-pub mod web;
 
-pub use redirect::Redirect;
+// public API
+pub mod extract;
+pub mod guard;
+pub mod respond;
+pub mod web;

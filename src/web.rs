@@ -1,10 +1,10 @@
+//! Experimental services.
+//!
 //! Analogous to the `web` module in Actix Web.
 
 use std::borrow::Cow;
 
-pub use crate::json::Json;
-pub use crate::lazy_data::LazyData;
-use crate::Redirect;
+pub use crate::redirect::Redirect;
 
 /// Create a relative or absolute redirect.
 ///

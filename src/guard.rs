@@ -1,11 +1,13 @@
 //! Experimental route guards.
+//!
+//! Analogous to the `guard` module in Actix Web.
 
 use actix_web::{
     guard::{Guard, GuardContext},
     http::header::Accept,
 };
 
-/// A guard that verifies that an `Accept` header is present and it contains a compatible mime type.
+/// A guard that verifies that an `Accept` header is present and it contains a compatible MIME type.
 ///
 /// # Examples
 /// ```

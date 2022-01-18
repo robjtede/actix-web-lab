@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+- Organise modules and exports.
 
 
 ## 0.4.0 - 2022-01-18
