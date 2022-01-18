@@ -171,7 +171,7 @@ mod tests {
 
         impl MyMw {
             async fn mw_cb(
-                self: Rc<Self>,
+                &self,
                 req: ServiceRequest,
                 next: Next<impl MessageBody + 'static>,
             ) -> Result<ServiceResponse<impl MessageBody>, Error> {
@@ -198,7 +198,10 @@ mod tests {
                 B: MessageBody + 'static,
             {
                 let this = Rc::new(self);
-                from_fn(move |req, next| Self::mw_cb(Rc::clone(&this), req, next))
+                from_fn(move |req, next| {
+                    let this = Rc::clone(&this);
+                    async move { Self::mw_cb(&this, req, next).await }
+                })
             }
         }
 
