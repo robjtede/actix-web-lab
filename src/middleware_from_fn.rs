@@ -20,14 +20,14 @@ pub struct MiddlewareFn<F> {
     mw_fn: Rc<F>,
 }
 
-impl<S, F, R, B> Transform<S, ServiceRequest> for MiddlewareFn<F>
+impl<S, F, Fut, B, B2> Transform<S, ServiceRequest> for MiddlewareFn<F>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-    F: Fn(ServiceRequest, Next<B>) -> R,
-    R: Future<Output = Result<ServiceResponse<B>, Error>> + 'static,
-    B: MessageBody,
+    F: Fn(ServiceRequest, Next<B>) -> Fut + 'static,
+    Fut: Future<Output = Result<ServiceResponse<B2>, Error>>,
+    B2: MessageBody,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<B2>;
     type Error = Error;
     type Transform = MiddlewareFnService<F, B>;
     type InitError = ();
@@ -49,27 +49,25 @@ pub struct MiddlewareFnService<F, B> {
     _phantom: PhantomData<B>,
 }
 
-impl<F, R, B> Service<ServiceRequest> for MiddlewareFnService<F, B>
+impl<F, Fut, B, B2> Service<ServiceRequest> for MiddlewareFnService<F, B>
 where
-    F: Fn(ServiceRequest, Next<B>) -> R,
-    R: Future<Output = Result<ServiceResponse<B>, Error>> + 'static,
-    B: MessageBody,
+    F: Fn(ServiceRequest, Next<B>) -> Fut + 'static,
+    Fut: Future<Output = Result<ServiceResponse<B2>, Error>>,
+    B2: MessageBody,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<B2>;
     type Error = Error;
-    type Future = BoxFuture<Result<Self::Response, Self::Error>>;
+    type Future = Fut;
 
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let fut = (self.mw_fn)(
+        (self.mw_fn)(
             req,
             Next::<B> {
                 service: Rc::clone(&self.service),
             },
-        );
-
-        Box::pin(fut)
+        )
     }
 }
 
@@ -151,8 +149,17 @@ mod tests {
             Ok(res)
         }
 
+        async fn mutate_body_type(
+            req: ServiceRequest,
+            next: Next<impl MessageBody + 'static>,
+        ) -> Result<ServiceResponse<impl MessageBody>, Error> {
+            let res = next.call(req).await?;
+            Ok(res.map_into_left_body::<()>())
+        }
+
         let app = test::init_service(
             App::new()
+                .wrap(from_fn(mutate_body_type))
                 .wrap(from_fn(add_res_header))
                 .wrap(Logger::default())
                 .wrap(from_fn(noop))
