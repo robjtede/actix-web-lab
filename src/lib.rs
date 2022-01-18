@@ -13,6 +13,7 @@
 //!   version of this crate.
 //! - It will often be as easy as dropping the `_lab` suffix from imports when items graduate.
 
+mod buffered_serializing_stream;
 mod csv;
 pub mod guard;
 pub mod json;
