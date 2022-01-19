@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+- Add `Redirect::permanent`.
+- Default `Redirect` status is now 307 (temporary redirect).
 
 
 ## 0.7.0 - 2022-01-18

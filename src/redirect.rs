@@ -13,8 +13,8 @@ use actix_web::{
 ///
 /// Redirects are either [relative](Redirect::to) or [absolute](Redirect::to).
 ///
-/// By default, the "308 Temporary Redirect" status is used when responding.
-/// See [this MDN article](mdn-redirects) on why 308 is preferred over 301.
+/// By default, the "307 Temporary Redirect" status is used when responding.
+/// See [this MDN article](mdn-redirects) on why 307 is preferred over 302.
 ///
 /// # Examples
 /// ```
@@ -61,19 +61,28 @@ impl Redirect {
         Self {
             from: from.into(),
             to: to.into(),
-            status_code: StatusCode::PERMANENT_REDIRECT,
+            status_code: StatusCode::TEMPORARY_REDIRECT,
         }
     }
 
-    /// Shortcut for creating a redirect to use as a Responder.
+    /// Shortcut for creating a redirect to use as a `Responder`.
     ///
     /// Only receives a `to` argument since responders do not need to do route matching.
     pub fn to(to: impl Into<Cow<'static, str>>) -> Self {
         Self {
             from: "/".into(),
             to: to.into(),
-            status_code: StatusCode::PERMANENT_REDIRECT,
+            status_code: StatusCode::TEMPORARY_REDIRECT,
         }
+    }
+
+    /// Use the "308 Permanent Redirect" status when responding.
+    ///
+    /// See [this MDN article](mdn-redirects) on why 308 is preferred over 301.
+    ///
+    /// [mdn-redirects]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#permanent_redirections
+    pub fn permanent(self) -> Self {
+        self.using_status_code(StatusCode::PERMANENT_REDIRECT)
     }
 
     /// Use the "307 Temporary Redirect" status when responding.
@@ -151,7 +160,7 @@ mod tests {
 
     #[actix_web::test]
     async fn absolute_redirects() {
-        let redirector = Redirect::new("/one", "/two");
+        let redirector = Redirect::new("/one", "/two").permanent();
 
         let svc = test::init_service(App::new().service(redirector)).await;
 
@@ -164,7 +173,7 @@ mod tests {
 
     #[actix_web::test]
     async fn relative_redirects() {
-        let redirector = Redirect::new("/one", "two");
+        let redirector = Redirect::new("/one", "two").permanent();
 
         let svc = test::init_service(App::new().service(redirector)).await;
 
@@ -177,7 +186,7 @@ mod tests {
 
     #[actix_web::test]
     async fn temporary_redirects() {
-        let external_service = Redirect::new("/external", "https://duck.com").temporary();
+        let external_service = Redirect::new("/external", "https://duck.com");
 
         let svc = test::init_service(App::new().service(external_service)).await;
 
@@ -190,7 +199,7 @@ mod tests {
 
     #[actix_web::test]
     async fn as_responder() {
-        let responder = Redirect::to("https://duck.com").temporary();
+        let responder = Redirect::to("https://duck.com");
 
         let req = test::TestRequest::default().to_http_request();
         let res = responder.respond_to(&req);
