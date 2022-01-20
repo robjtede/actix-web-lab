@@ -4,7 +4,6 @@ use std::{
     task::{Context, Poll},
 };
 
-use actix_web::Error;
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
 use pin_project_lite::pin_project;
@@ -12,40 +11,50 @@ use pin_project_lite::pin_project;
 use crate::utils::MutWriter;
 
 pin_project! {
-    pub(crate) struct BufferedSerializingStream<S, F> {
+    pub(crate) struct BufferedSerializingStream<S, F, E> {
         // The wrapped item stream.
         #[pin]
         stream: S,
 
+        // function that converts stream item to chunk of bytes
         serialize_fn: F,
+
+        // storage for deferred stream error when buffer needs flushing
+        error: Option<E>
     }
 }
 
-impl<S, F> BufferedSerializingStream<S, F>
+impl<S, F, T, E> BufferedSerializingStream<S, F, E>
 where
-    S: Stream,
-    F: FnMut(&mut MutWriter<BytesMut>, &S::Item) -> io::Result<()>,
+    S: Stream<Item = Result<T, E>>,
+    F: FnMut(&mut MutWriter<BytesMut>, &T) -> io::Result<()>,
 {
     pub fn new(stream: S, serialize_fn: F) -> Self {
         Self {
             stream,
             serialize_fn,
+            error: None,
         }
     }
 }
 
-impl<S, F> Stream for BufferedSerializingStream<S, F>
+impl<S, F, T, E> Stream for BufferedSerializingStream<S, F, E>
 where
-    S: Stream,
-    F: FnMut(&mut MutWriter<BytesMut>, &S::Item) -> io::Result<()>,
+    S: Stream<Item = Result<T, E>>,
+    F: FnMut(&mut MutWriter<BytesMut>, &T) -> io::Result<()>,
 {
-    type Item = Result<Bytes, Error>;
+    type Item = Result<Bytes, E>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         // buffer up to 16KiB into payload buffer per poll_next
         const MAX_YIELD_CHUNK_SIZE: usize = 16_384;
 
         let mut this = self.project();
+
+        // yield a previously stored error
+        if let Some(err) = this.error.take() {
+            return Poll::Ready(Some(Err(err)));
+        }
 
         let mut buf = BytesMut::with_capacity(MAX_YIELD_CHUNK_SIZE);
         let mut wrt = MutWriter(&mut buf);
@@ -57,7 +66,19 @@ where
             }
 
             let item = match this.stream.as_mut().poll_next(cx) {
-                Poll::Ready(Some(item)) => item,
+                Poll::Ready(Some(Ok(item))) => item,
+
+                // if stream error and nothing buffered then return error
+                Poll::Ready(Some(Err(err))) if wrt.get_ref().is_empty() => {
+                    return Poll::Ready(Some(Err(err)));
+                }
+
+                // otherwise store error, break, and return buffer
+                // next poll will yield the error
+                Poll::Ready(Some(Err(err))) => {
+                    *this.error = Some(err);
+                    break;
+                }
 
                 // if end-of-stream and nothing buffered then forward poll
                 Poll::Ready(None) if wrt.get_ref().is_empty() => return Poll::Ready(None),
@@ -83,9 +104,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::VecDeque, fmt::Display, future::Future as _, io::Write};
+    use std::{fmt::Display, future::Future as _, io::Write};
 
-    use futures_util::{future::poll_fn, pin_mut, stream, task::noop_waker, StreamExt as _};
+    use futures_util::{
+        future::poll_fn, pin_mut, stream, task::noop_waker, StreamExt as _, TryStreamExt,
+    };
+
+    use crate::utils::{InfallibleStream, PollSeq};
 
     use super::*;
 
@@ -103,6 +128,19 @@ mod tests {
             let poll = poll_fn(|cx| $stream.as_mut().poll_next(cx).map_err(|_| ()));
             pin_mut!(poll);
             assert_eq!(poll.poll(&mut $cx), Poll::Ready(Some(Ok($expected))));
+        }};
+    }
+
+    macro_rules! assert_poll_is_error {
+        ($stream:expr, $cx:expr) => {{
+            let poll = poll_fn(|cx| $stream.as_mut().poll_next(cx));
+            pin_mut!(poll);
+            let p = poll.poll(&mut $cx);
+            assert!(
+                matches!(p, Poll::Ready(Some(Err(_)))),
+                "Poll was not error: {:?}",
+                p
+            );
         }};
     }
 
@@ -128,8 +166,10 @@ mod tests {
 
     #[actix_web::test]
     async fn empty_stream() {
-        let mut value_stream =
-            BufferedSerializingStream::new(stream::empty::<u32>(), serialize_display);
+        let mut value_stream = BufferedSerializingStream::new(
+            InfallibleStream::new(stream::empty::<u32>()),
+            serialize_display,
+        );
         assert!(value_stream.next().await.is_none());
         // test that stream is fused
         assert!(value_stream.next().await.is_none());
@@ -137,7 +177,7 @@ mod tests {
 
     #[actix_web::test]
     async fn serializes_chunks() {
-        let mut poll_seq = VecDeque::from([
+        let poll_seq = PollSeq::from([
             Poll::Ready(Some(123)),
             Poll::Pending,
             Poll::Ready(Some(789)),
@@ -148,15 +188,11 @@ mod tests {
             Poll::Ready(Some(456)),
             Poll::Pending,
             Poll::Ready(Some(123)),
-        ]);
+        ])
+        .into_stream();
 
-        let inner_stream = stream::poll_fn(|_cx| match poll_seq.pop_front() {
-            Some(item) => item,
-            None => Poll::Ready(None),
-        });
-
-        let stream = BufferedSerializingStream::new(inner_stream, serialize_display);
-
+        let stream =
+            BufferedSerializingStream::new(InfallibleStream::new(poll_seq), serialize_display);
         pin_mut!(stream);
 
         let waker = noop_waker();
@@ -175,19 +211,15 @@ mod tests {
         let ten_kb_str = "0123456789".repeat(1000);
         assert_eq!(ten_kb_str.len(), 10_000, "test string should be 10KB");
 
-        let mut poll_seq = VecDeque::from([
+        let poll_seq = PollSeq::from([
             Poll::Ready(Some(ten_kb_str.clone())),
             Poll::Ready(Some(ten_kb_str.clone())),
             Poll::Ready(Some(ten_kb_str.clone())),
-        ]);
+        ])
+        .into_stream();
 
-        let inner_stream = stream::poll_fn(|_cx| match poll_seq.pop_front() {
-            Some(item) => item,
-            None => Poll::Ready(None),
-        });
-
-        let stream = BufferedSerializingStream::new(inner_stream, serialize_display);
-
+        let stream =
+            BufferedSerializingStream::new(InfallibleStream::new(poll_seq), serialize_display);
         pin_mut!(stream);
 
         // only yields two of the chunks because the limit is 16 KiB
@@ -203,5 +235,46 @@ mod tests {
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);
         assert_poll_is_none!(stream, cx);
+    }
+
+    #[actix_web::test]
+    async fn error_stops_stream() {
+        let poll_seq = PollSeq::from([
+            Poll::Ready(Some(Ok(123))),
+            Poll::Pending,
+            Poll::Ready(Some(Ok(123))),
+            Poll::Ready(Some(Err(io::Error::new(
+                io::ErrorKind::ConnectionReset,
+                "",
+            )))),
+        ])
+        .into_stream();
+
+        let stream = BufferedSerializingStream::new(poll_seq, serialize_display);
+        pin_mut!(stream);
+
+        let waker = noop_waker();
+        let mut cx = Context::from_waker(&waker);
+
+        assert_poll_next!(stream, cx, Bytes::from("123\n"));
+        assert_poll_next!(stream, cx, Bytes::from("123\n"));
+        assert_poll_is_error!(stream, cx);
+        assert_poll_is_none!(stream, cx);
+
+        let poll_seq = PollSeq::from([
+            Poll::Ready(Some(Ok(123))),
+            Poll::Ready(Some(Err(io::Error::new(
+                io::ErrorKind::ConnectionReset,
+                "",
+            )))),
+            Poll::Ready(Some(Ok(123))),
+        ])
+        .into_stream();
+
+        let stream = BufferedSerializingStream::new(poll_seq, serialize_display);
+        pin_mut!(stream);
+
+        assert_poll_next!(stream, cx, Bytes::from("123\n"));
+        assert!(stream.try_collect::<Vec<_>>().await.is_err());
     }
 }

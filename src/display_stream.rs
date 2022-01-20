@@ -1,17 +1,21 @@
 use std::{
+    error::Error as StdError,
     fmt,
     io::{self, Write as _},
 };
 
 use actix_web::{
     body::{BodyStream, MessageBody},
-    Error, HttpResponse, Responder,
+    HttpResponse, Responder,
 };
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
 use pin_project_lite::pin_project;
 
-use crate::{buffered_serializing_stream::BufferedSerializingStream, utils::MutWriter};
+use crate::{
+    buffered_serializing_stream::BufferedSerializingStream,
+    utils::{InfallibleStream, MutWriter},
+};
 
 pin_project! {
     /// A buffered line formatting body stream.
@@ -35,7 +39,7 @@ pin_project! {
     /// async fn handler() -> impl Responder {
     ///     let data_stream = streaming_data_source();
     ///
-    ///     DisplayStream::new(data_stream)
+    ///     DisplayStream::new_infallible(data_stream)
     ///         .into_responder()
     /// }
     /// ```
@@ -53,10 +57,18 @@ impl<S> DisplayStream<S> {
     }
 }
 
-impl<S> DisplayStream<S>
+impl<S> DisplayStream<S> {
+    /// Constructs a new `DisplayStream` from an infallible stream of lines.
+    pub fn new_infallible(stream: S) -> DisplayStream<InfallibleStream<S>> {
+        DisplayStream::new(InfallibleStream::new(stream))
+    }
+}
+
+impl<S, T, E> DisplayStream<S>
 where
-    S: Stream,
-    S::Item: fmt::Display,
+    S: Stream<Item = Result<T, E>>,
+    T: fmt::Display,
+    E: Into<Box<dyn StdError>> + 'static,
 {
     /// Creates a chunked body stream that serializes as CSV on-the-fly.
     pub fn into_body_stream(self) -> impl MessageBody {
@@ -67,6 +79,8 @@ where
     pub fn into_responder(self) -> impl Responder
     where
         S: 'static,
+        T: 'static,
+        E: 'static,
     {
         HttpResponse::Ok()
             .content_type(mime::TEXT_PLAIN_UTF_8)
@@ -75,7 +89,7 @@ where
     }
 
     /// Creates a stream of serialized chunks.
-    pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, Error>> {
+    pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, E>> {
         BufferedSerializingStream::new(self.stream, write_display)
     }
 }
@@ -95,8 +109,8 @@ mod tests {
 
     #[actix_web::test]
     async fn serializes_into_body() {
-        let ndjson_body =
-            DisplayStream::new(stream::iter([123, 789, 345, 901, 456])).into_body_stream();
+        let ndjson_body = DisplayStream::new_infallible(stream::iter([123, 789, 345, 901, 456]))
+            .into_body_stream();
 
         let body_bytes = body::to_bytes(ndjson_body)
             .await

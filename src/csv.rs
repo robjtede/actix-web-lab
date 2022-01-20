@@ -1,8 +1,8 @@
-use std::{convert::Infallible, io};
+use std::{convert::Infallible, error::Error as StdError, io};
 
 use actix_web::{
     body::{BodyStream, MessageBody},
-    Error, HttpResponse, Responder,
+    HttpResponse, Responder,
 };
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
@@ -10,7 +10,10 @@ use mime::Mime;
 use pin_project_lite::pin_project;
 use serde::Serialize;
 
-use crate::{buffered_serializing_stream::BufferedSerializingStream, utils::MutWriter};
+use crate::{
+    buffered_serializing_stream::BufferedSerializingStream,
+    utils::{InfallibleStream, MutWriter},
+};
 
 pin_project! {
     /// A buffered CSV serializing body stream.
@@ -31,7 +34,7 @@ pin_project! {
     /// async fn handler() -> impl Responder {
     ///     let data_stream = streaming_data_source();
     ///
-    ///     Csv::new(data_stream)
+    ///     Csv::new_infallible(data_stream)
     ///         .into_responder()
     /// }
     /// ```
@@ -49,10 +52,18 @@ impl<S> Csv<S> {
     }
 }
 
-impl<S> Csv<S>
+impl<S> Csv<S> {
+    /// Constructs a new `Csv` from an infallible stream of rows.
+    pub fn new_infallible(stream: S) -> Csv<InfallibleStream<S>> {
+        Csv::new(InfallibleStream::new(stream))
+    }
+}
+
+impl<S, T, E> Csv<S>
 where
-    S: Stream,
-    S::Item: Serialize,
+    S: Stream<Item = Result<T, E>>,
+    T: Serialize,
+    E: Into<Box<dyn StdError>> + 'static,
 {
     /// Creates a chunked body stream that serializes as CSV on-the-fly.
     pub fn into_body_stream(self) -> impl MessageBody {
@@ -63,6 +74,8 @@ where
     pub fn into_responder(self) -> impl Responder
     where
         S: 'static,
+        T: 'static,
+        E: 'static,
     {
         HttpResponse::Ok()
             .content_type(mime::TEXT_CSV_UTF_8)
@@ -71,7 +84,7 @@ where
     }
 
     /// Creates a stream of serialized chunks.
-    pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, Error>> {
+    pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, E>> {
         BufferedSerializingStream::new(self.stream, serialize_csv_row)
     }
 }
@@ -101,7 +114,7 @@ mod tests {
 
     #[actix_web::test]
     async fn serializes_into_body() {
-        let ndjson_body = Csv::new(stream::iter([
+        let ndjson_body = Csv::new_infallible(stream::iter([
             [123, 456],
             [789, 12],
             [345, 678],

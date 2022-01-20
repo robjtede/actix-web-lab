@@ -20,12 +20,12 @@ use rand::{distributions::Alphanumeric, Rng as _};
 use serde::Deserialize;
 use serde_json::json;
 
-fn streaming_data_source(n: u32) -> impl Stream<Item = serde_json::Value> {
+fn streaming_data_source(n: u32) -> impl Stream<Item = Result<serde_json::Value, io::Error>> {
     stream::repeat_with(|| {
-        json!({
+        Ok(json!({
             "email": random_email(),
             "address": random_address(),
-        })
+        }))
     })
     .take(n as usize)
 }
@@ -67,7 +67,7 @@ async fn get_high_mem_user_list(opts: web::Query<Opts>) -> impl Responder {
 
     // buffer all data from the source into a Bytes container
     let mut buf = BytesMut::new().writer();
-    while let Some(item) = stream.next().await {
+    while let Some(Ok(item)) = stream.next().await {
         serde_json::to_writer(&mut buf, &item).unwrap();
         buf.write_all(b"\n").unwrap();
     }

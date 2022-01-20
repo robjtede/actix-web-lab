@@ -1,11 +1,12 @@
 use std::{
     convert::Infallible,
+    error::Error as StdError,
     io::{self, Write as _},
 };
 
 use actix_web::{
     body::{BodyStream, MessageBody},
-    Error, HttpResponse, Responder,
+    HttpResponse, Responder,
 };
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
@@ -14,7 +15,10 @@ use once_cell::sync::Lazy;
 use pin_project_lite::pin_project;
 use serde::Serialize;
 
-use crate::{buffered_serializing_stream::BufferedSerializingStream, utils::MutWriter};
+use crate::{
+    buffered_serializing_stream::BufferedSerializingStream,
+    utils::{InfallibleStream, MutWriter},
+};
 
 static NDJSON_MIME: Lazy<Mime> = Lazy::new(|| "application/x-ndjson".parse().unwrap());
 
@@ -37,7 +41,7 @@ pin_project! {
     /// async fn handler() -> impl Responder {
     ///     let data_stream = streaming_data_source();
     ///
-    ///     NdJson::new(data_stream)
+    ///     NdJson::new_infallible(data_stream)
     ///         .into_responder()
     /// }
     /// ```
@@ -57,10 +61,18 @@ impl<S> NdJson<S> {
     }
 }
 
-impl<S> NdJson<S>
+impl<S> NdJson<S> {
+    /// Constructs a new `NdJson` from an infallible stream of items.
+    pub fn new_infallible(stream: S) -> NdJson<InfallibleStream<S>> {
+        NdJson::new(InfallibleStream::new(stream))
+    }
+}
+
+impl<S, T, E> NdJson<S>
 where
-    S: Stream,
-    S::Item: Serialize,
+    S: Stream<Item = Result<T, E>>,
+    T: Serialize,
+    E: Into<Box<dyn StdError>> + 'static,
 {
     /// Creates a chunked body stream that serializes as NDJSON on-the-fly.
     pub fn into_body_stream(self) -> impl MessageBody {
@@ -71,6 +83,8 @@ where
     pub fn into_responder(self) -> impl Responder
     where
         S: 'static,
+        T: 'static,
+        E: 'static,
     {
         HttpResponse::Ok()
             .content_type(NDJSON_MIME.clone())
@@ -79,7 +93,7 @@ where
     }
 
     /// Creates a stream of serialized chunks.
-    pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, Error>> {
+    pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, E>> {
         BufferedSerializingStream::new(self.stream, serialize_json_line)
     }
 }
@@ -114,7 +128,7 @@ mod tests {
 
     #[actix_web::test]
     async fn serializes_into_body() {
-        let ndjson_body = NdJson::new(stream::iter(vec![
+        let ndjson_body = NdJson::new_infallible(stream::iter(vec![
             json!(null),
             json!(1u32),
             json!("123"),

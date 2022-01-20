@@ -23,6 +23,7 @@ csv = "1.1"
 bytes = "1"
 derive_more = "0.99.5"
 futures-core = "0.3.7"
+futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 log = "0.4"
 mime = "0.3"
 once_cell = "1.8"
