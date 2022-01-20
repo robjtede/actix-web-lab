@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.8.0 - 2022-01-20
 - `Csv`, `NdJson`, and `DisplayStream` now take fallible streams.
 - Added `{Csv, NdJson, DisplayStream}::new_infallible`.
 
