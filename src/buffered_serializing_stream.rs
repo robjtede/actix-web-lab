@@ -100,6 +100,15 @@ where
 
         Poll::Ready(Some(Ok(buf.freeze())))
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let (_, ub) = self.stream.size_hint();
+
+        // We cannot say what the lower bound is because of how we buffer items.
+        // We can say that the upper bound is the number of inner stream items plus the possible
+        // extra error item.
+        (0, ub.map(|ub| ub + 1))
+    }
 }
 
 #[cfg(test)]

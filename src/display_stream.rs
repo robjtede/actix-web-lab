@@ -75,7 +75,8 @@ where
         BodyStream::new(self.into_chunk_stream())
     }
 
-    /// Creates a `Responder` type with a serializing stream and correct Content-Type header.
+    /// Creates a `Responder` type with a line-by-line serializing stream and `text/plain`
+    /// content-type header.
     pub fn into_responder(self) -> impl Responder
     where
         S: 'static,
