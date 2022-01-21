@@ -28,6 +28,7 @@ mod json;
 mod lazy_data;
 mod middleware_from_fn;
 mod ndjson;
+mod query;
 mod redirect;
 mod utils;
 

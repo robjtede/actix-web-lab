@@ -3,7 +3,9 @@
         "actix",
         "clippy",
         "deque",
+        "deserialization",
         "Expiremental",
-        "ndjson"
+        "ndjson",
+        "serde"
     ]
 }
