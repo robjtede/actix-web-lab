@@ -12,6 +12,10 @@ use actix_web::{dev::Payload, error::QueryPayloadError, Error, FromRequest, Http
 
 /// Extract typed information from the request's query.
 ///
+/// This currently identical in purpose to the `Query` extractor in `actix-web` but it will be able
+/// to track version bumps of `serde-urlencoded` more closely. This version also does away with the
+/// custom error handler config.
+///
 /// To extract typed data from the URL query string, the inner type `T` must implement the
 /// [`DeserializeOwned`] trait.
 ///
