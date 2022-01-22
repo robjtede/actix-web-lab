@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.9.0 - 2022-01-22
 - Copy `Query` extractor from Actix Web that can track minor versions of `serde-urlencoded`.
 - Add quick SPA service builder `web::spa()`.
 
