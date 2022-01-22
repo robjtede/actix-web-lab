@@ -6,6 +6,7 @@
         "deserialization",
         "Expiremental",
         "ndjson",
+        "rdef",
         "serde"
     ]
 }

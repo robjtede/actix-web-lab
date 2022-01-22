@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actix Web SPA</title>
+</head>
+<body>
+    <img src="/static/actix.png" alt="Actix Web Logo" height="100">
+    <h1>Sample SPA</h1>
+    <h2>Text below is loaded from the API</h2>
+    <p id="from-api"></p>
+
+    <script>
+        fetch("/api/greet")
+            .then((res) => res.text())
+            .then((text) => document.getElementById("from-api").textContent = text)
+    </script>
+</body>
+</html>

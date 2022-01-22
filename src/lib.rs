@@ -30,6 +30,7 @@ mod middleware_from_fn;
 mod ndjson;
 mod query;
 mod redirect;
+mod spa;
 mod utils;
 
 // public API
