@@ -6,28 +6,29 @@ use actix_web::{
 
 use crate::{middleware_from_fn::Next, web::Redirect};
 
-/// A function middleware to redirect traffic to HTTPS if connection is insecure.
+/// A function middleware to redirect traffic to `www.` if not already there.
 ///
 /// # Examples
 /// ```rust
 /// # use actix_web::App;
-/// use actix_web_lab::middleware::{from_fn, redirect_to_https};
+/// use actix_web_lab::middleware::{from_fn, redirect_to_www};
 ///
 /// App::new()
-///     .wrap(from_fn(redirect_to_https))
+///     .wrap(from_fn(redirect_to_www))
 ///     # ;
 /// ```
-pub async fn redirect_to_https(
+pub async fn redirect_to_www(
     req: ServiceRequest,
     next: Next<impl MessageBody + 'static>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
     let (req, pl) = req.into_parts();
     let conn_info = req.connection_info();
 
-    if conn_info.scheme() != "https" {
+    if !conn_info.host().starts_with("www.") {
+        let scheme = conn_info.scheme();
         let host = conn_info.host();
         let path = req.uri().path();
-        let uri = format!("https://{host}{path}");
+        let uri = format!("{scheme}://www.{host}{path}");
 
         let res = Redirect::to(uri).respond_to(&req);
 
@@ -62,12 +63,12 @@ mod test_super {
         >,
     > {
         App::new()
-            .wrap(from_fn(redirect_to_https))
+            .wrap(from_fn(redirect_to_www))
             .route("/", web::get().to(|| HttpResponse::Ok().body("content")))
     }
 
     #[actix_web::test]
-    async fn redirect_non_https() {
+    async fn redirect_non_www() {
         let app = test::init_service(test_app()).await;
 
         let req = test::TestRequest::default().to_request();
@@ -76,18 +77,18 @@ mod test_super {
 
         let loc = res.headers().get(header::LOCATION);
         assert!(loc.is_some());
-        assert!(loc.unwrap().as_bytes().starts_with(b"https://"));
+        assert!(loc.unwrap().as_bytes().starts_with(b"http://www"));
 
         let body = test::read_body(res).await;
         assert!(body.is_empty());
     }
 
     #[actix_web::test]
-    async fn do_not_redirect_already_https() {
+    async fn do_not_redirect_already_www() {
         let app = test::init_service(test_app()).await;
 
         let req = test::TestRequest::default()
-            .uri("https://localhost:443/")
+            .uri("http://www.localhost/")
             .to_request();
         let res = test::call_service(&app, req).await;
         assert_eq!(res.status(), StatusCode::OK);

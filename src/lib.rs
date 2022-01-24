@@ -31,6 +31,7 @@ mod ndjson;
 mod query;
 mod redirect;
 mod redirect_to_https;
+mod redirect_to_www;
 mod spa;
 mod utils;
 
