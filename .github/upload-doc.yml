@@ -1,0 +1,34 @@
+name: Upload Documentation
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-x86_64-unknown-linux-gnu
+          profile: minimal
+          override: true
+
+      - name: Build Docs
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --no-deps --workspace --all-features
+
+      - name: Tweak HTML
+        run: echo '<meta http-equiv="refresh" content="0;url=actix_web_lab/index.html">' > target/doc/index.html
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4.2.2
+        with:
+          BRANCH: gh-pages
+          FOLDER: target/doc
