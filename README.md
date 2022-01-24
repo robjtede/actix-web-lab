@@ -18,6 +18,8 @@
 
 ### Middleware
 - `from_fn`: use an async function as a middleware [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/middleware/fn.from_fn.html)
+- `redirect_to_https`: function middleware to redirect traffic to HTTPS if connection is insecure [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/middleware/fn.redirect_to_https.html)
+- `redirect_to_www`: function middleware to redirect traffic to `www.` if not already there [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/middleware/fn.redirect_to_www.html)
 
 ### Extractors
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/extract/struct.LazyData.html)
