@@ -30,6 +30,7 @@ mod middleware_from_fn;
 mod ndjson;
 mod query;
 mod redirect;
+mod redirect_to_https;
 mod spa;
 mod utils;
 
