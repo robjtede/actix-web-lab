@@ -15,6 +15,7 @@
 - `Csv`: efficient CSV streaming [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/respond/struct.Csv.html)
 - `NdJson`: efficient NDJSON streaming [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/respond/struct.NdJson.html)
 - `DisplayStream`: efficient line-by-line `Display` streaming [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/respond/struct.DisplayStream.html)
+- `Html`: basic string wrapper that responds with HTML Content-Type [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/respond/struct.Html.html)
 
 ### Middleware
 - `from_fn`: use an async function as a middleware [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/middleware/fn.from_fn.html)

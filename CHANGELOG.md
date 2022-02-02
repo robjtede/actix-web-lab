@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+- Add `HTML` responder.
 
 
 ## 0.9.0 - 2022-01-22
