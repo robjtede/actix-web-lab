@@ -12,7 +12,7 @@ use actix_web::{
 ///
 /// web::resource("/images")
 ///     .guard(Acceptable::new(mime::IMAGE_STAR))
-///     .default_service(web::to(|| {
+///     .default_service(web::to(|| async {
 ///         HttpResponse::Ok().body("only called when images responses are acceptable")
 ///     }));
 /// ```

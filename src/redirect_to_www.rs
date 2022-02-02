@@ -62,9 +62,10 @@ mod test_super {
             Error = Error,
         >,
     > {
-        App::new()
-            .wrap(from_fn(redirect_to_www))
-            .route("/", web::get().to(|| HttpResponse::Ok().body("content")))
+        App::new().wrap(from_fn(redirect_to_www)).route(
+            "/",
+            web::get().to(|| async { HttpResponse::Ok().body("content") }),
+        )
     }
 
     #[actix_web::test]
