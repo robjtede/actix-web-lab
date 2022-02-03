@@ -9,11 +9,13 @@ use hmac::{Mac as _, SimpleHmac};
 
 use crate::body_extractor_fold::body_extractor_fold;
 
-/// Wraps an extractor and calculates a body checksum hash alongside.
+/// Wraps an extractor and calculates a body HMAC alongside.
 ///
 /// If your extractor would usually be `T` and you want to create a hash of type `D` then you need
 /// to use `Hmac<T, D>`. It is assumed that the `T` extractor will consume the payload.
 /// Any hasher that implements [`Digest`] can be used.
+///
+/// Provide secret key with [`HmacConfig`] in `app_data`.
 ///
 /// # Errors
 /// This extractor produces no errors of its own and all errors from the underlying extractor are
