@@ -23,17 +23,20 @@ type HmacSha256 = hmac::Hmac<sha2::Sha256>;
 ///
 /// # Example
 /// ```
-/// use actix_web::{Responder, web};
-/// use actix_web_lab::extract::BodyHash;
+/// use actix_web::{App, Responder, web};
+/// use actix_web_lab::extract::{Hmac, HmacConfig};
 /// use sha2::Sha256;
 ///
 /// # type T = u64;
-/// async fn hash_payload(form: Hmac<web::Json<T>, Sha256>) -> impl Responder {
-///     web::Bytes::copy_from_slice(form.hash())
+/// async fn hmac_payload(form: Hmac<web::Json<T>, Sha256>) -> impl Responder {
+///     web::Bytes::from(form.hash())
 /// }
 ///
+/// let key = vec![0x01, 0x12, 0x34, 0x56];
+///
 /// App::new()
-///     .app_data(HmacConfig)
+///     .app_data(HmacConfig::new(&key))
+/// # ;
 /// ```
 #[derive()]
 pub struct Hmac<T, D: Digest> {
