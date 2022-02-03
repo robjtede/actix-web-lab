@@ -1,15 +1,13 @@
 use std::fmt;
-use std::marker::PhantomData;
 
 use actix_web::{dev, FromRequest, HttpRequest};
-use digest::CtOutput;
+use digest::core_api::BlockSizeUser;
+use digest::{generic_array::GenericArray, FixedOutput as _};
 use futures_core::future::LocalBoxFuture;
 use hmac::digest::Digest;
-use hmac::Mac as _;
+use hmac::{Mac as _, SimpleHmac};
 
 use crate::body_extractor_fold::body_extractor_fold;
-
-type HmacSha256 = hmac::Hmac<sha2::Sha256>;
 
 /// Wraps an extractor and calculates a body checksum hash alongside.
 ///
@@ -29,7 +27,7 @@ type HmacSha256 = hmac::Hmac<sha2::Sha256>;
 ///
 /// # type T = u64;
 /// async fn hmac_payload(form: Hmac<web::Json<T>, Sha256>) -> impl Responder {
-///     web::Bytes::from(form.hash())
+///     web::Bytes::copy_from_slice(form.hash())
 /// }
 ///
 /// let key = vec![0x01, 0x12, 0x34, 0x56];
@@ -39,10 +37,12 @@ type HmacSha256 = hmac::Hmac<sha2::Sha256>;
 /// # ;
 /// ```
 #[derive()]
-pub struct Hmac<T, D: Digest> {
+pub struct Hmac<T, D>
+where
+    D: Digest + BlockSizeUser,
+{
     body: T,
-    hash: CtOutput<HmacSha256>,
-    _phantom: PhantomData<(D,)>,
+    hash: GenericArray<u8, D::OutputSize>,
 }
 
 pub struct HmacConfig {
@@ -65,11 +65,13 @@ impl fmt::Debug for HmacConfig {
     }
 }
 
-impl<T, D: Digest> Hmac<T, D> {
+impl<T, D: Digest> Hmac<T, D>
+where
+    D: Digest + BlockSizeUser,
+{
     /// Returns hash slice.
-    pub fn hash(&self) -> Vec<u8> {
-        let out = self.hash.clone().into_bytes();
-        out.as_slice().to_vec()
+    pub fn hash(&self) -> &[u8] {
+        self.hash.as_slice()
     }
 
     /// Returns hash output size.
@@ -79,15 +81,15 @@ impl<T, D: Digest> Hmac<T, D> {
 
     /// Returns tuple containing body type and owned hash.
     pub fn into_parts(self) -> (T, Vec<u8>) {
-        let hash = self.hash();
+        let hash = self.hash().to_vec();
         (self.body, hash)
     }
 }
 
 impl<T, D> FromRequest for Hmac<T, D>
 where
-    D: Digest,
     T: FromRequest + 'static,
+    D: Digest + BlockSizeUser + 'static,
 {
     type Error = T::Error;
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
@@ -98,12 +100,11 @@ where
         body_extractor_fold(
             req,
             payload,
-            HmacSha256::new_from_slice(&config.key).unwrap(),
+            SimpleHmac::<D>::new_from_slice(&config.key).unwrap(),
             |hasher, _req, chunk| hasher.update(&chunk),
             |body, hasher| Self {
                 body,
-                hash: hasher.finalize(),
-                _phantom: PhantomData,
+                hash: hasher.finalize_fixed(),
             },
         )
     }
@@ -118,7 +119,7 @@ mod tests {
         App, Resource,
     };
     use hex_literal::hex;
-    use sha2::Sha256;
+    use sha2::{Sha256, Sha512};
 
     use super::*;
     use crate::extract::Json;
@@ -131,14 +132,21 @@ mod tests {
                     Resource::new("/key-blank")
                         .app_data(HmacConfig::new(&[]))
                         .route(web::get().to(|body: Hmac<Bytes, Sha256>| async move {
-                            Bytes::from(body.hash())
+                            Bytes::copy_from_slice(body.hash())
                         })),
                 )
                 .service(
                     Resource::new("/key-pi")
                         .app_data(HmacConfig::new(&hex!("31 41 59 26 53 58 97 93")))
                         .route(web::get().to(|body: Hmac<Bytes, Sha256>| async move {
-                            Bytes::from(body.hash())
+                            Bytes::copy_from_slice(body.hash())
+                        })),
+                )
+                .service(
+                    Resource::new("/sha512")
+                        .app_data(HmacConfig::new(&[]))
+                        .route(web::get().to(|body: Hmac<Bytes, Sha512>| async move {
+                            Bytes::copy_from_slice(body.hash())
                         })),
                 ),
         )
@@ -175,17 +183,26 @@ mod tests {
             &body[..],
             hex!("67029104 cd676bae 23d74ac6 bdce84fc 80764b5e 5327a624 515fc5a5 2c240f8e")
         );
+
+        let req = test::TestRequest::with_uri("/sha512").to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(
+            &body[..],
+            hex!(
+                "b936cee8 6c9f87aa 5d3c6f2e 84cb5a42 39a5fe50 480a6ec6 6b70ab5b 1f4ac673
+                 0c6c5154 21b327ec 1d69402e 53dfb49a d7381eb0 67b338fd 7b0cb222 47225d47"
+            )
+        );
     }
 
     #[actix_web::test]
     async fn respects_inner_extractor_errors() {
-        let app = test::init_service(
-            App::new().app_data(HmacConfig::new(&[])).route(
-                "/",
-                web::get()
-                    .to(|body: Hmac<Json<u64, 4>, Sha256>| async move { Bytes::from(body.hash()) }),
-            ),
-        )
+        let app = test::init_service(App::new().app_data(HmacConfig::new(&[])).route(
+            "/",
+            web::get().to(|body: Hmac<Json<u64, 4>, Sha256>| async move {
+                Bytes::copy_from_slice(body.hash())
+            }),
+        ))
         .await;
 
         let req = test::TestRequest::default().set_json(1234).to_request();

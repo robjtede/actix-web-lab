@@ -51,8 +51,8 @@ impl<T, D: Digest> BodyHash<T, D> {
 
 impl<T, D> FromRequest for BodyHash<T, D>
 where
-    D: Digest + 'static,
     T: FromRequest + 'static,
+    D: Digest + 'static,
 {
     type Error = T::Error;
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
@@ -80,19 +80,28 @@ mod tests {
         App,
     };
     use hex_literal::hex;
-    use sha2::Sha256;
+    use sha2::{Sha256, Sha512};
 
     use super::*;
     use crate::extract::Json;
 
     #[actix_web::test]
     async fn correctly_hashes_payload() {
-        let app = test::init_service(App::new().route(
-            "/",
-            web::get().to(|body: BodyHash<Bytes, Sha256>| async move {
-                Bytes::copy_from_slice(body.hash())
-            }),
-        ))
+        let app = test::init_service(
+            App::new()
+                .route(
+                    "/sha512",
+                    web::get().to(|body: BodyHash<Bytes, Sha512>| async move {
+                        Bytes::copy_from_slice(body.hash())
+                    }),
+                )
+                .route(
+                    "/",
+                    web::get().to(|body: BodyHash<Bytes, Sha256>| async move {
+                        Bytes::copy_from_slice(body.hash())
+                    }),
+                ),
+        )
         .await;
 
         let req = test::TestRequest::default().to_request();
@@ -109,6 +118,16 @@ mod tests {
             body,
             hex!("ba7816bf 8f01cfea 414140de 5dae2223 b00361a3 96177a9c b410ff61 f20015ad")
                 .as_ref()
+        );
+
+        let req = test::TestRequest::with_uri("/sha512").to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(
+            &body[..],
+            hex!(
+                "cf83e135 7eefb8bd f1542850 d66d8007 d620e405 0b5715dc 83f4a921 d36ce9ce
+                 47d0d13c 5d85f2b0 ff8318d2 877eec2f 63b931bd 47417a81 a538327a f927da3e"
+            )
         );
     }
 
