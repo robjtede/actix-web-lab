@@ -1,10 +1,8 @@
-use actix_http::BoxedPayloadStream;
 use actix_web::{dev, FromRequest, HttpRequest};
 use digest::{generic_array::GenericArray, Digest};
 use futures_core::future::LocalBoxFuture;
-use futures_util::StreamExt as _;
-use local_channel::mpsc;
-use tokio::try_join;
+
+use crate::body_fold::body_fold;
 
 /// Wraps an extractor and calculates a body checksum hash alongside.
 ///
@@ -14,7 +12,7 @@ use tokio::try_join;
 ///
 /// # Errors
 /// This extractor produces no errors of its own and all errors from the underlying extractor are
-/// propagated correctly. For example, if the payload limits are exceeded.
+/// propagated correctly; for example, if the payload limits are exceeded.
 ///
 /// # Example
 /// ```
@@ -53,49 +51,23 @@ impl<T, D: Digest> BodyHash<T, D> {
 
 impl<T, D> FromRequest for BodyHash<T, D>
 where
-    D: Digest,
+    D: Digest + 'static,
     T: FromRequest + 'static,
 {
     type Error = T::Error;
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
 
     fn from_request(req: &HttpRequest, payload: &mut dev::Payload) -> Self::Future {
-        let req = req.clone();
-        let payload = payload.take();
-
-        Box::pin(async move {
-            let (tx, mut rx) = mpsc::channel();
-
-            // wrap payload in stream that reads chunks and clones them (cheaply) back here
-            let proxy_stream: BoxedPayloadStream = Box::pin(payload.inspect(move |res| {
-                if let Ok(chunk) = res {
-                    log::trace!("yielding {} byte chunk", chunk.len());
-                    tx.send(chunk.clone()).unwrap();
-                }
-            }));
-
-            log::trace!("creating proxy payload");
-            let mut proxy_payload = dev::Payload::from(proxy_stream);
-            let body_fut = T::from_request(&req, &mut proxy_payload);
-
-            // compute body hash as chunks are yielded from channel
-            let hash_fut = async {
-                let mut running_hash = D::new();
-                while let Some(chunk) = rx.recv().await {
-                    log::trace!("updating hasher with {} byte chunk", chunk.len());
-                    running_hash.update(&chunk);
-                }
-                Ok(running_hash)
-            };
-
-            log::trace!("driving both futures");
-            let (body, hash) = try_join!(body_fut, hash_fut)?;
-
-            Ok(Self {
+        body_fold(
+            req,
+            payload,
+            D::new(),
+            |hasher, _req, chunk| hasher.update(&chunk),
+            |body, hasher| Self {
                 body,
-                hash: hash.finalize(),
-            })
-        })
+                hash: hasher.finalize(),
+            },
+        )
     }
 }
 

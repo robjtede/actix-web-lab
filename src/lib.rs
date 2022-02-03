@@ -20,6 +20,7 @@
 //! - Migrating will often be as easy as dropping the `_lab` suffix from imports when migrating.
 
 mod acceptable;
+mod body_fold;
 mod body_hash;
 mod buffered_serializing_stream;
 mod channel_body;
