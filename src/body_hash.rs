@@ -1,10 +1,10 @@
-use actix_http::{BoxedPayloadStream, Payload};
+use actix_http::BoxedPayloadStream;
 use actix_web::{dev, FromRequest, HttpRequest};
-use async_stream::try_stream;
 use digest::{generic_array::GenericArray, Digest};
 use futures_core::future::LocalBoxFuture;
 use futures_util::StreamExt as _;
-use tokio::{sync::mpsc, try_join};
+use local_channel::mpsc;
+use tokio::try_join;
 
 /// Wraps an extractor and calculates a body checksum hash alongside.
 ///
@@ -51,8 +51,6 @@ impl<T, D: Digest> BodyHash<T, D> {
     }
 }
 
-impl<T, D: Digest> BodyHash<T, D> {}
-
 impl<T, D> FromRequest for BodyHash<T, D>
 where
     D: Digest,
@@ -61,22 +59,20 @@ where
     type Error = T::Error;
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
 
-    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
+    fn from_request(req: &HttpRequest, payload: &mut dev::Payload) -> Self::Future {
         let req = req.clone();
-        let mut payload = payload.take();
+        let payload = payload.take();
 
         Box::pin(async move {
-            let (tx, mut rx) = mpsc::unbounded_channel();
+            let (tx, mut rx) = mpsc::channel();
 
             // wrap payload in stream that reads chunks and clones them (cheaply) back here
-            let proxy_stream: BoxedPayloadStream = Box::pin(try_stream! {
-                while let Some(chunk) = payload.next().await {
-                    let chunk = chunk?;
+            let proxy_stream: BoxedPayloadStream = Box::pin(payload.inspect(move |res| {
+                if let Ok(chunk) = res {
                     log::trace!("yielding {} byte chunk", chunk.len());
                     tx.send(chunk.clone()).unwrap();
-                    yield chunk;
                 }
-            });
+            }));
 
             log::trace!("creating proxy payload");
             let mut proxy_payload = dev::Payload::from(proxy_stream);
@@ -105,8 +101,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use actix_http::StatusCode;
     use actix_web::{
+        http::StatusCode,
         test,
         web::{self, Bytes},
         App,
@@ -114,9 +110,8 @@ mod tests {
     use hex_literal::hex;
     use sha2::Sha256;
 
-    use crate::extract::Json;
-
     use super::*;
+    use crate::extract::Json;
 
     #[actix_web::test]
     async fn correctly_hashes_payload() {
