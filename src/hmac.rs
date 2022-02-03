@@ -42,13 +42,15 @@ pub struct Hmac<T, D: Digest> {
     _phantom: PhantomData<(D,)>,
 }
 
-struct HmacConfig {
+pub struct HmacConfig {
     key: Vec<u8>,
 }
 
 impl HmacConfig {
-    fn default() -> Self {
-        Self { key: vec![] }
+    pub fn new(key: &[u8]) -> Self {
+        Self {
+            key: key.to_owned(),
+        }
     }
 }
 
@@ -67,16 +69,16 @@ impl<T, D: Digest> Hmac<T, D> {
         out.as_slice().to_vec()
     }
 
-    // /// Returns hash output size.
-    // pub fn hash_size(&self) -> usize {
-    //     self.hash.len()
-    // }
+    /// Returns hash output size.
+    pub fn hash_size(&self) -> usize {
+        self.hash().len()
+    }
 
-    // /// Returns tuple containing body type and owned hash.
-    // pub fn into_parts(self) -> (T, Vec<u8>) {
-    //     let hash = self.hash().to_vec();
-    //     (self.body, hash)
-    // }
+    /// Returns tuple containing body type and owned hash.
+    pub fn into_parts(self) -> (T, Vec<u8>) {
+        let hash = self.hash();
+        (self.body, hash)
+    }
 }
 
 impl<T, D> FromRequest for Hmac<T, D>
@@ -107,9 +109,10 @@ where
 #[cfg(test)]
 mod tests {
     use actix_web::{
+        http::StatusCode,
         test,
         web::{self, Bytes},
-        App,
+        App, Resource,
     };
     use hex_literal::hex;
     use sha2::Sha256;
@@ -119,55 +122,84 @@ mod tests {
 
     #[actix_web::test]
     async fn correctly_hashes_payload() {
-        let app = test::init_service(App::new().app_data(HmacConfig::default()).route(
-            "/",
-            web::get().to(|body: Hmac<Bytes, Sha256>| async move { Bytes::from(body.hash()) }),
-        ))
+        let app = test::init_service(
+            App::new()
+                .service(
+                    Resource::new("/key-blank")
+                        .app_data(HmacConfig::new(&[]))
+                        .route(web::get().to(|body: Hmac<Bytes, Sha256>| async move {
+                            Bytes::from(body.hash())
+                        })),
+                )
+                .service(
+                    Resource::new("/key-pi")
+                        .app_data(HmacConfig::new(&hex!("31 41 59 26 53 58 97 93")))
+                        .route(web::get().to(|body: Hmac<Bytes, Sha256>| async move {
+                            Bytes::from(body.hash())
+                        })),
+                ),
+        )
         .await;
 
-        let req = test::TestRequest::default().to_request();
+        let req = test::TestRequest::with_uri("/key-blank").to_request();
         let body = test::call_and_read_body(&app, req).await;
         assert_eq!(
-            body,
+            &body[..],
             hex!("b613679a 0814d9ec 772f95d7 78c35fc5 ff1697c4 93715653 c6c71214 4292c5ad")
-                .as_ref()
         );
 
-        let req = test::TestRequest::default().set_payload("abc").to_request();
+        let req = test::TestRequest::with_uri("/key-blank")
+            .set_payload("abc")
+            .to_request();
         let body = test::call_and_read_body(&app, req).await;
         assert_eq!(
-            body,
+            &body[..],
             hex!("fd7adb15 2c05ef80 dccf50a1 fa4c05d5 a3ec6da9 5575fc31 2ae7c5d0 91836351")
-                .as_ref()
+        );
+
+        let req = test::TestRequest::with_uri("/key-pi").to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(
+            &body[..],
+            hex!("bbb4789d d01448ce 3c87ebec a78d45a1 6b6072db 2b639648 2783a284 f2ce5713")
+        );
+
+        let req = test::TestRequest::with_uri("/key-pi")
+            .set_payload("abc")
+            .to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(
+            &body[..],
+            hex!("67029104 cd676bae 23d74ac6 bdce84fc 80764b5e 5327a624 515fc5a5 2c240f8e")
         );
     }
 
-    // #[actix_web::test]
-    // async fn respects_inner_extractor_errors() {
-    //     let app = test::init_service(App::new().route(
-    //         "/",
-    //         web::get().to(|body: Hmac<Json<u64, 4>, Sha256>| async move {
-    //             Bytes::copy_from_slice(body.hash())
-    //         }),
-    //     ))
-    //     .await;
+    #[actix_web::test]
+    async fn respects_inner_extractor_errors() {
+        let app = test::init_service(
+            App::new().app_data(HmacConfig::new(&[])).route(
+                "/",
+                web::get()
+                    .to(|body: Hmac<Json<u64, 4>, Sha256>| async move { Bytes::from(body.hash()) }),
+            ),
+        )
+        .await;
 
-    //     let req = test::TestRequest::default().set_json(1234).to_request();
-    //     let body = test::call_and_read_body(&app, req).await;
-    //     assert_eq!(
-    //         body,
-    //         hex!("03ac6742 16f3e15c 761ee1a5 e255f067 953623c8 b388b445 9e13f978 d7c846f4")
-    //             .as_ref()
-    //     );
+        let req = test::TestRequest::default().set_json(1234).to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(
+            &body[..],
+            hex!("5a697c67 68fcb4f3 63874b4d 73c517a6 e7f8932d 23c31b6e a52bebd2 c3f4aa05")
+        );
 
-    //     // no body would expect a 400 content type error
-    //     let req = test::TestRequest::default().to_request();
-    //     let body = test::call_service(&app, req).await;
-    //     assert_eq!(body.status(), StatusCode::BAD_REQUEST);
+        // no body would expect a 400 content type error
+        let req = test::TestRequest::default().to_request();
+        let body = test::call_service(&app, req).await;
+        assert_eq!(body.status(), StatusCode::BAD_REQUEST);
 
-    //     // body too big would expect a 413 request payload too large
-    //     let req = test::TestRequest::default().set_json(12345).to_request();
-    //     let body = test::call_service(&app, req).await;
-    //     assert_eq!(body.status(), StatusCode::PAYLOAD_TOO_LARGE);
-    // }
+        // body too big would expect a 413 request payload too large
+        let req = test::TestRequest::default().set_json(12345).to_request();
+        let body = test::call_service(&app, req).await;
+        assert_eq!(body.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    }
 }
