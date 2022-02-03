@@ -2,7 +2,7 @@ use actix_web::{dev, FromRequest, HttpRequest};
 use digest::{generic_array::GenericArray, Digest};
 use futures_core::future::LocalBoxFuture;
 
-use crate::body_fold::body_fold;
+use crate::body_extractor_fold::body_extractor_fold;
 
 /// Wraps an extractor and calculates a body checksum hash alongside.
 ///
@@ -58,7 +58,7 @@ where
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
 
     fn from_request(req: &HttpRequest, payload: &mut dev::Payload) -> Self::Future {
-        body_fold(
+        body_extractor_fold(
             req,
             payload,
             D::new(),

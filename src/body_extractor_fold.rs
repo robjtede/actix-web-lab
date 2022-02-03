@@ -6,7 +6,7 @@ use futures_util::StreamExt as _;
 use local_channel::mpsc;
 use tokio::try_join;
 
-pub(crate) fn body_fold<T, Init, Out>(
+pub(crate) fn body_extractor_fold<T, Init, Out>(
     req: &HttpRequest,
     payload: &mut dev::Payload,
     init: Init,

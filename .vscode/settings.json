@@ -5,6 +5,7 @@
         "deque",
         "deserialization",
         "Expiremental",
+        "hmac",
         "ndjson",
         "rdef",
         "serde"
