@@ -26,6 +26,7 @@
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/extract/struct.LazyData.html)
 - `Json`: simplified JSON extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/extract/struct.Json.html)
 - `Query`: simplified query-string extractor [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/extract/struct.Query.html)
+- `BodyHash`: wraps an extractor and calculates a body checksum hash alongside [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/extract/struct.BodyHash.html)
 
 ### Body Types
 - `channel`: a simple channel-like body type with a sender side that can be used from another thread [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/body/fn.channel.html)

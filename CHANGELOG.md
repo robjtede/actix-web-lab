@@ -2,6 +2,7 @@
 
 ## Unreleased - 2021-xx-xx
 - Add `HTML` responder.
+- Add `BodyHash` extractor wrapper.
 
 
 ## 0.9.0 - 2022-01-22
