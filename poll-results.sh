@@ -4,8 +4,8 @@ set -euo pipefail
 
 F="$(mktemp)"
 
-# HAS_XSV="$(command -v xsv)"
-HAS_XSV=""
+HAS_XSV="$(command -v xsv)"
+# HAS_XSV=""
 
 if [ "$HAS_XSV" ]; then
     echo 'votes,feature,"issue url"' >> "$F"
