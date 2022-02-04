@@ -11,6 +11,8 @@
 [![CircleCI](https://circleci.com/gh/robjtede/actix-web-lab/tree/main.svg?style=shield)](https://circleci.com/gh/robjtede/actix-web-lab/tree/main)
 
 ## Features
+**[Feature Voting &rarr;](https://github.com/robjtede/actix-web-lab/discussions/7)**
+
 ### Responders
 - `Csv`: efficient CSV streaming [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/respond/struct.Csv.html)
 - `NdJson`: efficient NDJSON streaming [(docs)](https://docs.rs/actix-web-lab/0.9.0/actix_web_lab/respond/struct.NdJson.html)
