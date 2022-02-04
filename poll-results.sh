@@ -7,7 +7,7 @@ F="$(mktemp)"
 HAS_XSV="$(command -v xsv)"
 # HAS_XSV=""
 
-if [ "$(command -v gh)" ]; then
+if [ ! "$(command -v gh)" ]; then
     echo "This script requires the GitHub CLI."
     echo "https://cli.github.com"
     exit 1
