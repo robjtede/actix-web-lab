@@ -6,6 +6,7 @@ F="$(mktemp)"
 echo 'votes,feature,"issue url"' >> "$F"
 
 gh issue list \
+    --repo="robjtede/actix-web-lab" \
     --search="is:issue is:open sort:reactions-+1-desc" \
     --json="title,url,reactionGroups" \
     | jq -r '
@@ -19,4 +20,8 @@ gh issue list \
         ' \
     | sed -E 's/(.*)\[poll\] (.*)/\1\2/' >> "$F"
 
-cat "$F" | xsv table
+if [ $(command -v xsv) ]; then
+    cat "$F" | xsv table
+else
+    cat "$F"
+fi
