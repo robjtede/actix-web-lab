@@ -3,13 +3,21 @@
 set -euo pipefail
 
 F="$(mktemp)"
-echo 'votes,feature,"issue url"' >> "$F"
+
+# HAS_XSV="$(command -v xsv)"
+HAS_XSV=""
+
+if [ "$HAS_XSV" ]; then
+    echo 'votes,feature,"issue url"' >> "$F"
+else
+    echo "votes \tfeature \tissue url" >> "$F"
+fi
 
 gh issue list \
     --repo="robjtede/actix-web-lab" \
     --search="is:issue is:open sort:reactions-+1-desc" \
     --json="title,url,reactionGroups" \
-    | jq -r '
+    --jq '
         .[]
         | {
             title,
@@ -20,8 +28,8 @@ gh issue list \
         ' \
     | sed -E 's/(.*)\[poll\] (.*)/\1\2/' >> "$F"
 
-if [ $(command -v xsv) ]; then
+if [ "$HAS_XSV" ]; then
     cat "$F" | xsv table
 else
-    cat "$F"
+    cat "$F" | awk -F "\"*,\"*" '{ print $1 "\t" $2 "\t" $3 }'
 fi
