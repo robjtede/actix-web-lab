@@ -134,6 +134,7 @@ impl fmt::Debug for HmacConfig {
 #[cfg(test)]
 mod tests {
     use actix_web::{
+        error,
         http::StatusCode,
         test,
         web::{self, Bytes},
@@ -218,9 +219,9 @@ mod tests {
 
     #[actix_web::test]
     async fn correctly_hashes_payload_dynamic_key() {
-        fn base64_api_key_header(req: &HttpRequest) -> Vec<u8> {
+        fn base64_api_key_header(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
             let key_b64 = req.headers().get("api-key").unwrap().as_bytes();
-            base64::decode(key_b64).unwrap()
+            Ok(base64::decode(key_b64).unwrap())
         }
 
         let app = test::init_service(
@@ -306,5 +307,42 @@ mod tests {
             .to_request();
         let body = test::call_service(&app, req).await;
         assert_eq!(body.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    }
+
+    #[actix_web::test]
+    async fn error_retrieving_key() {
+        fn base64_api_key_header(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
+            let key_b64 = match req.headers().get("api-key") {
+                Some(key) => key.as_bytes(),
+                None => return Err(error::ErrorUnauthorized("no api-key provided")),
+            };
+
+            base64::decode(key_b64).map_err(error::ErrorBadRequest)
+        }
+
+        let app = test::init_service(
+            App::new()
+                .app_data(HmacConfig::dynamic_key(base64_api_key_header))
+                .route(
+                    "/",
+                    web::get().to(|body: BodyHmac<String, Sha256>| async move {
+                        Bytes::copy_from_slice(body.hash())
+                    }),
+                ),
+        )
+        .await;
+
+        // not sending api-key header would expect 401 header according to our fn
+        let req = test::TestRequest::default().set_payload("abc").to_request();
+        let body = test::call_service(&app, req).await;
+        assert_eq!(body.status(), StatusCode::UNAUTHORIZED);
+
+        // api-key header not base64 would expect 400 according to our fn
+        let req = test::TestRequest::default()
+            .insert_header(("api-key", "not base64"))
+            .set_payload("abc")
+            .to_request();
+        let body = test::call_service(&app, req).await;
+        assert_eq!(body.status(), StatusCode::BAD_REQUEST);
     }
 }
