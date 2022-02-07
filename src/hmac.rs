@@ -1,11 +1,9 @@
-use std::fmt;
-use std::future::ready;
+use std::{fmt, future::ready};
 
 use actix_web::{dev, Error, FromRequest, HttpRequest};
-use digest::core_api::BlockSizeUser;
-use digest::{generic_array::GenericArray, FixedOutput as _};
+use digest::{core_api::BlockSizeUser, generic_array::GenericArray, FixedOutput as _};
 use futures_core::future::LocalBoxFuture;
-use futures_util::{FutureExt as _, TryFutureExt as _};
+use futures_util::TryFutureExt as _;
 use hmac::{digest::Digest, Mac as _, SimpleHmac};
 
 use crate::body_extractor_fold::body_extractor_fold;
@@ -86,30 +84,34 @@ where
 
     fn from_request(req: &HttpRequest, payload: &mut dev::Payload) -> Self::Future {
         let config = req.app_data::<HmacConfig>().unwrap();
-        let key = match (config.key_fn)(req) {
-            Ok(key) => key,
-            Err(err) => return Box::pin(ready(Err(err))),
-        };
+        let fut = (config.key_fn)(req);
+        let req = req.clone();
+        let mut payload = payload.take();
 
-        body_extractor_fold(
-            req,
-            payload,
-            SimpleHmac::<D>::new_from_slice(&key).unwrap(),
-            |hasher, _req, chunk| hasher.update(&chunk),
-            |body, hasher| Self {
-                body,
-                hash: hasher.finalize_fixed(),
-            },
-        )
-        .map_err(Into::into)
-        .boxed_local()
+        Box::pin(async move {
+            let key = fut.await?;
+
+            let a = body_extractor_fold(
+                &req,
+                &mut payload,
+                SimpleHmac::<D>::new_from_slice(&key).unwrap(),
+                |hasher, _req, chunk| hasher.update(&chunk),
+                |body, hasher| Self {
+                    body,
+                    hash: hasher.finalize_fixed(),
+                },
+            )
+            .map_err(Into::into)
+            .await;
+
+            a
+        })
     }
 }
 
-// #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct HmacConfig {
-    // pub key: Vec<u8>,
-    key_fn: Box<dyn Fn(&HttpRequest) -> Result<Vec<u8>, Error>>,
+    #[allow(clippy::type_complexity)]
+    key_fn: Box<dyn Fn(&HttpRequest) -> LocalBoxFuture<'static, Result<Vec<u8>, Error>> + 'static>,
 }
 
 impl HmacConfig {
@@ -118,7 +120,7 @@ impl HmacConfig {
         let key = key.into();
 
         Self {
-            key_fn: Box::new(move |_| Ok(key.clone())),
+            key_fn: Box::new(move |_| Box::pin(ready(Ok(key.clone())))),
         }
     }
 
@@ -126,7 +128,10 @@ impl HmacConfig {
     ///
     /// Closure receives a reference to the HTTP request. Use when signature of request depends on
     /// per-user secret keys.
-    pub fn dynamic_key(key_fn: impl Fn(&HttpRequest) -> Result<Vec<u8>, Error> + 'static) -> Self {
+    pub fn dynamic_key<F>(key_fn: F) -> Self
+    where
+        F: Fn(&HttpRequest) -> LocalBoxFuture<'static, Result<Vec<u8>, Error>> + 'static,
+    {
         Self {
             key_fn: Box::new(key_fn),
         }
@@ -155,6 +160,19 @@ mod tests {
 
     use super::*;
     use crate::extract::Json;
+
+    fn base64_api_key_header(
+        req: &HttpRequest,
+    ) -> LocalBoxFuture<'static, actix_web::Result<Vec<u8>>> {
+        let key_b64 = match req.headers().get("api-key") {
+            Some(key) => key.as_bytes(),
+            None => return Box::pin(ready(Err(error::ErrorUnauthorized("no api-key provided")))),
+        };
+
+        Box::pin(ready(
+            base64::decode(key_b64).map_err(error::ErrorBadRequest),
+        ))
+    }
 
     #[actix_web::test]
     async fn correctly_hashes_payload_static_key() {
@@ -229,11 +247,6 @@ mod tests {
 
     #[actix_web::test]
     async fn correctly_hashes_payload_dynamic_key() {
-        fn base64_api_key_header(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
-            let key_b64 = req.headers().get("api-key").unwrap().as_bytes();
-            Ok(base64::decode(key_b64).unwrap())
-        }
-
         let app = test::init_service(
             App::new()
                 .service(
@@ -321,15 +334,6 @@ mod tests {
 
     #[actix_web::test]
     async fn error_retrieving_key() {
-        fn base64_api_key_header(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
-            let key_b64 = match req.headers().get("api-key") {
-                Some(key) => key.as_bytes(),
-                None => return Err(error::ErrorUnauthorized("no api-key provided")),
-            };
-
-            base64::decode(key_b64).map_err(error::ErrorBadRequest)
-        }
-
         let app = test::init_service(
             App::new()
                 .app_data(HmacConfig::dynamic_key(base64_api_key_header))
