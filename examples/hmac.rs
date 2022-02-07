@@ -22,7 +22,7 @@ async fn lookup_public_key_in_db<T>(_db: &(), val: T) -> T {
 }
 
 /// Extracts user's public key from request and pretends it is the secret key.
-async fn cf_extract_key_sync(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
+fn cf_extract_key_sync(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
     // public key, not encryption key
     let hdr = req.headers().get("Api-Key");
     let pub_key = hdr
@@ -78,10 +78,7 @@ async fn main() -> io::Result<()> {
 
     HttpServer::new(|| {
         // let hmac_config = HmacConfig::static_key(*b"");
-        let hmac_config = HmacConfig::dynamic_key(|req| {
-            let key_b64 = req.headers().get("api-key").unwrap().as_bytes();
-            base64::decode(key_b64).unwrap()
-        });
+        let hmac_config = HmacConfig::dynamic_key(cf_extract_key_sync);
 
         App::new()
             .app_data(hmac_config)

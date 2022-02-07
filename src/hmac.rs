@@ -1,18 +1,14 @@
 use std::fmt;
+use std::future::ready;
 
-use actix_web::{dev, FromRequest, HttpRequest};
+use actix_web::{dev, Error, FromRequest, HttpRequest};
 use digest::core_api::BlockSizeUser;
 use digest::{generic_array::GenericArray, FixedOutput as _};
 use futures_core::future::LocalBoxFuture;
-use hmac::digest::Digest;
-use hmac::{Mac as _, SimpleHmac};
+use futures_util::{FutureExt as _, TryFutureExt as _};
+use hmac::{digest::Digest, Mac as _, SimpleHmac};
 
 use crate::body_extractor_fold::body_extractor_fold;
-
-// /// The "static" in the type name refers to the fact that the key is expected to be used for every
-// /// request. That's to say, this is not appropriate for APIs where its users are using signing keys
-// /// specific to their account.
-// ///
 
 /// Wraps an extractor and calculates a body HMAC alongside.
 ///
@@ -20,7 +16,8 @@ use crate::body_extractor_fold::body_extractor_fold;
 /// to use `Hmac<T, D>`. It is assumed that the `T` extractor will consume the payload.
 /// Any hasher that implements [`Digest`] can be used.
 ///
-/// Provide secret key with [`HmacConfig`] in `app_data`.
+/// Use [`HmacConfig`] (in `app_data`) to configure how the secret key is found. Static (global key)
+/// and dynamic (key-per-user) configurations are supported.
 ///
 /// # Errors
 /// This extractor produces no errors of its own and all errors from the underlying extractor are
@@ -78,12 +75,16 @@ where
     T: FromRequest + 'static,
     D: Digest + BlockSizeUser + 'static,
 {
-    type Error = T::Error;
+    // type Error = BodyHmacError<T::Error>;
+    type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
 
     fn from_request(req: &HttpRequest, payload: &mut dev::Payload) -> Self::Future {
         let config = req.app_data::<HmacConfig>().unwrap();
-        let key = (config.key_fn)(req);
+        let key = match (config.key_fn)(req) {
+            Ok(key) => key,
+            Err(err) => return Box::pin(ready(Err(err))),
+        };
 
         body_extractor_fold(
             req,
@@ -95,13 +96,15 @@ where
                 hash: hasher.finalize_fixed(),
             },
         )
+        .map_err(Into::into)
+        .boxed_local()
     }
 }
 
 // #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct HmacConfig {
     // pub key: Vec<u8>,
-    key_fn: Box<dyn Fn(&HttpRequest) -> Vec<u8>>,
+    key_fn: Box<dyn Fn(&HttpRequest) -> Result<Vec<u8>, Error>>,
 }
 
 impl HmacConfig {
@@ -109,11 +112,11 @@ impl HmacConfig {
         let key = key.into();
 
         Self {
-            key_fn: Box::new(move |_| key.clone()),
+            key_fn: Box::new(move |_| Ok(key.clone())),
         }
     }
 
-    pub fn dynamic_key(key_fn: impl Fn(&HttpRequest) -> Vec<u8> + 'static) -> Self {
+    pub fn dynamic_key(key_fn: impl Fn(&HttpRequest) -> Result<Vec<u8>, Error> + 'static) -> Self {
         Self {
             key_fn: Box::new(key_fn),
         }
