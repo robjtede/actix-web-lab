@@ -22,11 +22,11 @@
 mod acceptable;
 mod body_extractor_fold;
 mod body_hash;
+mod body_hmac;
 mod buffered_serializing_stream;
 mod channel_body;
 mod csv;
 mod display_stream;
-mod hmac;
 mod html;
 mod json;
 mod lazy_data;
