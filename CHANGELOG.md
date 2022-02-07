@@ -1,8 +1,12 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
-- Add `HTML` responder.
+
+
+## 0.10.0 - 2022-02-07
+- Add `Html` responder.
 - Add `BodyHash` extractor wrapper.
+- Add `BodyHmac` extractor wrapper.
 
 
 ## 0.9.0 - 2022-01-22
