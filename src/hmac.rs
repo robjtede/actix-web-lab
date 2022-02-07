@@ -9,6 +9,11 @@ use hmac::{Mac as _, SimpleHmac};
 
 use crate::body_extractor_fold::body_extractor_fold;
 
+// /// The "static" in the type name refers to the fact that the key is expected to be used for every
+// /// request. That's to say, this is not appropriate for APIs where its users are using signing keys
+// /// specific to their account.
+// ///
+
 /// Wraps an extractor and calculates a body HMAC alongside.
 ///
 /// If your extractor would usually be `T` and you want to create a hash of type `D` then you need
@@ -24,22 +29,22 @@ use crate::body_extractor_fold::body_extractor_fold;
 /// # Example
 /// ```
 /// use actix_web::{App, Responder, web};
-/// use actix_web_lab::extract::{Hmac, HmacConfig};
+/// use actix_web_lab::extract::{BodyHmac, HmacConfig};
 /// use sha2::Sha256;
 ///
 /// # type T = u64;
-/// async fn hmac_payload(form: Hmac<web::Json<T>, Sha256>) -> impl Responder {
+/// async fn hmac_payload(form: BodyHmac<web::Json<T>, Sha256>) -> impl Responder {
 ///     web::Bytes::copy_from_slice(form.hash())
 /// }
 ///
 /// let key = vec![0x01, 0x12, 0x34, 0x56];
 ///
 /// App::new()
-///     .app_data(HmacConfig::new(&key))
+///     .app_data(HmacConfig::static_key(key))
 /// # ;
 /// ```
-#[derive()]
-pub struct Hmac<T, D>
+#[derive(Debug, Clone)]
+pub struct BodyHmac<T, D>
 where
     D: Digest + BlockSizeUser,
 {
@@ -47,27 +52,7 @@ where
     hash: GenericArray<u8, D::OutputSize>,
 }
 
-pub struct HmacConfig {
-    key: Vec<u8>,
-}
-
-impl HmacConfig {
-    pub fn new(key: &[u8]) -> Self {
-        Self {
-            key: key.to_owned(),
-        }
-    }
-}
-
-impl fmt::Debug for HmacConfig {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("HmacConfig")
-            .field("key", &"[redacted]")
-            .finish()
-    }
-}
-
-impl<T, D: Digest> Hmac<T, D>
+impl<T, D: Digest> BodyHmac<T, D>
 where
     D: Digest + BlockSizeUser,
 {
@@ -88,7 +73,7 @@ where
     }
 }
 
-impl<T, D> FromRequest for Hmac<T, D>
+impl<T, D> FromRequest for BodyHmac<T, D>
 where
     T: FromRequest + 'static,
     D: Digest + BlockSizeUser + 'static,
@@ -98,17 +83,48 @@ where
 
     fn from_request(req: &HttpRequest, payload: &mut dev::Payload) -> Self::Future {
         let config = req.app_data::<HmacConfig>().unwrap();
+        let key = (config.key_fn)(req);
 
         body_extractor_fold(
             req,
             payload,
-            SimpleHmac::<D>::new_from_slice(&config.key).unwrap(),
+            SimpleHmac::<D>::new_from_slice(&key).unwrap(),
             |hasher, _req, chunk| hasher.update(&chunk),
             |body, hasher| Self {
                 body,
                 hash: hasher.finalize_fixed(),
             },
         )
+    }
+}
+
+// #[derive(Zeroize, ZeroizeOnDrop)]
+pub struct HmacConfig {
+    // pub key: Vec<u8>,
+    key_fn: Box<dyn Fn(&HttpRequest) -> Vec<u8>>,
+}
+
+impl HmacConfig {
+    pub fn static_key(key: impl Into<Vec<u8>>) -> Self {
+        let key = key.into();
+
+        Self {
+            key_fn: Box::new(move |_| key.clone()),
+        }
+    }
+
+    pub fn dynamic_key(key_fn: impl Fn(&HttpRequest) -> Vec<u8> + 'static) -> Self {
+        Self {
+            key_fn: Box::new(key_fn),
+        }
+    }
+}
+
+impl fmt::Debug for HmacConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("HmacConfig")
+            .field("key", &"[redacted]")
+            .finish()
     }
 }
 
@@ -127,27 +143,27 @@ mod tests {
     use crate::extract::Json;
 
     #[actix_web::test]
-    async fn correctly_hashes_payload() {
+    async fn correctly_hashes_payload_static_key() {
         let app = test::init_service(
             App::new()
                 .service(
                     Resource::new("/key-blank")
-                        .app_data(HmacConfig::new(&[]))
-                        .route(web::get().to(|body: Hmac<Bytes, Sha256>| async move {
+                        .app_data(HmacConfig::static_key([]))
+                        .route(web::get().to(|body: BodyHmac<Bytes, Sha256>| async move {
                             Bytes::copy_from_slice(body.hash())
                         })),
                 )
                 .service(
                     Resource::new("/key-pi")
-                        .app_data(HmacConfig::new(&hex!("31 41 59 26 53 58 97 93")))
-                        .route(web::get().to(|body: Hmac<Bytes, Sha256>| async move {
+                        .app_data(HmacConfig::static_key(hex!("31 41 59 26 53 58 97 93")))
+                        .route(web::get().to(|body: BodyHmac<Bytes, Sha256>| async move {
                             Bytes::copy_from_slice(body.hash())
                         })),
                 )
                 .service(
                     Resource::new("/sha512")
-                        .app_data(HmacConfig::new(&[]))
-                        .route(web::get().to(|body: Hmac<Bytes, Sha512>| async move {
+                        .app_data(HmacConfig::static_key([]))
+                        .route(web::get().to(|body: BodyHmac<Bytes, Sha512>| async move {
                             Bytes::copy_from_slice(body.hash())
                         })),
                 ),
@@ -198,16 +214,78 @@ mod tests {
     }
 
     #[actix_web::test]
+    async fn correctly_hashes_payload_dynamic_key() {
+        fn base64_api_key_header(req: &HttpRequest) -> Vec<u8> {
+            let key_b64 = req.headers().get("api-key").unwrap().as_bytes();
+            base64::decode(key_b64).unwrap()
+        }
+
+        let app = test::init_service(
+            App::new()
+                .service(
+                    Resource::new("/sha256")
+                        .app_data(HmacConfig::dynamic_key(base64_api_key_header))
+                        .route(web::get().to(|body: BodyHmac<Bytes, Sha256>| async move {
+                            Bytes::copy_from_slice(body.hash())
+                        })),
+                )
+                .service(
+                    Resource::new("/sha512")
+                        .app_data(HmacConfig::dynamic_key(base64_api_key_header))
+                        .route(web::get().to(|body: BodyHmac<Bytes, Sha512>| async move {
+                            Bytes::copy_from_slice(body.hash())
+                        })),
+                ),
+        )
+        .await;
+
+        let req = test::TestRequest::with_uri("/sha256")
+            .insert_header(("api-key", ""))
+            .set_payload("abc")
+            .to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(
+            &body[..],
+            hex!("fd7adb15 2c05ef80 dccf50a1 fa4c05d5 a3ec6da9 5575fc31 2ae7c5d0 91836351")
+        );
+
+        let req = test::TestRequest::with_uri("/sha256")
+            .insert_header(("api-key", "MTIzNA=="))
+            .set_payload("abc")
+            .to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(
+            &body[..],
+            hex!("2a76332d a8983432 bc65ee84 0c4c9493 26b4a010 d2175a71 5105e90e 59c206e8")
+        );
+
+        let req = test::TestRequest::with_uri("/sha512")
+            .insert_header(("api-key", "MTIzNA=="))
+            .set_payload("abc")
+            .to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(
+            &body[..],
+            hex!(
+                "6f91e2c8 377a9f67 25ceb5b1 17c816a7 dc5e0e2e 17630972 b7f05d41 f0a56b3f
+                 d4a2a5d7 465d740f 0eed1ed9 0af5b917 47bf3c0c 77585536 5c778c34 ea7cd805"
+            )
+        );
+    }
+
+    #[actix_web::test]
     async fn respects_inner_extractor_errors() {
-        let app = test::init_service(App::new().app_data(HmacConfig::new(&[])).route(
+        let app = test::init_service(App::new().app_data(HmacConfig::static_key([])).route(
             "/",
-            web::get().to(|body: Hmac<Json<u64, 4>, Sha256>| async move {
+            web::get().to(|body: BodyHmac<Json<u64, 4>, Sha256>| async move {
                 Bytes::copy_from_slice(body.hash())
             }),
         ))
         .await;
 
-        let req = test::TestRequest::default().set_json(1234).to_request();
+        let req = test::TestRequest::default()
+            .set_json(1234usize)
+            .to_request();
         let body = test::call_and_read_body(&app, req).await;
         assert_eq!(
             &body[..],
@@ -220,7 +298,9 @@ mod tests {
         assert_eq!(body.status(), StatusCode::BAD_REQUEST);
 
         // body too big would expect a 413 request payload too large
-        let req = test::TestRequest::default().set_json(12345).to_request();
+        let req = test::TestRequest::default()
+            .set_json(12345usize)
+            .to_request();
         let body = test::call_service(&app, req).await;
         assert_eq!(body.status(), StatusCode::PAYLOAD_TOO_LARGE);
     }
