@@ -9,7 +9,7 @@ use actix_web::{
 };
 use actix_web_lab::extract::{BodyHmac, HmacConfig};
 use digest::Mac as _;
-use futures_core::{future::LocalBoxFuture, Stream};
+use futures_core::Stream;
 use futures_util::StreamExt as _;
 use hmac::SimpleHmac;
 use sha2::{Sha256, Sha512};
@@ -22,24 +22,20 @@ async fn lookup_public_key_in_db<T>(_db: &(), val: T) -> T {
 }
 
 /// Extracts user's public key from request and pretends to look up secret key in the DB.
-fn cf_extract_key(req: &HttpRequest) -> LocalBoxFuture<'static, actix_web::Result<Vec<u8>>> {
-    let req = req.clone();
+async fn cf_extract_key(req: HttpRequest) -> actix_web::Result<Vec<u8>> {
+    // public key, not encryption key
+    let hdr = req.headers().get("Api-Key");
+    let pub_key = hdr
+        .map(HeaderValue::as_bytes)
+        .map(base64::decode)
+        .transpose()
+        .map_err(error::ErrorInternalServerError)?
+        .ok_or_else(|| error::ErrorUnauthorized("key not provided"))?;
 
-    Box::pin(async move {
-        // public key, not encryption key
-        let hdr = req.headers().get("Api-Key");
-        let pub_key = hdr
-            .map(HeaderValue::as_bytes)
-            .map(base64::decode)
-            .transpose()
-            .map_err(error::ErrorInternalServerError)?
-            .ok_or_else(|| error::ErrorUnauthorized("key not provided"))?;
+    // let db = req.app_data::<DbPool>().unwrap();
+    let secret_key = lookup_public_key_in_db(&db, pub_key).await;
 
-        // let db = req.app_data::<DbPool>().unwrap();
-        let secret_key = lookup_public_key_in_db(&db, pub_key).await;
-
-        Ok(secret_key)
-    })
+    Ok(secret_key)
 }
 
 /// Signature scheme of `body + nonce + path`.

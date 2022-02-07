@@ -1,4 +1,7 @@
-use std::{fmt, future::ready};
+use std::{
+    fmt,
+    future::{ready, Future},
+};
 
 use actix_web::{dev, Error, FromRequest, HttpRequest};
 use digest::{core_api::BlockSizeUser, generic_array::GenericArray, FixedOutput as _};
@@ -84,7 +87,7 @@ where
 
     fn from_request(req: &HttpRequest, payload: &mut dev::Payload) -> Self::Future {
         let config = req.app_data::<HmacConfig>().unwrap();
-        let fut = (config.key_fn)(req);
+        let fut = (config.key_fn)(req.clone());
         let req = req.clone();
         let mut payload = payload.take();
 
@@ -111,7 +114,7 @@ where
 
 pub struct HmacConfig {
     #[allow(clippy::type_complexity)]
-    key_fn: Box<dyn Fn(&HttpRequest) -> LocalBoxFuture<'static, Result<Vec<u8>, Error>> + 'static>,
+    key_fn: Box<dyn Fn(HttpRequest) -> LocalBoxFuture<'static, Result<Vec<u8>, Error>> + 'static>,
 }
 
 impl HmacConfig {
@@ -128,12 +131,13 @@ impl HmacConfig {
     ///
     /// Closure receives a reference to the HTTP request. Use when signature of request depends on
     /// per-user secret keys.
-    pub fn dynamic_key<F>(key_fn: F) -> Self
+    pub fn dynamic_key<F, Fut>(key_fn: F) -> Self
     where
-        F: Fn(&HttpRequest) -> LocalBoxFuture<'static, Result<Vec<u8>, Error>> + 'static,
+        F: Fn(HttpRequest) -> Fut + 'static,
+        Fut: Future<Output = Result<Vec<u8>, Error>> + 'static,
     {
         Self {
-            key_fn: Box::new(key_fn),
+            key_fn: async_fn_to_boxed(key_fn),
         }
     }
 }
@@ -141,9 +145,19 @@ impl HmacConfig {
 impl fmt::Debug for HmacConfig {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("HmacConfig")
-            .field("key", &"[redacted]")
+            .field("key_fn", &"[key_fn]")
             .finish()
     }
+}
+
+fn async_fn_to_boxed<F, T, Fut>(
+    async_fn: F,
+) -> Box<dyn Fn(T) -> LocalBoxFuture<'static, Fut::Output>>
+where
+    F: Fn(T) -> Fut + 'static,
+    Fut: Future + 'static,
+{
+    Box::new(move |arg| Box::pin((async_fn)(arg)))
 }
 
 #[cfg(test)]
@@ -162,7 +176,7 @@ mod tests {
     use crate::extract::Json;
 
     fn base64_api_key_header(
-        req: &HttpRequest,
+        req: HttpRequest,
     ) -> LocalBoxFuture<'static, actix_web::Result<Vec<u8>>> {
         let key_b64 = match req.headers().get("api-key") {
             Some(key) => key.as_bytes(),
