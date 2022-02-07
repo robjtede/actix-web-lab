@@ -137,36 +137,80 @@ impl<B> Service<ServiceRequest> for Next<B> {
 mod tests {
     use actix_web::{
         http::header::{self, HeaderValue},
-        middleware::Logger,
+        middleware::{Compat, Logger},
         test, web, App, HttpResponse,
     };
 
     use super::*;
 
-    #[actix_web::test]
-    async fn feels_good() {
-        async fn noop<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {
-            next.call(req).await
-        }
+    async fn noop<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {
+        next.call(req).await
+    }
 
-        async fn add_res_header<B>(
+    async fn add_res_header<B>(
+        req: ServiceRequest,
+        next: Next<B>,
+    ) -> Result<ServiceResponse<B>, Error> {
+        let mut res = next.call(req).await?;
+        res.headers_mut()
+            .insert(header::WARNING, HeaderValue::from_static("42"));
+        Ok(res)
+    }
+
+    async fn mutate_body_type(
+        req: ServiceRequest,
+        next: Next<impl MessageBody + 'static>,
+    ) -> Result<ServiceResponse<impl MessageBody>, Error> {
+        let res = next.call(req).await?;
+        Ok(res.map_into_left_body::<()>())
+    }
+
+    struct MyMw(bool);
+
+    impl MyMw {
+        async fn mw_cb(
+            &self,
             req: ServiceRequest,
-            next: Next<B>,
-        ) -> Result<ServiceResponse<B>, Error> {
-            let mut res = next.call(req).await?;
+            next: Next<impl MessageBody + 'static>,
+        ) -> Result<ServiceResponse<impl MessageBody>, Error> {
+            let mut res = match self.0 {
+                true => req.into_response("short-circuited").map_into_right_body(),
+                false => next.call(req).await?.map_into_left_body(),
+            };
             res.headers_mut()
                 .insert(header::WARNING, HeaderValue::from_static("42"));
             Ok(res)
         }
 
-        async fn mutate_body_type(
-            req: ServiceRequest,
-            next: Next<impl MessageBody + 'static>,
-        ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-            let res = next.call(req).await?;
-            Ok(res.map_into_left_body::<()>())
+        pub fn into_middleware<S, B>(
+            self,
+        ) -> impl Transform<
+            S,
+            ServiceRequest,
+            Response = ServiceResponse<impl MessageBody>,
+            Error = Error,
+            InitError = (),
+        >
+        where
+            S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+            B: MessageBody + 'static,
+        {
+            let this = Rc::new(self);
+            from_fn(move |req, next| {
+                let this = Rc::clone(&this);
+                async move { Self::mw_cb(&this, req, next).await }
+            })
         }
+    }
 
+    #[actix_web::test]
+    async fn compat_compat() {
+        let _ = App::new().wrap(Compat::new(from_fn(noop)));
+        let _ = App::new().wrap(Compat::new(from_fn(mutate_body_type)));
+    }
+
+    #[actix_web::test]
+    async fn feels_good() {
         let app = test::init_service(
             App::new()
                 .wrap(from_fn(mutate_body_type))
@@ -184,44 +228,6 @@ mod tests {
 
     #[actix_web::test]
     async fn closure_capture_and_return_from_fn() {
-        struct MyMw(bool);
-
-        impl MyMw {
-            async fn mw_cb(
-                &self,
-                req: ServiceRequest,
-                next: Next<impl MessageBody + 'static>,
-            ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-                let mut res = match self.0 {
-                    true => req.into_response("short-circuited").map_into_right_body(),
-                    false => next.call(req).await?.map_into_left_body(),
-                };
-                res.headers_mut()
-                    .insert(header::WARNING, HeaderValue::from_static("42"));
-                Ok(res)
-            }
-
-            pub fn into_middleware<S, B>(
-                self,
-            ) -> impl Transform<
-                S,
-                ServiceRequest,
-                Response = ServiceResponse<impl MessageBody>,
-                Error = Error,
-                InitError = (),
-            >
-            where
-                S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-                B: MessageBody + 'static,
-            {
-                let this = Rc::new(self);
-                from_fn(move |req, next| {
-                    let this = Rc::clone(&this);
-                    async move { Self::mw_cb(&this, req, next).await }
-                })
-            }
-        }
-
         let app = test::init_service(
             App::new()
                 .wrap(Logger::default())

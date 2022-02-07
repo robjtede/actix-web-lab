@@ -1,6 +1,6 @@
 //! Simple builder for a SPA (Single Page Application) service builder.
 
-use std::io::{self};
+use std::io;
 
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use actix_web_lab::web::spa;
