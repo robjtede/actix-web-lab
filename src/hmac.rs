@@ -40,6 +40,11 @@ use crate::body_extractor_fold::body_extractor_fold;
 ///     .app_data(HmacConfig::static_key(key))
 /// # ;
 /// ```
+///
+/// # Todo
+/// - [ ] Async dynamic key extractor methods.
+/// - [ ] Concurrently acquire key and feed wrapped extractor.
+/// - [ ] Expose constant-time digest verification.
 #[derive(Debug, Clone)]
 pub struct BodyHmac<T, D>
 where
@@ -108,6 +113,7 @@ pub struct HmacConfig {
 }
 
 impl HmacConfig {
+    /// Configure HMAC extractors to use a global, static key for all HMAC calculations.
     pub fn static_key(key: impl Into<Vec<u8>>) -> Self {
         let key = key.into();
 
@@ -116,6 +122,10 @@ impl HmacConfig {
         }
     }
 
+    /// Configure HMAC extractors to use a custom method for obtaining a secret keys.
+    ///
+    /// Closure receives a reference to the HTTP request. Use when signature of request depends on
+    /// per-user secret keys.
     pub fn dynamic_key(key_fn: impl Fn(&HttpRequest) -> Result<Vec<u8>, Error> + 'static) -> Self {
         Self {
             key_fn: Box::new(key_fn),
