@@ -1,7 +1,8 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
-
+- Dynamic `HmacConfig` uses async function.
+- `BodyHmac::into_parts` includes `Bytes` buffer.
 
 ## 0.10.0 - 2022-02-07
 - Add `Html` responder.
