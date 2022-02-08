@@ -3,7 +3,7 @@ use std::{
     future::{ready, Future},
 };
 
-use actix_web::{dev, Error, FromRequest, HttpRequest};
+use actix_web::{dev, web::Bytes, Error, FromRequest, HttpRequest};
 use digest::{core_api::BlockSizeUser, generic_array::GenericArray, FixedOutput as _};
 use futures_core::future::LocalBoxFuture;
 use futures_util::TryFutureExt as _;
@@ -25,6 +25,7 @@ use crate::body_extractor_fold::body_extractor_fold;
 /// propagated correctly. For example, if the payload limits are exceeded.
 ///
 /// # Example
+/// Static key:
 /// ```
 /// use actix_web::{App, Responder, web};
 /// use actix_web_lab::extract::{BodyHmac, HmacConfig};
@@ -43,7 +44,6 @@ use crate::body_extractor_fold::body_extractor_fold;
 /// ```
 ///
 /// # Todo
-/// - [ ] Async dynamic key extractor methods.
 /// - [ ] Concurrently acquire key and feed wrapped extractor.
 /// - [ ] Expose constant-time digest verification.
 #[derive(Debug, Clone)]
@@ -52,6 +52,7 @@ where
     D: Digest + BlockSizeUser,
 {
     body: T,
+    bytes: Bytes,
     hash: GenericArray<u8, D::OutputSize>,
 }
 
@@ -70,9 +71,9 @@ where
     }
 
     /// Returns tuple containing body type and owned hash.
-    pub fn into_parts(self) -> (T, Vec<u8>) {
+    pub fn into_parts(self) -> (T, Bytes, Vec<u8>) {
         let hash = self.hash().to_vec();
-        (self.body, hash)
+        (self.body, self.bytes, hash)
     }
 }
 
@@ -94,20 +95,19 @@ where
         Box::pin(async move {
             let key = fut.await?;
 
-            let a = body_extractor_fold(
+            body_extractor_fold(
                 &req,
                 &mut payload,
                 SimpleHmac::<D>::new_from_slice(&key).unwrap(),
                 |hasher, _req, chunk| hasher.update(&chunk),
-                |body, hasher| Self {
+                |body, bytes, hasher| Self {
                     body,
+                    bytes,
                     hash: hasher.finalize_fixed(),
                 },
             )
             .map_err(Into::into)
-            .await;
-
-            a
+            .await
         })
     }
 }
@@ -372,5 +372,48 @@ mod tests {
             .to_request();
         let body = test::call_service(&app, req).await;
         assert_eq!(body.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[actix_web::test]
+    async fn collects_body_bytes() {
+        let app = test::init_service(
+            App::new()
+                .app_data(HmacConfig::static_key([]))
+                .route(
+                    "/bytes",
+                    web::get().to(|body: BodyHmac<Bytes, Sha256>| async move {
+                        let (b1, b2, _) = body.into_parts();
+                        if b1 == b2 {
+                            "same"
+                        } else {
+                            "different"
+                        }
+                    }),
+                )
+                .route(
+                    "/string",
+                    web::get().to(|body: BodyHmac<String, Sha256>| async move {
+                        let (b1, b2, _) = body.into_parts();
+                        if b1.as_bytes() == b2 {
+                            "same"
+                        } else {
+                            "different"
+                        }
+                    }),
+                ),
+        )
+        .await;
+
+        let req = test::TestRequest::with_uri("/bytes")
+            .set_payload("abc")
+            .to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(body, "same");
+
+        let req = test::TestRequest::with_uri("/string")
+            .set_payload("abc")
+            .to_request();
+        let body = test::call_and_read_body(&app, req).await;
+        assert_eq!(body, "same");
     }
 }

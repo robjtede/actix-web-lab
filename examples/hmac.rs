@@ -8,11 +8,11 @@ use actix_web::{
     App, HttpRequest, HttpServer,
 };
 use actix_web_lab::extract::{BodyHmac, HmacConfig};
-use digest::Mac as _;
-use futures_core::Stream;
-use futures_util::StreamExt as _;
-use hmac::SimpleHmac;
-use sha2::{Sha256, Sha512};
+// use digest::Mac as _;
+// use futures_core::Stream;
+// use futures_util::StreamExt as _;
+// use hmac::SimpleHmac;
+use sha2::Sha256;
 
 #[allow(non_upper_case_globals)]
 const db: () = ();
@@ -36,24 +36,6 @@ async fn cf_extract_key(req: HttpRequest) -> actix_web::Result<Vec<u8>> {
     let secret_key = lookup_public_key_in_db(&db, pub_key).await;
 
     Ok(secret_key)
-}
-
-/// Signature scheme of `body + nonce + path`.
-async fn cf_signature_scheme(
-    mut hasher: SimpleHmac<Sha512>,
-    req: &HttpRequest,
-    mut chunks: impl Stream<Item = web::Bytes> + Unpin,
-) {
-    while let Some(chunk) = chunks.next().await {
-        hasher.update(&chunk)
-    }
-
-    // nonce optional
-    if let Some(hdr) = req.headers().get("Nonce") {
-        hasher.update(hdr.as_bytes());
-    }
-
-    hasher.update(req.path().as_bytes());
 }
 
 #[actix_web::main]
@@ -81,3 +63,21 @@ async fn main() -> io::Result<()> {
     .run()
     .await
 }
+
+// /// Signature scheme of `body + nonce + path`.
+// async fn cf_signature_scheme(
+//     mut hasher: SimpleHmac<Sha512>,
+//     req: &HttpRequest,
+//     mut chunks: impl Stream<Item = web::Bytes> + Unpin,
+// ) {
+//     while let Some(chunk) = chunks.next().await {
+//         hasher.update(&chunk)
+//     }
+
+//     // nonce optional
+//     if let Some(hdr) = req.headers().get("Nonce") {
+//         hasher.update(hdr.as_bytes());
+//     }
+
+//     hasher.update(req.path().as_bytes());
+// }

@@ -1,6 +1,9 @@
 use actix_http::BoxedPayloadStream;
-use actix_web::{dev, FromRequest, HttpRequest};
-use bytes::Bytes;
+use actix_web::{
+    dev,
+    web::{BufMut as _, Bytes, BytesMut},
+    FromRequest, HttpRequest,
+};
 use futures_core::future::LocalBoxFuture;
 use futures_util::StreamExt as _;
 use local_channel::mpsc;
@@ -11,7 +14,7 @@ pub(crate) fn body_extractor_fold<T, Init, Out>(
     payload: &mut dev::Payload,
     init: Init,
     mut update_fn: impl FnMut(&mut Init, &HttpRequest, Bytes) + 'static,
-    mut finalize_fn: impl FnMut(T, Init) -> Out + 'static,
+    mut finalize_fn: impl FnMut(T, Bytes, Init) -> Out + 'static,
 ) -> LocalBoxFuture<'static, Result<Out, T::Error>>
 where
     T: FromRequest,
@@ -35,11 +38,14 @@ where
         let mut proxy_payload = dev::Payload::from(proxy_stream);
         let body_fut = T::from_request(&req, &mut proxy_payload);
 
-        // compute body hash as chunks are yielded from channel
+        let mut body_buf = BytesMut::new();
+
+        // run update function as chunks are yielded from channel
         let hash_fut = async {
             let mut accumulator = init;
             while let Some(chunk) = rx.recv().await {
                 log::trace!("updating hasher with {} byte chunk", chunk.len());
+                body_buf.put_slice(&chunk);
                 update_fn(&mut accumulator, &req, chunk)
             }
             Ok(accumulator)
@@ -48,7 +54,7 @@ where
         log::trace!("driving both futures");
         let (body, hash) = try_join!(body_fut, hash_fut)?;
 
-        let out = (finalize_fn)(body, hash);
+        let out = (finalize_fn)(body, body_buf.freeze(), hash);
 
         Ok(out)
     })

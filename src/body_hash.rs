@@ -1,4 +1,4 @@
-use actix_web::{dev, FromRequest, HttpRequest};
+use actix_web::{dev, web::Bytes, FromRequest, HttpRequest};
 use digest::{generic_array::GenericArray, Digest};
 use futures_core::future::LocalBoxFuture;
 
@@ -28,6 +28,7 @@ use crate::body_extractor_fold::body_extractor_fold;
 #[derive(Debug, Clone)]
 pub struct BodyHash<T, D: Digest> {
     body: T,
+    bytes: Bytes,
     hash: GenericArray<u8, D::OutputSize>,
 }
 
@@ -43,9 +44,9 @@ impl<T, D: Digest> BodyHash<T, D> {
     }
 
     /// Returns tuple containing body type and owned hash.
-    pub fn into_parts(self) -> (T, Vec<u8>) {
+    pub fn into_parts(self) -> (T, Bytes, Vec<u8>) {
         let hash = self.hash().to_vec();
-        (self.body, hash)
+        (self.body, self.bytes, hash)
     }
 }
 
@@ -63,8 +64,9 @@ where
             payload,
             D::new(),
             |hasher, _req, chunk| hasher.update(&chunk),
-            |body, hasher| Self {
+            |body, bytes, hasher| Self {
                 body,
+                bytes,
                 hash: hasher.finalize(),
             },
         )
