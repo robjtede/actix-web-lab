@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.11.0 - 2022-02-22
 - Add alternate `ErrorHandler` middleware.
 - Dynamic `HmacConfig` uses async function.
 - `BodyHmac::into_parts` includes `Bytes` buffer.
