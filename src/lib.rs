@@ -27,6 +27,7 @@ mod buffered_serializing_stream;
 mod channel_body;
 mod csv;
 mod display_stream;
+mod err_handler;
 mod html;
 mod json;
 mod lazy_data;
