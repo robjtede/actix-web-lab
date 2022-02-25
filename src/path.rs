@@ -22,7 +22,8 @@ use serde::de;
 ///
 /// # Examples
 /// ```
-/// use actix_web::{get, web};
+/// use actix_web::get;
+/// use actix_web_lab::extract::Path;
 ///
 /// // extract path info from "/{name}/{count}/index.html" into tuple
 /// // {name}  - deserialize a String
@@ -37,7 +38,8 @@ use serde::de;
 /// Path segment labels will be matched with struct field names.
 ///
 /// ```
-/// use actix_web::{get, web};
+/// use actix_web::get;
+/// use actix_web_lab::extract::Path;
 /// use serde::Deserialize;
 ///
 /// #[derive(Deserialize)]
@@ -47,7 +49,7 @@ use serde::de;
 ///
 /// // extract `Info` from a path using serde
 /// #[get("/{name}")]
-/// async fn index(info: web::Path<Info>) -> String {
+/// async fn index(info: Path<Info>) -> String {
 ///     let info = info.into_inner();
 ///     format!("Welcome {}!", info.name)
 /// }

@@ -59,7 +59,7 @@ pub const DEFAULT_JSON_LIMIT: usize = 2_097_152; // 2MiB
 /// }
 /// ```
 #[derive(Debug, Deref, DerefMut, Display)]
-pub struct Json<T, const LIMIT: usize>(pub T);
+pub struct Json<T, const LIMIT: usize = DEFAULT_JSON_LIMIT>(pub T);
 
 impl<T, const LIMIT: usize> Json<T, LIMIT> {
     /// Unwrap into inner `T` value.
