@@ -28,6 +28,7 @@
 ### Extractors
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/0.12.0/actix_web_lab/extract/struct.LazyData.html)
 - `Json`: simplified JSON extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.12.0/actix_web_lab/extract/struct.Json.html)
+- `Path`: simplified path parameter extractor that supports destructuring [(docs)](https://docs.rs/actix-web-lab/0.12.0/actix_web_lab/extract/struct.Path.html)
 - `Query`: simplified query-string extractor [(docs)](https://docs.rs/actix-web-lab/0.12.0/actix_web_lab/extract/struct.Query.html)
 - `BodyHash`: wraps an extractor and calculates a body checksum hash alongside [(docs)](https://docs.rs/actix-web-lab/0.12.0/actix_web_lab/extract/struct.BodyHash.html)
 - `BodyHmac`: wraps an extractor and calculates a body HMAC alongside [(docs)](https://docs.rs/actix-web-lab/0.12.0/actix_web_lab/extract/struct.BodyHmac.html)
