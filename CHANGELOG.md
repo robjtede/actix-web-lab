@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2021-xx-xx
+- Add `Path` extractor that can be deconstructed.
+- `Json` limit const generic parameter now has a default and can be omitted.
+- Update `actix-web` dependency to `4.0.0`.
 
 
 ## 0.11.0 - 2022-02-22

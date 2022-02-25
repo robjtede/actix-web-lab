@@ -33,6 +33,7 @@ mod json;
 mod lazy_data;
 mod middleware_from_fn;
 mod ndjson;
+mod path;
 mod query;
 mod redirect;
 mod redirect_to_https;

@@ -46,13 +46,15 @@ pub const DEFAULT_JSON_LIMIT: usize = 2_097_152; // 2MiB
 ///
 /// /// Deserialize `Info` from request's body.
 /// #[post("/")]
-/// async fn index(info: Json<Info, DEFAULT_JSON_LIMIT>) -> String {
+/// async fn index(info: Json<Info>) -> String {
 ///     format!("Welcome {}!", info.username)
 /// }
 ///
+/// const LIMIT_32_MB: usize = 33_554_432;
+///
 /// /// Deserialize payload with a higher 32MiB limit.
 /// #[post("/big-payload")]
-/// async fn big_payload(info: Json<Info, 33_554_432>) -> String {
+/// async fn big_payload(info: Json<Info, LIMIT_32_MB>) -> String {
 ///     format!("Welcome {}!", info.username)
 /// }
 /// ```
