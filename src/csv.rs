@@ -550,4 +550,26 @@ mod tests {
 
         assert_eq!(body_bytes, EXP_BYTES);
     }
+
+    #[actix_web::test]
+    async fn serializes_into_body_lines() {
+        let csv_body = Csv::new(stream::iter([
+            [123, 456],
+            [789, 12],
+            [345, 678],
+            [901, 234],
+            [456, 789],
+        ]))
+        .into_body_stream();
+
+        let body_bytes = body::to_bytes(csv_body).await.unwrap();
+
+        const EXP_BYTES: &str = "123,456\n\
+        789,12\n\
+        345,678\n\
+        901,234\n\
+        456,789\n";
+
+        assert_eq!(body_bytes, EXP_BYTES);
+    }
 }
