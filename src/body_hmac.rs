@@ -33,7 +33,11 @@ use crate::body_extractor_fold::body_extractor_fold;
 ///
 /// # type T = u64;
 /// async fn hmac_payload(form: BodyHmac<web::Json<T>, Sha256>) -> impl Responder {
-///     web::Bytes::copy_from_slice(form.hash())
+///     if !form.verify_slice(b"correct-signature") {
+///         // return unauthorized error
+///     }
+///
+///     "Ok"
 /// }
 ///
 /// let key = vec![0x01, 0x12, 0x34, 0x56];
@@ -45,7 +49,6 @@ use crate::body_extractor_fold::body_extractor_fold;
 ///
 /// # Todo
 /// - [ ] Concurrently acquire key and feed wrapped extractor.
-/// - [ ] Expose constant-time digest verification.
 #[derive(Debug, Clone)]
 pub struct BodyHmac<T, D>
 where
@@ -70,7 +73,13 @@ where
         self.hash().len()
     }
 
-    /// Returns tuple containing body type and owned hash.
+    /// Verifies HMAC hash against provides `tag` using constant-time equality.
+    pub fn verify_slice(&self, tag: &[u8]) -> bool {
+        use subtle::ConstantTimeEq as _;
+        self.hash.ct_eq(tag).into()
+    }
+
+    /// Returns tuple containing body type, raw body bytes, and owned hash.
     pub fn into_parts(self) -> (T, Bytes, Vec<u8>) {
         let hash = self.hash().to_vec();
         (self.body, self.bytes, hash)

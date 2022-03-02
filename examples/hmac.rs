@@ -54,7 +54,11 @@ async fn main() -> io::Result<()> {
             .route(
                 "/",
                 web::post().to(|body: BodyHmac<Bytes, Sha256>| async move {
-                    Bytes::copy_from_slice(body.hash())
+                    if !body.verify_slice(b"correct-signature") {
+                        return "HMAC signature not correct";
+                    }
+
+                    "OK"
                 }),
             )
     })

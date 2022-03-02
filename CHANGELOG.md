@@ -1,6 +1,7 @@
 # Changelog
 
-## Unreleased - 2021-xx-xx
+## Unreleased - 2022-xx-xx
+- Add `Body{Hash, Hmac}::verify_slice()`.
 
 
 ## 0.12.0 - 2022-02-25
