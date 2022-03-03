@@ -19,6 +19,10 @@
 //!   of time so you can migrate.
 //! - Migrating will often be as easy as dropping the `_lab` suffix from imports when migrating.
 
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible, missing_docs)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 mod acceptable;
 mod body_extractor_fold;
 mod body_hash;

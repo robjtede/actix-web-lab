@@ -21,7 +21,7 @@
 
 ### Middleware
 - `from_fn`: use an async function as a middleware [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/middleware/fn.from_fn.html)
-- `redirect_to_https`: function middleware to redirect traffic to HTTPS if connection is insecure [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/middleware/fn.redirect_to_https.html)
+- `RedirectHttps`: middleware to redirect traffic to HTTPS if connection is insecure with optional HSTS [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/middleware/struct.RedirectHttps.html)
 - `redirect_to_www`: function middleware to redirect traffic to `www.` if not already there [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/middleware/fn.redirect_to_www.html)
 - `ErrorHandlers`: alternative error handler middleware with simpler interface [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/middleware/struct.ErrorHandlers.html)
 
@@ -32,6 +32,9 @@
 - `Query`: simplified query-string extractor [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/extract/struct.Query.html)
 - `BodyHash`: wraps an extractor and calculates a body checksum hash alongside [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/extract/struct.BodyHash.html)
 - `BodyHmac`: wraps an extractor and calculates a body HMAC alongside [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/extract/struct.BodyHmac.html)
+
+### Headers
+- `Hsts`: Strict-Transport-Security (HSTS) [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/header/struct.Hsts.html)
 
 ### Body Types
 - `channel`: a simple channel-like body type with a sender side that can be used from another thread [(docs)](https://docs.rs/actix-web-lab/0.12.1/actix_web_lab/body/fn.channel.html)

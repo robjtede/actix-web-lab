@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- Add `Hsts` (Strict-Transport-Security) typed header.
+- Convert `redirect_to_https` function middleware to `RedirectHttps` middleware type.
+- Add HSTS configuration to new `RedirectHttps` middleware.
 
 
 ## 0.12.1 - 2022-03-02
