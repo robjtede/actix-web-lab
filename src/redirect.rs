@@ -1,11 +1,10 @@
 //! See [`Redirect`] for service/responder documentation.
 
-use std::{borrow::Cow, future::ready, ops::Deref};
+use std::{borrow::Cow, future::ready};
 
 use actix_web::{
-    body::BoxBody,
     dev::{fn_service, AppService, HttpServiceFactory, ResourceDef, ServiceRequest},
-    http::{header, StatusCode},
+    http::{header::LOCATION, StatusCode},
     HttpRequest, HttpResponse, Responder,
 };
 
@@ -13,8 +12,8 @@ use actix_web::{
 ///
 /// Redirects are either [relative](Redirect::to) or [absolute](Redirect::to).
 ///
-/// By default, the "307 Temporary Redirect" status is used when responding.
-/// See [this MDN article](mdn-redirects) on why 307 is preferred over 302.
+/// By default, the "307 Temporary Redirect" status is used when responding. See [this MDN
+/// article](mdn-redirects) on why 307 is preferred over 302.
 ///
 /// # Examples
 /// ```
@@ -119,19 +118,11 @@ impl Redirect {
 
 impl HttpServiceFactory for Redirect {
     fn register(self, config: &mut AppService) {
-        let Self {
-            from,
-            to,
-            status_code,
-        } = self;
-
-        let rdef = ResourceDef::new(from.into_owned());
-        let redirect_factory = fn_service(move |req: ServiceRequest| {
-            ready(Ok(req.into_response(
-                HttpResponse::build(status_code)
-                    .insert_header((header::LOCATION, to.deref()))
-                    .finish(),
-            )))
+        let redirect = self.clone();
+        let rdef = ResourceDef::new(self.from.into_owned());
+        let redirect_factory = fn_service(move |mut req: ServiceRequest| {
+            let res = redirect.clone().respond_to(req.parts_mut().0);
+            ready(Ok(req.into_response(res.map_into_boxed_body())))
         });
 
         config.register_service(rdef, None, redirect_factory, None)
@@ -139,16 +130,21 @@ impl HttpServiceFactory for Redirect {
 }
 
 impl Responder for Redirect {
-    type Body = BoxBody;
+    type Body = ();
 
-    fn respond_to(self, _req: &HttpRequest) -> HttpResponse {
-        let Redirect {
-            to, status_code, ..
-        } = self;
+    fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
+        let mut res = HttpResponse::with_body(self.status_code, ());
 
-        HttpResponse::build(status_code)
-            .insert_header((header::LOCATION, to.into_owned()))
-            .finish()
+        if let Ok(hdr_val) = self.to.parse() {
+            res.headers_mut().insert(LOCATION, hdr_val);
+        } else {
+            log::debug!(
+                "redirect target location can not be converted to header value: {:?}",
+                self.to
+            );
+        }
+
+        res
     }
 }
 
@@ -167,7 +163,7 @@ mod tests {
         let req = test::TestRequest::default().uri("/one").to_request();
         let res = svc.call(req).await.unwrap();
         assert_eq!(res.status(), StatusCode::from_u16(308).unwrap());
-        let hdr = res.headers().get(&header::LOCATION).unwrap();
+        let hdr = res.headers().get(&LOCATION).unwrap();
         assert_eq!(hdr.to_str().unwrap(), "/two");
     }
 
@@ -180,7 +176,7 @@ mod tests {
         let req = test::TestRequest::default().uri("/one").to_request();
         let res = svc.call(req).await.unwrap();
         assert_eq!(res.status(), StatusCode::from_u16(308).unwrap());
-        let hdr = res.headers().get(&header::LOCATION).unwrap();
+        let hdr = res.headers().get(&LOCATION).unwrap();
         assert_eq!(hdr.to_str().unwrap(), "two");
     }
 
@@ -193,7 +189,7 @@ mod tests {
         let req = test::TestRequest::default().uri("/external").to_request();
         let res = svc.call(req).await.unwrap();
         assert_eq!(res.status(), StatusCode::from_u16(307).unwrap());
-        let hdr = res.headers().get(&header::LOCATION).unwrap();
+        let hdr = res.headers().get(&LOCATION).unwrap();
         assert_eq!(hdr.to_str().unwrap(), "https://duck.com");
     }
 
@@ -205,7 +201,7 @@ mod tests {
         let res = responder.respond_to(&req);
 
         assert_eq!(res.status(), StatusCode::from_u16(307).unwrap());
-        let hdr = res.headers().get(&header::LOCATION).unwrap();
+        let hdr = res.headers().get(&LOCATION).unwrap();
         assert_eq!(hdr.to_str().unwrap(), "https://duck.com");
     }
 }
