@@ -407,6 +407,7 @@
 <span id="402">402</span>
 <span id="403">403</span>
 <span id="404">404</span>
+<span id="405">405</span>
 </pre><pre class="rust"><code><span class="doccomment">//! JSON extractor with const-generic payload size limit.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -427,7 +428,8 @@
     <span class="ident">HttpRequest</span>,
 };
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_JSON_LIMIT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2_097_152</span>; <span class="comment">// 2MiB</span>
+<span class="doccomment">/// Default JSON payload size limit of 2MiB.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_JSON_LIMIT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2_097_152</span>;
 
 <span class="doccomment">/// JSON extractor with const-generic payload size limit.</span>
 <span class="doccomment">///</span>
@@ -812,5 +814,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (f0c4da499 2022-03-01)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (8769f4ef2 2022-03-02)" ></div>
 </body></html>

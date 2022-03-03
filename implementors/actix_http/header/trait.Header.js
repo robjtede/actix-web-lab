@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["actix_web_lab"] = [{"text":"impl Header for <a class=\"struct\" href=\"actix_web_lab/header/struct.Hsts.html\" title=\"struct actix_web_lab::header::Hsts\">Hsts</a>","synthetic":false,"types":["actix_web_lab::hsts::Hsts"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

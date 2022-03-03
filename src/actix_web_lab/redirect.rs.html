@@ -210,18 +210,13 @@
 <span id="205">205</span>
 <span id="206">206</span>
 <span id="207">207</span>
-<span id="208">208</span>
-<span id="209">209</span>
-<span id="210">210</span>
-<span id="211">211</span>
 </pre><pre class="rust"><code><span class="doccomment">//! See [`Redirect`] for service/responder documentation.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">future::ready</span>, <span class="ident">ops::Deref</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">future::ready</span>};
 
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">body::BoxBody</span>,
     <span class="ident">dev</span>::{<span class="ident">fn_service</span>, <span class="ident">AppService</span>, <span class="ident">HttpServiceFactory</span>, <span class="ident">ResourceDef</span>, <span class="ident">ServiceRequest</span>},
-    <span class="ident">http</span>::{<span class="ident">header</span>, <span class="ident">StatusCode</span>},
+    <span class="ident">http</span>::{<span class="ident">header::LOCATION</span>, <span class="ident">StatusCode</span>},
     <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>, <span class="ident">Responder</span>,
 };
 
@@ -229,8 +224,8 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Redirects are either [relative](Redirect::to) or [absolute](Redirect::to).</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// By default, the &quot;307 Temporary Redirect&quot; status is used when responding.</span>
-<span class="doccomment">/// See [this MDN article](mdn-redirects) on why 307 is preferred over 302.</span>
+<span class="doccomment">/// By default, the &quot;307 Temporary Redirect&quot; status is used when responding. See [this MDN</span>
+<span class="doccomment">/// article](mdn-redirects) on why 307 is preferred over 302.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
@@ -335,19 +330,11 @@
 
 <span class="kw">impl</span> <span class="ident">HttpServiceFactory</span> <span class="kw">for</span> <span class="ident">Redirect</span> {
     <span class="kw">fn</span> <span class="ident">register</span>(<span class="self">self</span>, <span class="ident">config</span>: <span class="kw-2">&amp;mut</span> <span class="ident">AppService</span>) {
-        <span class="kw">let</span> <span class="self">Self</span> {
-            <span class="ident">from</span>,
-            <span class="ident">to</span>,
-            <span class="ident">status_code</span>,
-        } <span class="op">=</span> <span class="self">self</span>;
-
-        <span class="kw">let</span> <span class="ident">rdef</span> <span class="op">=</span> <span class="ident">ResourceDef::new</span>(<span class="ident">from</span>.<span class="ident">into_owned</span>());
-        <span class="kw">let</span> <span class="ident">redirect_factory</span> <span class="op">=</span> <span class="ident">fn_service</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> {
-            <span class="ident">ready</span>(<span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">into_response</span>(
-                <span class="ident">HttpResponse::build</span>(<span class="ident">status_code</span>)
-                    .<span class="ident">insert_header</span>((<span class="ident">header::LOCATION</span>, <span class="ident">to</span>.<span class="ident">deref</span>()))
-                    .<span class="ident">finish</span>(),
-            )))
+        <span class="kw">let</span> <span class="ident">redirect</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">rdef</span> <span class="op">=</span> <span class="ident">ResourceDef::new</span>(<span class="self">self</span>.<span class="ident">from</span>.<span class="ident">into_owned</span>());
+        <span class="kw">let</span> <span class="ident">redirect_factory</span> <span class="op">=</span> <span class="ident">fn_service</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">redirect</span>.<span class="ident">clone</span>().<span class="ident">respond_to</span>(<span class="ident">req</span>.<span class="ident">parts_mut</span>().<span class="number">0</span>);
+            <span class="ident">ready</span>(<span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">res</span>.<span class="ident">map_into_boxed_body</span>())))
         });
 
         <span class="ident">config</span>.<span class="ident">register_service</span>(<span class="ident">rdef</span>, <span class="prelude-val">None</span>, <span class="ident">redirect_factory</span>, <span class="prelude-val">None</span>)
@@ -355,16 +342,21 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Responder</span> <span class="kw">for</span> <span class="ident">Redirect</span> {
-    <span class="kw">type</span> <span class="ident">Body</span> <span class="op">=</span> <span class="ident">BoxBody</span>;
+    <span class="kw">type</span> <span class="ident">Body</span> <span class="op">=</span> ();
 
-    <span class="kw">fn</span> <span class="ident">respond_to</span>(<span class="self">self</span>, <span class="ident">_req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>) -&gt; <span class="ident">HttpResponse</span> {
-        <span class="kw">let</span> <span class="ident">Redirect</span> {
-            <span class="ident">to</span>, <span class="ident">status_code</span>, ..
-        } <span class="op">=</span> <span class="self">self</span>;
+    <span class="kw">fn</span> <span class="ident">respond_to</span>(<span class="self">self</span>, <span class="ident">_req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>) -&gt; <span class="ident">HttpResponse</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Body</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">HttpResponse::with_body</span>(<span class="self">self</span>.<span class="ident">status_code</span>, ());
 
-        <span class="ident">HttpResponse::build</span>(<span class="ident">status_code</span>)
-            .<span class="ident">insert_header</span>((<span class="ident">header::LOCATION</span>, <span class="ident">to</span>.<span class="ident">into_owned</span>()))
-            .<span class="ident">finish</span>()
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">hdr_val</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">to</span>.<span class="ident">parse</span>() {
+            <span class="ident">res</span>.<span class="ident">headers_mut</span>().<span class="ident">insert</span>(<span class="ident">LOCATION</span>, <span class="ident">hdr_val</span>);
+        } <span class="kw">else</span> {
+            <span class="macro">log::debug!</span>(
+                <span class="string">&quot;redirect target location can not be converted to header value: {:?}&quot;</span>,
+                <span class="self">self</span>.<span class="ident">to</span>
+            );
+        }
+
+        <span class="ident">res</span>
     }
 }
 
@@ -383,7 +375,7 @@
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">uri</span>(<span class="string">&quot;/one&quot;</span>).<span class="ident">to_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">svc</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::from_u16</span>(<span class="number">308</span>).<span class="ident">unwrap</span>());
-        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">header::LOCATION</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">LOCATION</span>).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">hdr</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(), <span class="string">&quot;/two&quot;</span>);
     }
 
@@ -396,7 +388,7 @@
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">uri</span>(<span class="string">&quot;/one&quot;</span>).<span class="ident">to_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">svc</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::from_u16</span>(<span class="number">308</span>).<span class="ident">unwrap</span>());
-        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">header::LOCATION</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">LOCATION</span>).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">hdr</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(), <span class="string">&quot;two&quot;</span>);
     }
 
@@ -409,7 +401,7 @@
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">uri</span>(<span class="string">&quot;/external&quot;</span>).<span class="ident">to_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">svc</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::from_u16</span>(<span class="number">307</span>).<span class="ident">unwrap</span>());
-        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">header::LOCATION</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">LOCATION</span>).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">hdr</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(), <span class="string">&quot;https://duck.com&quot;</span>);
     }
 
@@ -421,10 +413,10 @@
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">responder</span>.<span class="ident">respond_to</span>(<span class="kw-2">&amp;</span><span class="ident">req</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::from_u16</span>(<span class="number">307</span>).<span class="ident">unwrap</span>());
-        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">header::LOCATION</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">LOCATION</span>).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">hdr</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(), <span class="string">&quot;https://duck.com&quot;</span>);
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (f0c4da499 2022-03-01)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (8769f4ef2 2022-03-02)" ></div>
 </body></html>
