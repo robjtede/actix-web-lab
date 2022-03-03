@@ -95,7 +95,7 @@ where
     }
 }
 
-fn write_display<T: fmt::Display>(wrt: &mut MutWriter<BytesMut>, item: &T) -> io::Result<()> {
+fn write_display<T: fmt::Display>(wrt: &mut MutWriter<'_, BytesMut>, item: &T) -> io::Result<()> {
     writeln!(wrt, "{}", item)
 }
 

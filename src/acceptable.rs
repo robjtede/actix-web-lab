@@ -27,6 +27,7 @@ pub struct Acceptable {
 }
 
 impl Acceptable {
+    /// Constructs new `Acceptable` guard with the given `mime` type/pattern.
     pub fn new(mime: mime::Mime) -> Self {
         Self {
             mime,
@@ -34,6 +35,7 @@ impl Acceptable {
         }
     }
 
+    /// Allows `*/*` in the `Accept` header to pass the guard check.
     pub fn match_star_star(mut self) -> Self {
         self.match_star_star = true;
         self
@@ -41,7 +43,7 @@ impl Acceptable {
 }
 
 impl Guard for Acceptable {
-    fn check(&self, ctx: &GuardContext) -> bool {
+    fn check(&self, ctx: &GuardContext<'_>) -> bool {
         let accept = match ctx.header::<Accept>() {
             Some(hdr) => hdr,
             None => return false,

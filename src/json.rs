@@ -18,7 +18,8 @@ use actix_web::{
     HttpRequest,
 };
 
-pub const DEFAULT_JSON_LIMIT: usize = 2_097_152; // 2MiB
+/// Default JSON payload size limit of 2MiB.
+pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
 
 /// JSON extractor with const-generic payload size limit.
 ///

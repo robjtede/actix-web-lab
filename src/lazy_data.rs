@@ -10,11 +10,13 @@ use futures_core::future::LocalBoxFuture;
 use tokio::sync::OnceCell;
 
 /// A lazy extractor for thread-local data.
+///
+/// Using `LazyData` as an extractor will not initialize the data; [`get`](Self::get) must be used.
 pub struct LazyData<T> {
     inner: Rc<LazyDataInner<T>>,
 }
 
-pub struct LazyDataInner<T> {
+struct LazyDataInner<T> {
     cell: OnceCell<T>,
     fut: Cell<Option<LocalBoxFuture<'static, T>>>,
 }
@@ -37,6 +39,9 @@ impl<T: fmt::Debug> fmt::Debug for LazyData<T> {
 }
 
 impl<T> LazyData<T> {
+    /// Constructs a new `LazyData` extractor with the given initialization function.
+    ///
+    /// Initialization functions must return a future that resolves to `T`.
     pub fn new<F, Fut>(init: F) -> LazyData<T>
     where
         F: FnOnce() -> Fut,
@@ -50,6 +55,7 @@ impl<T> LazyData<T> {
         }
     }
 
+    /// Returns reference to result of lazy `T` value, initializing if necessary.
     pub async fn get(&self) -> &T {
         self.inner
             .cell

@@ -121,6 +121,7 @@ where
     }
 }
 
+/// Configuration for [`BodyHmac`] extractor.
 pub struct HmacConfig {
     #[allow(clippy::type_complexity)]
     key_fn: Box<dyn Fn(HttpRequest) -> LocalBoxFuture<'static, Result<Vec<u8>, Error>> + 'static>,

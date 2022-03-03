@@ -27,7 +27,7 @@ pin_project! {
 impl<S, F, T, E> BufferedSerializingStream<S, F, E>
 where
     S: Stream<Item = Result<T, E>>,
-    F: FnMut(&mut MutWriter<BytesMut>, &T) -> io::Result<()>,
+    F: for<'a> FnMut(&mut MutWriter<'a, BytesMut>, &T) -> io::Result<()>,
 {
     pub fn new(stream: S, serialize_fn: F) -> Self {
         Self {
@@ -41,7 +41,7 @@ where
 impl<S, F, T, E> Stream for BufferedSerializingStream<S, F, E>
 where
     S: Stream<Item = Result<T, E>>,
-    F: FnMut(&mut MutWriter<BytesMut>, &T) -> io::Result<()>,
+    F: for<'a> FnMut(&mut MutWriter<'a, BytesMut>, &T) -> io::Result<()>,
 {
     type Item = Result<Bytes, E>;
 
@@ -169,7 +169,10 @@ mod tests {
         }};
     }
 
-    fn serialize_display<T: Display>(wrt: &mut MutWriter<BytesMut>, item: &T) -> io::Result<()> {
+    fn serialize_display<T: Display>(
+        wrt: &mut MutWriter<'_, BytesMut>,
+        item: &T,
+    ) -> io::Result<()> {
         writeln!(wrt, "{}", item)
     }
 

@@ -6,6 +6,7 @@
         "deserialization",
         "Expiremental",
         "hmac",
+        "hsts",
         "ndjson",
         "rdef",
         "serde"

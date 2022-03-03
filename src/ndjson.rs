@@ -106,7 +106,7 @@ impl NdJson<Infallible> {
 }
 
 fn serialize_json_line<T: Serialize>(
-    mut wrt: &mut MutWriter<BytesMut>,
+    mut wrt: &mut MutWriter<'_, BytesMut>,
     item: &T,
 ) -> io::Result<()> {
     // serialize JSON line to buffer

@@ -96,7 +96,7 @@ impl Csv<Infallible> {
     }
 }
 
-fn serialize_csv_row<T: Serialize>(wrt: &mut MutWriter<BytesMut>, item: &T) -> io::Result<()> {
+fn serialize_csv_row<T: Serialize>(wrt: &mut MutWriter<'_, BytesMut>, item: &T) -> io::Result<()> {
     // serialize CSV row to buffer
     let mut csv_wrt = csv::Writer::from_writer(wrt);
     csv_wrt.serialize(&item).unwrap();
