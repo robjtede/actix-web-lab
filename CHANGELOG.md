@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- Add `test` module containing new test request builders and response testing macros.
 
 
 ## 0.13.0 - 2022-03-03
