@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Hsts","HTTP Strict Transport Security (HSTS) configuration."]]});
+initSidebarItems({"enum":[["CacheDirective","Directives contained in a [`CacheControl`] header."]],"struct":[["CacheControl","The `Cache-Control` header, defined in RFC 7234 §5.2."],["Hsts","HTTP Strict Transport Security (HSTS) configuration."]]});

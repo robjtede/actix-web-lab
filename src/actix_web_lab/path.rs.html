@@ -222,8 +222,6 @@
 <span id="217">217</span>
 <span id="218">218</span>
 <span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
 </pre><pre class="rust"><code><span class="doccomment">//! For path segment extractor documentation, see [`Path`].</span>
 
 <span class="kw">use</span> <span class="ident">actix_router::PathDeserializer</span>;
@@ -240,8 +238,6 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Alternative to `web::Path` extractor from Actix Web that allows deconstruction, but omits the</span>
 <span class="doccomment">/// implementation of `Deref`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Use [`PathConfig`] to configure extraction option.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Unlike, [`HttpRequest::match_info`], this extractor will fully percent-decode dynamic segments,</span>
 <span class="doccomment">/// including `/`, `%`, and `+`.</span>
