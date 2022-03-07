@@ -43,6 +43,7 @@ mod query;
 mod redirect;
 mod redirect_to_https;
 mod redirect_to_www;
+mod request_hash;
 mod spa;
 mod test_request_macros;
 mod test_response_macros;
