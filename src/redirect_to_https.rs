@@ -29,7 +29,7 @@ use crate::{header::Hsts, web::Redirect};
 /// use actix_web_lab::{header::Hsts, middleware::RedirectHttps};
 ///
 /// App::new().wrap(RedirectHttps::default());
-/// App::new().wrap(RedirectHttps::with_hsts(Hsts::default()));
+/// App::new().wrap(RedirectHttps::with_hsts(Hsts::default().to_port(8443)));
 /// App::new().wrap(RedirectHttps::with_hsts(Hsts::new(Duration::from_secs(60 * 60))));
 /// App::new().wrap(RedirectHttps::with_hsts(Hsts::recommended()));
 /// ```
@@ -38,12 +38,24 @@ use crate::{header::Hsts, web::Redirect};
 #[derive(Debug, Clone, Default)]
 pub struct RedirectHttps {
     hsts: Option<Hsts>,
+    port: Option<u16>,
 }
 
 impl RedirectHttps {
     /// Construct new HTTP redirect middleware with
     pub fn with_hsts(hsts: Hsts) -> Self {
-        Self { hsts: Some(hsts) }
+        Self {
+            hsts: Some(hsts),
+            ..Self::default()
+        }
+    }
+
+    /// Sets custom secure redirect port.
+    ///
+    /// By default, no port is set explicitly so the standard HTTPS port (443) is used.
+    pub fn to_port(mut self, port: u16) -> Self {
+        self.port = Some(port);
+        self
     }
 }
 
@@ -61,6 +73,7 @@ where
         ready(Ok(RedirectHttpsMiddleware {
             service: Rc::new(service),
             hsts: self.hsts,
+            port: self.port,
         }))
     }
 }
@@ -68,6 +81,7 @@ where
 pub struct RedirectHttpsMiddleware<S> {
     service: Rc<S>,
     hsts: Option<Hsts>,
+    port: Option<u16>,
 }
 
 impl<S, B> Service<ServiceRequest> for RedirectHttpsMiddleware<S>
@@ -83,16 +97,23 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let service = Rc::clone(&self.service);
         let hsts = self.hsts;
+        let port = self.port;
 
         Box::pin(async move {
             let (req, pl) = req.into_parts();
             let conn_info = req.connection_info();
 
             if conn_info.scheme() != "https" {
-                // construct equivalent https path
                 let host = conn_info.host();
+
+                // construct equivalent https path
+                let (hostname, _port) = host.split_once(':').unwrap_or((host, ""));
+
                 let path = req.uri().path();
-                let uri = format!("https://{host}{path}");
+                let uri = match port {
+                    Some(port) => format!("https://{hostname}:{port}{path}"),
+                    None => format!("https://{hostname}{path}"),
+                };
                 drop(conn_info);
 
                 // create redirection response
@@ -138,6 +159,8 @@ mod tests {
         test, web, App, Error, HttpResponse,
     };
 
+    use crate::{assert_response_matches, test_request};
+
     use super::*;
 
     fn test_app() -> App<
@@ -161,10 +184,9 @@ mod tests {
 
         let req = test::TestRequest::default().to_request();
         let res = test::call_service(&app, req).await;
-        assert_eq!(res.status(), StatusCode::TEMPORARY_REDIRECT);
 
+        assert_eq!(res.status(), StatusCode::TEMPORARY_REDIRECT);
         let loc = res.headers().get(header::LOCATION);
-        assert!(loc.is_some());
         assert!(loc.unwrap().as_bytes().starts_with(b"https://"));
 
         let body = test::read_body(res).await;
@@ -178,11 +200,10 @@ mod tests {
         let req = test::TestRequest::default()
             .uri("https://localhost:443/")
             .to_request();
+
         let res = test::call_service(&app, req).await;
         assert_eq!(res.status(), StatusCode::OK);
-
-        let loc = res.headers().get(header::LOCATION);
-        assert!(loc.is_none());
+        assert!(res.headers().get(header::LOCATION).is_none());
 
         let body = test::read_body(res).await;
         assert_eq!(body, "content");
@@ -191,41 +212,57 @@ mod tests {
     #[actix_web::test]
     async fn with_hsts() {
         // no HSTS
-        let app = test::init_service(test_app()).await;
+        let app = RedirectHttps::default()
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
 
-        let req = test::TestRequest::default()
-            .uri("http://localhost:443/")
-            .to_request();
+        let req = test_request!(GET "http://localhost/").to_srv_request();
         let res = test::call_service(&app, req).await;
         assert!(!res.headers().contains_key(Hsts::name()));
 
-        let req = test::TestRequest::default()
-            .uri("https://localhost:443/")
-            .to_request();
+        let req = test_request!(GET "https://localhost:443/").to_srv_request();
         let res = test::call_service(&app, req).await;
         assert!(!res.headers().contains_key(Hsts::name()));
 
         // with HSTS
-        let app = test::init_service(
-            App::new()
-                .wrap(RedirectHttps::with_hsts(Hsts::recommended()))
-                .route(
-                    "/",
-                    web::get().to(|| async { HttpResponse::Ok().body("content") }),
-                ),
-        )
-        .await;
+        let app = RedirectHttps::with_hsts(Hsts::recommended())
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
 
-        let req = test::TestRequest::default()
-            .uri("http://localhost:443/")
-            .to_request();
+        let req = test_request!(GET "http://localhost/").to_srv_request();
         let res = test::call_service(&app, req).await;
         assert!(res.headers().contains_key(Hsts::name()));
 
-        let req = test::TestRequest::default()
-            .uri("https://localhost:443/")
-            .to_request();
+        let req = test_request!(GET "https://localhost:443/").to_srv_request();
         let res = test::call_service(&app, req).await;
         assert!(res.headers().contains_key(Hsts::name()));
+    }
+
+    #[actix_web::test]
+    async fn to_custom_port() {
+        let app = RedirectHttps::default()
+            .to_port(8443)
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        let req = test_request!(GET "http://localhost/").to_srv_request();
+        let res = test::call_service(&app, req).await;
+        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
+    }
+
+    #[actix_web::test]
+    async fn to_custom_port_when_port_in_host() {
+        let app = RedirectHttps::default()
+            .to_port(8443)
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        let req = test_request!(GET "http://localhost:8080/").to_srv_request();
+        let res = test::call_service(&app, req).await;
+        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
     }
 }
