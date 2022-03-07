@@ -160,7 +160,7 @@ mod tests {
         test, web, App, Error, HttpResponse,
     };
 
-    use crate::{modname::assert_response_matches, test_request};
+    use crate::{assert_response_matches, test_request};
 
     use super::*;
 
@@ -251,7 +251,7 @@ mod tests {
 
         let req = test_request!(GET "http://localhost/").to_srv_request();
         let res = test::call_service(&app, req).await;
-        modname::assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
+        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
     }
 
     #[actix_web::test]
@@ -264,6 +264,6 @@ mod tests {
 
         let req = test_request!(GET "http://localhost:8080/").to_srv_request();
         let res = test::call_service(&app, req).await;
-        modname::assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
+        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
     }
 }
