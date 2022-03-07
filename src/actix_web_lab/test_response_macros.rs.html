@@ -131,49 +131,63 @@
 <span id="126">126</span>
 <span id="127">127</span>
 <span id="128">128</span>
-</pre><pre class="rust"><code><span class="doccomment">/**
-Quickly write tests that check various parts of a `ServiceResponse`.
-
-# Examples
-```
-let res = ServiceResponse::new(
-    TestRequest::default().to_http_request(),
-    HttpResponse::Created()
-        .insert_header((&quot;date&quot;, &quot;today&quot;))
-        .insert_header((&quot;set-cookie&quot;, &quot;a=b&quot;))
-        .body(&quot;Hello World!&quot;),
-);
-
-assert_response_matches!(res, CREATED);
-assert_response_matches!(res, CREATED; &quot;date&quot; =&gt; &quot;today&quot;);
-assert_response_matches!(res, CREATED; @raw &quot;Hello World!&quot;);
-
-let res = ServiceResponse::new(
-    TestRequest::default().to_http_request(),
-    HttpResponse::Created()
-        .insert_header((&quot;date&quot;, &quot;today&quot;))
-        .insert_header((&quot;set-cookie&quot;, &quot;a=b&quot;))
-        .body(&quot;Hello World!&quot;),
-);
-
-assert_response_matches!(res, CREATED;
-    &quot;date&quot; =&gt; &quot;today&quot;
-    &quot;set-cookie&quot; =&gt; &quot;a=b&quot;;
-    @raw &quot;Hello World!&quot;
-);
-
-let res = ServiceResponse::new(
-    TestRequest::default().to_http_request(),
-    HttpResponse::Created()
-        .content_type(ContentType::json())
-        .insert_header((&quot;date&quot;, &quot;today&quot;))
-        .insert_header((&quot;set-cookie&quot;, &quot;a=b&quot;))
-        .body(r#&quot;{&quot;abc&quot;:&quot;123&quot;}&quot;#),
-);
-
-assert_response_matches!(res, CREATED; @json { &quot;abc&quot;: &quot;123&quot; });
-```
-*/</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+</pre><pre class="rust"><code><span class="doccomment">/// Quickly write tests that check various parts of a `ServiceResponse`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// An async test must be used (e.g., `#[actix_web::test]`) if used to assert on response body.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use actix_web::{</span>
+<span class="doccomment">///     dev::ServiceResponse, http::header::ContentType, test::TestRequest, HttpResponse,</span>
+<span class="doccomment">/// };</span>
+<span class="doccomment">/// use actix_web_lab::assert_response_matches;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # actix_web::rt::System::new().block_on(async {</span>
+<span class="doccomment">/// let res = ServiceResponse::new(</span>
+<span class="doccomment">///     TestRequest::default().to_http_request(),</span>
+<span class="doccomment">///     HttpResponse::Created()</span>
+<span class="doccomment">///         .insert_header((&quot;date&quot;, &quot;today&quot;))</span>
+<span class="doccomment">///         .insert_header((&quot;set-cookie&quot;, &quot;a=b&quot;))</span>
+<span class="doccomment">///         .body(&quot;Hello World!&quot;),</span>
+<span class="doccomment">/// );</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// assert_response_matches!(res, CREATED);</span>
+<span class="doccomment">/// assert_response_matches!(res, CREATED; &quot;date&quot; =&gt; &quot;today&quot;);</span>
+<span class="doccomment">/// assert_response_matches!(res, CREATED; @raw &quot;Hello World!&quot;);</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let res = ServiceResponse::new(</span>
+<span class="doccomment">///     TestRequest::default().to_http_request(),</span>
+<span class="doccomment">///     HttpResponse::Created()</span>
+<span class="doccomment">///         .insert_header((&quot;date&quot;, &quot;today&quot;))</span>
+<span class="doccomment">///         .insert_header((&quot;set-cookie&quot;, &quot;a=b&quot;))</span>
+<span class="doccomment">///         .body(&quot;Hello World!&quot;),</span>
+<span class="doccomment">/// );</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// assert_response_matches!(res, CREATED;</span>
+<span class="doccomment">///     &quot;date&quot; =&gt; &quot;today&quot;</span>
+<span class="doccomment">///     &quot;set-cookie&quot; =&gt; &quot;a=b&quot;;</span>
+<span class="doccomment">///     @raw &quot;Hello World!&quot;</span>
+<span class="doccomment">/// );</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let res = ServiceResponse::new(</span>
+<span class="doccomment">///     TestRequest::default().to_http_request(),</span>
+<span class="doccomment">///     HttpResponse::Created()</span>
+<span class="doccomment">///         .content_type(ContentType::json())</span>
+<span class="doccomment">///         .insert_header((&quot;date&quot;, &quot;today&quot;))</span>
+<span class="doccomment">///         .insert_header((&quot;set-cookie&quot;, &quot;a=b&quot;))</span>
+<span class="doccomment">///         .body(r#&quot;{&quot;abc&quot;:&quot;123&quot;}&quot;#),</span>
+<span class="doccomment">/// );</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// assert_response_matches!(res, CREATED; @json { &quot;abc&quot;: &quot;123&quot; });</span>
+<span class="doccomment">/// # });</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">assert_response_matches</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">res</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">status</span>:<span class="ident">ident</span>) =&gt; {{
