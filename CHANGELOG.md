@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- Add `CacheControl` typed header.
+- Add `CacheDirective` type with support for modern cache directives.
 
 
 ## 0.14.0 - 2022-03-07
