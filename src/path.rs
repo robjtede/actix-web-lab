@@ -15,8 +15,6 @@ use serde::de;
 /// Alternative to `web::Path` extractor from Actix Web that allows deconstruction, but omits the
 /// implementation of `Deref`.
 ///
-/// Use [`PathConfig`] to configure extraction option.
-///
 /// Unlike, [`HttpRequest::match_info`], this extractor will fully percent-decode dynamic segments,
 /// including `/`, `%`, and `+`.
 ///

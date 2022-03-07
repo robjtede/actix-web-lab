@@ -28,6 +28,7 @@ mod body_extractor_fold;
 mod body_hash;
 mod body_hmac;
 mod buffered_serializing_stream;
+mod cache_control;
 mod channel_body;
 mod csv;
 mod display_stream;
@@ -45,6 +46,8 @@ mod redirect_to_https;
 mod redirect_to_www;
 mod request_hash;
 mod spa;
+#[cfg(test)]
+mod test_header_macros;
 mod test_request_macros;
 mod test_response_macros;
 mod test_services;
@@ -63,5 +66,5 @@ pub mod web;
 // private re-exports for macros
 #[doc(hidden)]
 pub mod __reexports {
-    pub use serde_json;
+    pub use ::serde_json;
 }

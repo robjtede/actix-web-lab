@@ -8,7 +8,6 @@ use actix_web::{
 
 /// Creates service that always responds with given status code and echoes request path as response
 /// body.
-#[doc(hidden)]
 pub fn echo_path_service(
     status_code: StatusCode,
 ) -> impl Service<ServiceRequest, Response = ServiceResponse<BoxBody>, Error = Error> {
