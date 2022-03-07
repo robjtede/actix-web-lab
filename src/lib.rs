@@ -47,6 +47,7 @@ mod request_hash;
 mod spa;
 mod test_request_macros;
 mod test_response_macros;
+mod test_services;
 mod utils;
 
 // public API
