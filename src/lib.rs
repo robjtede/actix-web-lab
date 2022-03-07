@@ -45,6 +45,7 @@ mod redirect_to_https;
 mod redirect_to_www;
 mod spa;
 mod test_request_macros;
+mod test_response_macros;
 mod utils;
 
 // public API
@@ -56,3 +57,9 @@ pub mod middleware;
 pub mod respond;
 pub mod test;
 pub mod web;
+
+// private re-exports for macros
+#[doc(hidden)]
+mod __reexports {
+    pub use serde_json;
+}
