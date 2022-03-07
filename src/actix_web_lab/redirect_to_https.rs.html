@@ -234,6 +234,43 @@
 <span id="229">229</span>
 <span id="230">230</span>
 <span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>},
     <span class="ident">rc::Rc</span>,
@@ -265,7 +302,7 @@
 <span class="doccomment">/// use actix_web_lab::{header::Hsts, middleware::RedirectHttps};</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// App::new().wrap(RedirectHttps::default());</span>
-<span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(Hsts::default()));</span>
+<span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(Hsts::default().to_port(8443)));</span>
 <span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(Hsts::new(Duration::from_secs(60 * 60))));</span>
 <span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(Hsts::recommended()));</span>
 <span class="doccomment">/// ```</span>
@@ -274,12 +311,24 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedirectHttps</span> {
     <span class="ident">hsts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Hsts</span><span class="op">&gt;</span>,
+    <span class="ident">port</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">RedirectHttps</span> {
     <span class="doccomment">/// Construct new HTTP redirect middleware with</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_hsts</span>(<span class="ident">hsts</span>: <span class="ident">Hsts</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">hsts</span>: <span class="prelude-val">Some</span>(<span class="ident">hsts</span>) }
+        <span class="self">Self</span> {
+            <span class="ident">hsts</span>: <span class="prelude-val">Some</span>(<span class="ident">hsts</span>),
+            ..<span class="ident"><span class="self">Self</span>::default</span>()
+        }
+    }
+
+    <span class="doccomment">/// Sets custom secure redirect port.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// By default, no port is set explicitly so the standard HTTPS port (443) is used.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_port</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">port</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">port</span>);
+        <span class="self">self</span>
     }
 }
 
@@ -297,6 +346,7 @@
         <span class="ident">ready</span>(<span class="prelude-val">Ok</span>(<span class="ident">RedirectHttpsMiddleware</span> {
             <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">service</span>),
             <span class="ident">hsts</span>: <span class="self">self</span>.<span class="ident">hsts</span>,
+            <span class="ident">port</span>: <span class="self">self</span>.<span class="ident">port</span>,
         }))
     }
 }
@@ -304,6 +354,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedirectHttpsMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="ident">service</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
     <span class="ident">hsts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Hsts</span><span class="op">&gt;</span>,
+    <span class="ident">port</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RedirectHttpsMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
@@ -319,16 +370,23 @@
     <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="ident">ServiceRequest</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
         <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">service</span>);
         <span class="kw">let</span> <span class="ident">hsts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">hsts</span>;
+        <span class="kw">let</span> <span class="ident">port</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">port</span>;
 
         <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">let</span> (<span class="ident">req</span>, <span class="ident">pl</span>) <span class="op">=</span> <span class="ident">req</span>.<span class="ident">into_parts</span>();
             <span class="kw">let</span> <span class="ident">conn_info</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">connection_info</span>();
 
             <span class="kw">if</span> <span class="ident">conn_info</span>.<span class="ident">scheme</span>() <span class="op">!</span><span class="op">=</span> <span class="string">&quot;https&quot;</span> {
-                <span class="comment">// construct equivalent https path</span>
                 <span class="kw">let</span> <span class="ident">host</span> <span class="op">=</span> <span class="ident">conn_info</span>.<span class="ident">host</span>();
+
+                <span class="comment">// construct equivalent https path</span>
+                <span class="kw">let</span> (<span class="ident">hostname</span>, <span class="ident">_port</span>) <span class="op">=</span> <span class="ident">host</span>.<span class="ident">split_once</span>(<span class="string">&#39;:&#39;</span>).<span class="ident">unwrap_or</span>((<span class="ident">host</span>, <span class="string">&quot;&quot;</span>));
+
                 <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">uri</span>().<span class="ident">path</span>();
-                <span class="kw">let</span> <span class="ident">uri</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;https://{host}{path}&quot;</span>);
+                <span class="kw">let</span> <span class="ident">uri</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">port</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">port</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;https://{hostname}:{port}{path}&quot;</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="macro">format!</span>(<span class="string">&quot;https://{hostname}{path}&quot;</span>),
+                };
                 <span class="ident">drop</span>(<span class="ident">conn_info</span>);
 
                 <span class="comment">// create redirection response</span>
@@ -374,6 +432,8 @@
         <span class="ident">test</span>, <span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">Error</span>, <span class="ident">HttpResponse</span>,
     };
 
+    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">assert_response_matches</span>, <span class="ident">test_request</span>};
+
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="kw">fn</span> <span class="ident">test_app</span>() -&gt; <span class="ident">App</span><span class="op">&lt;</span>
@@ -397,10 +457,9 @@
 
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">to_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::TEMPORARY_REDIRECT</span>);
 
+        <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::TEMPORARY_REDIRECT</span>);
         <span class="kw">let</span> <span class="ident">loc</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="ident">header::LOCATION</span>);
-        <span class="macro">assert!</span>(<span class="ident">loc</span>.<span class="ident">is_some</span>());
         <span class="macro">assert!</span>(<span class="ident">loc</span>.<span class="ident">unwrap</span>().<span class="ident">as_bytes</span>().<span class="ident">starts_with</span>(<span class="string">b&quot;https://&quot;</span>));
 
         <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">test::read_body</span>(<span class="ident">res</span>).<span class="kw">await</span>;
@@ -414,11 +473,10 @@
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>()
             .<span class="ident">uri</span>(<span class="string">&quot;https://localhost:443/&quot;</span>)
             .<span class="ident">to_request</span>();
+
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::OK</span>);
-
-        <span class="kw">let</span> <span class="ident">loc</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="ident">header::LOCATION</span>);
-        <span class="macro">assert!</span>(<span class="ident">loc</span>.<span class="ident">is_none</span>());
+        <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="ident">header::LOCATION</span>).<span class="ident">is_none</span>());
 
         <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">test::read_body</span>(<span class="ident">res</span>).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">body</span>, <span class="string">&quot;content&quot;</span>);
@@ -427,44 +485,60 @@
     <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">with_hsts</span>() {
         <span class="comment">// no HSTS</span>
-        <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(<span class="ident">test_app</span>()).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">RedirectHttps::default</span>()
+            .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>()
-            .<span class="ident">uri</span>(<span class="string">&quot;http://localhost:443/&quot;</span>)
-            .<span class="ident">to_request</span>();
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;http://localhost/&quot;</span>).<span class="ident">to_srv_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
         <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">Hsts::name</span>()));
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>()
-            .<span class="ident">uri</span>(<span class="string">&quot;https://localhost:443/&quot;</span>)
-            .<span class="ident">to_request</span>();
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;https://localhost:443/&quot;</span>).<span class="ident">to_srv_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
         <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">Hsts::name</span>()));
 
         <span class="comment">// with HSTS</span>
-        <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
-            <span class="ident">App::new</span>()
-                .<span class="ident">wrap</span>(<span class="ident">RedirectHttps::with_hsts</span>(<span class="ident">Hsts::recommended</span>()))
-                .<span class="ident">route</span>(
-                    <span class="string">&quot;/&quot;</span>,
-                    <span class="ident">web::get</span>().<span class="ident">to</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="ident">HttpResponse::Ok</span>().<span class="ident">body</span>(<span class="string">&quot;content&quot;</span>) }),
-                ),
-        )
-        .<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">RedirectHttps::with_hsts</span>(<span class="ident">Hsts::recommended</span>())
+            .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>()
-            .<span class="ident">uri</span>(<span class="string">&quot;http://localhost:443/&quot;</span>)
-            .<span class="ident">to_request</span>();
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;http://localhost/&quot;</span>).<span class="ident">to_srv_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
         <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">Hsts::name</span>()));
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>()
-            .<span class="ident">uri</span>(<span class="string">&quot;https://localhost:443/&quot;</span>)
-            .<span class="ident">to_request</span>();
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;https://localhost:443/&quot;</span>).<span class="ident">to_srv_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
         <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">Hsts::name</span>()));
     }
+
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">to_custom_port</span>() {
+        <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">RedirectHttps::default</span>()
+            .<span class="ident">to_port</span>(<span class="number">8443</span>)
+            .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;http://localhost/&quot;</span>).<span class="ident">to_srv_request</span>();
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="macro">assert_response_matches!</span>(<span class="ident">res</span>, <span class="ident">TEMPORARY_REDIRECT</span>; <span class="string">&quot;location&quot;</span> =&gt; <span class="string">&quot;https://localhost:8443/&quot;</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">to_custom_port_when_port_in_host</span>() {
+        <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">RedirectHttps::default</span>()
+            .<span class="ident">to_port</span>(<span class="number">8443</span>)
+            .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;http://localhost:8080/&quot;</span>).<span class="ident">to_srv_request</span>();
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="macro">assert_response_matches!</span>(<span class="ident">res</span>, <span class="ident">TEMPORARY_REDIRECT</span>; <span class="string">&quot;location&quot;</span> =&gt; <span class="string">&quot;https://localhost:8443/&quot;</span>);
+    }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (8769f4ef2 2022-03-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (38a0b81b1 2022-03-06)" ></div>
 </body></html>
