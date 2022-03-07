@@ -1,46 +1,53 @@
-/**
-Quickly write tests that check various parts of a `ServiceResponse`.
-
-# Examples
-```
-let res = ServiceResponse::new(
-    TestRequest::default().to_http_request(),
-    HttpResponse::Created()
-        .insert_header(("date", "today"))
-        .insert_header(("set-cookie", "a=b"))
-        .body("Hello World!"),
-);
-
-assert_response_matches!(res, CREATED);
-assert_response_matches!(res, CREATED; "date" => "today");
-assert_response_matches!(res, CREATED; @raw "Hello World!");
-
-let res = ServiceResponse::new(
-    TestRequest::default().to_http_request(),
-    HttpResponse::Created()
-        .insert_header(("date", "today"))
-        .insert_header(("set-cookie", "a=b"))
-        .body("Hello World!"),
-);
-
-assert_response_matches!(res, CREATED;
-    "date" => "today"
-    "set-cookie" => "a=b";
-    @raw "Hello World!"
-);
-
-let res = ServiceResponse::new(
-    TestRequest::default().to_http_request(),
-    HttpResponse::Created()
-        .content_type(ContentType::json())
-        .insert_header(("date", "today"))
-        .insert_header(("set-cookie", "a=b"))
-        .body(r#"{"abc":"123"}"#),
-);
-
-assert_response_matches!(res, CREATED; @json { "abc": "123" });
-```
-*/
+/// Quickly write tests that check various parts of a `ServiceResponse`.
+///
+/// An async test must be used (e.g., `#[actix_web::test]`) if used to assert on response body.
+///
+/// # Examples
+/// ```
+/// use actix_web::{
+///     dev::ServiceResponse, http::header::ContentType, test::TestRequest, HttpResponse,
+/// };
+/// use actix_web_lab::assert_response_matches;
+///
+/// # actix_web::rt::System::new().block_on(async {
+/// let res = ServiceResponse::new(
+///     TestRequest::default().to_http_request(),
+///     HttpResponse::Created()
+///         .insert_header(("date", "today"))
+///         .insert_header(("set-cookie", "a=b"))
+///         .body("Hello World!"),
+/// );
+///
+/// assert_response_matches!(res, CREATED);
+/// assert_response_matches!(res, CREATED; "date" => "today");
+/// assert_response_matches!(res, CREATED; @raw "Hello World!");
+///
+/// let res = ServiceResponse::new(
+///     TestRequest::default().to_http_request(),
+///     HttpResponse::Created()
+///         .insert_header(("date", "today"))
+///         .insert_header(("set-cookie", "a=b"))
+///         .body("Hello World!"),
+/// );
+///
+/// assert_response_matches!(res, CREATED;
+///     "date" => "today"
+///     "set-cookie" => "a=b";
+///     @raw "Hello World!"
+/// );
+///
+/// let res = ServiceResponse::new(
+///     TestRequest::default().to_http_request(),
+///     HttpResponse::Created()
+///         .content_type(ContentType::json())
+///         .insert_header(("date", "today"))
+///         .insert_header(("set-cookie", "a=b"))
+///         .body(r#"{"abc":"123"}"#),
+/// );
+///
+/// assert_response_matches!(res, CREATED; @json { "abc": "123" });
+/// # });
+/// ```
 #[macro_export]
 macro_rules! assert_response_matches {
     ($res:ident, $status:ident) => {{

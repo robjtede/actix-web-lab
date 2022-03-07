@@ -61,6 +61,6 @@ pub mod web;
 
 // private re-exports for macros
 #[doc(hidden)]
-mod __reexports {
+pub mod __reexports {
     pub use serde_json;
 }

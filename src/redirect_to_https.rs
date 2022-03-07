@@ -29,7 +29,8 @@ use crate::{header::Hsts, web::Redirect};
 /// use actix_web_lab::{header::Hsts, middleware::RedirectHttps};
 ///
 /// App::new().wrap(RedirectHttps::default());
-/// App::new().wrap(RedirectHttps::with_hsts(Hsts::default().to_port(8443)));
+/// App::new().wrap(RedirectHttps::default().to_port(8443));
+/// App::new().wrap(RedirectHttps::with_hsts(Hsts::default()));
 /// App::new().wrap(RedirectHttps::with_hsts(Hsts::new(Duration::from_secs(60 * 60))));
 /// App::new().wrap(RedirectHttps::with_hsts(Hsts::recommended()));
 /// ```
@@ -159,7 +160,7 @@ mod tests {
         test, web, App, Error, HttpResponse,
     };
 
-    use crate::{assert_response_matches, test_request};
+    use crate::{modname::assert_response_matches, test_request};
 
     use super::*;
 
@@ -250,7 +251,7 @@ mod tests {
 
         let req = test_request!(GET "http://localhost/").to_srv_request();
         let res = test::call_service(&app, req).await;
-        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
+        modname::assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
     }
 
     #[actix_web::test]
@@ -263,6 +264,6 @@ mod tests {
 
         let req = test_request!(GET "http://localhost:8080/").to_srv_request();
         let res = test::call_service(&app, req).await;
-        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
+        modname::assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
     }
 }

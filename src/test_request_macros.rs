@@ -2,6 +2,9 @@
 ///
 /// # Examples
 /// ```
+/// use actix_web::test::TestRequest;
+/// use actix_web_lab::test_request;
+///
 /// let _req: TestRequest = test_request! {
 ///     POST "/";
 ///     "Origin" => "example.com"
