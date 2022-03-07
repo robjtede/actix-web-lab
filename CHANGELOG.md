@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.14.0 - 2022-03-07
 - Add `test` module containing new test request builders and response testing macros.
 - Add `RedirectHttps::to_port()` for specifying custom HTTPS redirect port.
 - Fix `RedirectHttps` when host contains port already.
