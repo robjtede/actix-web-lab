@@ -44,6 +44,7 @@ mod redirect;
 mod redirect_to_https;
 mod redirect_to_www;
 mod spa;
+mod test_request_macros;
 mod utils;
 
 // public API
@@ -53,4 +54,5 @@ pub mod guard;
 pub mod header;
 pub mod middleware;
 pub mod respond;
+pub mod test;
 pub mod web;
