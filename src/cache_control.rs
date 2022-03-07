@@ -286,10 +286,10 @@ impl fmt::Display for CacheDirective {
 impl str::FromStr for CacheDirective {
     type Err = Option<<u32 as str::FromStr>::Err>;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(dir: &str) -> Result<Self, Self::Err> {
         use CacheDirective::*;
 
-        match s {
+        match dir {
             "" => Err(None),
 
             "no-cache" => Ok(NoCache),
@@ -306,18 +306,23 @@ impl str::FromStr for CacheDirective {
             "stale-while-revalidate" => Ok(StaleWhileRevalidate),
             "stale-if-error" => Ok(StaleIfError),
 
-            _ => match s.find('=') {
-                Some(idx) if idx + 1 < s.len() => {
-                    match (&s[..idx], (&s[idx + 1..]).trim_matches('"')) {
-                        ("max-age", secs) => secs.parse().map(MaxAge).map_err(Some),
-                        ("max-stale", secs) => secs.parse().map(MaxStale).map_err(Some),
-                        ("min-fresh", secs) => secs.parse().map(MinFresh).map_err(Some),
-                        ("s-maxage", secs) => secs.parse().map(SMaxAge).map_err(Some),
-                        (left, right) => Ok(Extension(left.to_owned(), Some(right.to_owned()))),
-                    }
-                }
-                Some(_) => Err(None),
-                None => Ok(Extension(s.to_owned(), None)),
+            _ => match dir
+                .split_once('=')
+                .map(|(dir, arg)| (dir, arg.trim_matches('"')))
+            {
+                // empty argument is not allowed
+                Some((_dir, "")) => Err(None),
+
+                Some(("max-age", secs)) => secs.parse().map(MaxAge).map_err(Some),
+                Some(("max-stale", secs)) => secs.parse().map(MaxStale).map_err(Some),
+                Some(("min-fresh", secs)) => secs.parse().map(MinFresh).map_err(Some),
+                Some(("s-maxage", secs)) => secs.parse().map(SMaxAge).map_err(Some),
+
+                // unknown but correctly formatted directive+argument
+                Some((left, right)) => Ok(Extension(left.to_owned(), Some(right.to_owned()))),
+
+                // unknown directive
+                None => Ok(Extension(dir.to_owned(), None)),
             },
         }
     }
