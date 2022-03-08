@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["actix_web_lab"] = [{"text":"impl&lt;S:&nbsp;Stream&gt; Stream for <a class=\"struct\" href=\"actix_web_lab/util/struct.InfallibleStream.html\" title=\"struct actix_web_lab::util::InfallibleStream\">InfallibleStream</a>&lt;S&gt;","synthetic":false,"types":["actix_web_lab::util::InfallibleStream"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
