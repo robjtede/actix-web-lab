@@ -14,7 +14,7 @@ use pin_project_lite::pin_project;
 
 use crate::{
     buffered_serializing_stream::BufferedSerializingStream,
-    utils::{InfallibleStream, MutWriter},
+    util::{InfallibleStream, MutWriter},
 };
 
 pin_project! {

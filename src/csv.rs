@@ -12,7 +12,7 @@ use serde::Serialize;
 
 use crate::{
     buffered_serializing_stream::BufferedSerializingStream,
-    utils::{InfallibleStream, MutWriter},
+    util::{InfallibleStream, MutWriter},
 };
 
 pin_project! {

@@ -8,7 +8,7 @@ use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
 use pin_project_lite::pin_project;
 
-use crate::utils::MutWriter;
+use crate::util::MutWriter;
 
 pin_project! {
     pub(crate) struct BufferedSerializingStream<S, F, E> {
@@ -119,7 +119,7 @@ mod tests {
         future::poll_fn, pin_mut, stream, task::noop_waker, StreamExt as _, TryStreamExt,
     };
 
-    use crate::utils::{InfallibleStream, PollSeq};
+    use crate::util::{InfallibleStream, PollSeq};
 
     use super::*;
 

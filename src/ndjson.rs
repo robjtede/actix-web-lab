@@ -17,7 +17,7 @@ use serde::Serialize;
 
 use crate::{
     buffered_serializing_stream::BufferedSerializingStream,
-    utils::{InfallibleStream, MutWriter},
+    util::{InfallibleStream, MutWriter},
 };
 
 static NDJSON_MIME: Lazy<Mime> = Lazy::new(|| "application/x-ndjson".parse().unwrap());

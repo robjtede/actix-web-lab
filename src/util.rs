@@ -1,3 +1,5 @@
+//! Utilities for working with Actix Web types.
+
 use std::{
     convert::Infallible,
     io,

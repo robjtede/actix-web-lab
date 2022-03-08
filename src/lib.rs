@@ -35,6 +35,7 @@ mod display_stream;
 mod err_handler;
 mod hsts;
 mod html;
+mod infallible_body_stream;
 mod json;
 mod lazy_data;
 mod middleware_from_fn;
@@ -51,7 +52,6 @@ mod test_header_macros;
 mod test_request_macros;
 mod test_response_macros;
 mod test_services;
-mod utils;
 
 // public API
 pub mod body;
@@ -61,6 +61,7 @@ pub mod header;
 pub mod middleware;
 pub mod respond;
 pub mod test;
+pub mod util;
 pub mod web;
 
 // private re-exports for macros
