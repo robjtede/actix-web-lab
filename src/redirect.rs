@@ -7,6 +7,7 @@ use actix_web::{
     http::{header::LOCATION, StatusCode},
     HttpRequest, HttpResponse, Responder,
 };
+use tracing::debug;
 
 /// An HTTP service for redirecting one path to another path or URL.
 ///
@@ -138,7 +139,7 @@ impl Responder for Redirect {
         if let Ok(hdr_val) = self.to.parse() {
             res.headers_mut().insert(LOCATION, hdr_val);
         } else {
-            log::debug!(
+            debug!(
                 "redirect target location can not be converted to header value: {:?}",
                 self.to
             );

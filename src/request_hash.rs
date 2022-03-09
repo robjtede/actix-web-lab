@@ -7,6 +7,7 @@ use futures_core::{future::LocalBoxFuture, Future};
 use futures_util::{FutureExt as _, StreamExt as _};
 use local_channel::mpsc::{self, Receiver};
 use tokio::try_join;
+use tracing::trace;
 
 type HashFn<D> = Arc<dyn Fn(D, HttpRequest, Receiver<Bytes>) -> LocalBoxFuture<'static, D>>;
 
@@ -125,19 +126,19 @@ where
             // wrap payload in stream that reads chunks and clones them (cheaply) back here
             let proxy_stream: BoxedPayloadStream = Box::pin(payload.inspect(move |res| {
                 if let Ok(chunk) = res {
-                    log::trace!("yielding {} byte chunk", chunk.len());
+                    trace!("yielding {} byte chunk", chunk.len());
                     tx.send(chunk.clone()).unwrap();
                 }
             }));
 
-            log::trace!("creating proxy payload");
+            trace!("creating proxy payload");
             let mut proxy_payload = dev::Payload::from(proxy_stream);
             let body_fut = T::from_request(&req, &mut proxy_payload);
 
             // run update function as chunks are yielded from channel
             let hash_fut = ((hash_fn)(hasher, req, rx)).map(Ok);
 
-            log::trace!("driving both futures");
+            trace!("driving both futures");
             let (body, hash) = try_join!(body_fut, hash_fut)?;
 
             let out = Self {

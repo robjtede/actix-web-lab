@@ -12,12 +12,13 @@ use actix_web_lab::extract::{RequestHash, RequestHasher};
 use digest::Digest;
 use local_channel::mpsc::Receiver;
 use sha2::Sha256;
+use tracing::info;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    log::info!("staring server at http://localhost:8080");
+    info!("staring server at http://localhost:8080");
 
     HttpServer::new(|| {
         App::new()

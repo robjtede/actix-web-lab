@@ -4,13 +4,14 @@ use std::io;
 
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use actix_web_lab::web::spa;
+use tracing::info;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let bind = ("127.0.0.1", 8080);
-    log::info!("staring server at http://{}:{}", &bind.0, &bind.1);
+    info!("staring server at http://{}:{}", &bind.0, &bind.1);
 
     HttpServer::new(|| {
         App::new()

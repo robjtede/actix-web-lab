@@ -17,6 +17,7 @@ use actix_web::{
     dev::Payload, error::JsonPayloadError, http::header, web, Error, FromRequest, HttpMessage,
     HttpRequest,
 };
+use tracing::debug;
 
 /// Default JSON payload size limit of 2MiB.
 pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
@@ -99,7 +100,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonExtractFut<T, LIMIT
         let res = match res {
             Err(err) => {
                 let req = this.req.take().unwrap();
-                log::debug!(
+                debug!(
                     "Failed to deserialize Json<{}> from payload in handler: {}",
                     core::any::type_name::<T>(),
                     req.match_name().unwrap_or_else(|| req.path())

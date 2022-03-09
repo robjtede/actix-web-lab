@@ -9,6 +9,7 @@ use actix_web::{
 };
 use derive_more::{AsRef, Display, From};
 use serde::de;
+use tracing::debug;
 
 /// Extract typed data from request path segments.
 ///
@@ -76,7 +77,7 @@ where
             de::Deserialize::deserialize(PathDeserializer::new(req.match_info()))
                 .map(Path)
                 .map_err(move |err| {
-                    log::debug!(
+                    debug!(
                         "Failed during Path extractor deserialization. \
                          Request path: {:?}",
                         req.path()

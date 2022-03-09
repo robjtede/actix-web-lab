@@ -8,6 +8,7 @@ use std::{
 use actix_web::{dev, error, Error, FromRequest, HttpRequest};
 use futures_core::future::LocalBoxFuture;
 use tokio::sync::OnceCell;
+use tracing::debug;
 
 /// A lazy extractor for thread-local data.
 ///
@@ -78,7 +79,7 @@ impl<T: 'static> FromRequest for LazyData<T> {
         if let Some(lazy) = req.app_data::<LazyData<T>>() {
             ready(Ok(lazy.clone()))
         } else {
-            log::debug!(
+            debug!(
                 "Failed to extract `LazyData<{}>` for `{}` handler. For the Data extractor to work \
                 correctly, wrap the data with `LazyData::new()` and pass it to `App::app_data()`. \
                 Ensure that types align in both the set and retrieve calls.",

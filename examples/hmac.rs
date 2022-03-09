@@ -13,6 +13,7 @@ use actix_web_lab::extract::{BodyHmac, HmacConfig};
 // use futures_util::StreamExt as _;
 // use hmac::SimpleHmac;
 use sha2::Sha256;
+use tracing::info;
 
 #[allow(non_upper_case_globals)]
 const db: () = ();
@@ -42,7 +43,7 @@ async fn cf_extract_key(req: HttpRequest) -> actix_web::Result<Vec<u8>> {
 async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    log::info!("staring server at http://localhost:8080");
+    info!("staring server at http://localhost:8080");
 
     HttpServer::new(|| {
         // let hmac_config = HmacConfig::static_key(*b"");

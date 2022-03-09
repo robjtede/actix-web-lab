@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use actix_files::{Files, NamedFile};
 use actix_service::fn_service;
 use actix_web::dev::{HttpServiceFactory, ResourceDef, ServiceRequest, ServiceResponse};
+use tracing::trace;
 
 /// Single Page App (SPA) service builder.
 ///
@@ -110,7 +111,7 @@ async fn serve_index(
     req: ServiceRequest,
     index_file: String,
 ) -> Result<ServiceResponse, actix_web::Error> {
-    log::trace!("serving default SPA page");
+    trace!("serving default SPA page");
     let (req, _) = req.into_parts();
     let file = NamedFile::open_async(&index_file).await?;
     let res = file.into_response(&req);

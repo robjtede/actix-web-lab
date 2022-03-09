@@ -19,6 +19,7 @@ use futures_util::{stream, StreamExt as _};
 use rand::{distributions::Alphanumeric, Rng as _};
 use serde::Deserialize;
 use serde_json::json;
+use tracing::info;
 
 fn streaming_data_source(n: u32) -> impl Stream<Item = Result<serde_json::Value, io::Error>> {
     stream::repeat_with(|| {
@@ -83,7 +84,7 @@ async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let bind = ("127.0.0.1", 8080);
-    log::info!("staring server at http://{}:{}", &bind.0, &bind.1);
+    info!("staring server at http://{}:{}", &bind.0, &bind.1);
 
     HttpServer::new(|| {
         App::new()

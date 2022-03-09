@@ -9,6 +9,7 @@ use std::{
 use serde::de::DeserializeOwned;
 
 use actix_web::{dev::Payload, error::QueryPayloadError, Error, FromRequest, HttpRequest};
+use tracing::debug;
 
 /// Extract typed information from the request's query.
 ///
@@ -123,7 +124,7 @@ impl<T: DeserializeOwned> FromRequest for Query<T> {
             .unwrap_or_else(move |e| {
                 let err = QueryPayloadError::Deserialize(e);
 
-                log::debug!(
+                debug!(
                     "Failed during Query extractor deserialization. \
                      Request path: {:?}",
                     req.path()
