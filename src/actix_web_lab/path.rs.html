@@ -222,6 +222,7 @@
 <span id="217">217</span>
 <span id="218">218</span>
 <span id="219">219</span>
+<span id="220">220</span>
 </pre><pre class="rust"><code><span class="doccomment">//! For path segment extractor documentation, see [`Path`].</span>
 
 <span class="kw">use</span> <span class="ident">actix_router::PathDeserializer</span>;
@@ -233,6 +234,7 @@
 };
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">AsRef</span>, <span class="ident">Display</span>, <span class="ident">From</span>};
 <span class="kw">use</span> <span class="ident">serde::de</span>;
+<span class="kw">use</span> <span class="ident">tracing::debug</span>;
 
 <span class="doccomment">/// Extract typed data from request path segments.</span>
 <span class="doccomment">///</span>
@@ -300,7 +302,7 @@
             <span class="ident">de::Deserialize::deserialize</span>(<span class="ident">PathDeserializer::new</span>(<span class="ident">req</span>.<span class="ident">match_info</span>()))
                 .<span class="ident">map</span>(<span class="ident">Path</span>)
                 .<span class="ident">map_err</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                    <span class="macro">log::debug!</span>(
+                    <span class="macro">debug!</span>(
                         <span class="string">&quot;Failed during Path extractor deserialization. \
                          Request path: {:?}&quot;</span>,
                         <span class="ident">req</span>.<span class="ident">path</span>()
@@ -442,5 +444,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (03918badd 2022-03-07)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1eb72580d 2022-03-08)" ></div>
 </body></html>

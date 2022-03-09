@@ -210,6 +210,7 @@
 <span id="205">205</span>
 <span id="206">206</span>
 <span id="207">207</span>
+<span id="208">208</span>
 </pre><pre class="rust"><code><span class="doccomment">//! See [`Redirect`] for service/responder documentation.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">future::ready</span>};
@@ -219,6 +220,7 @@
     <span class="ident">http</span>::{<span class="ident">header::LOCATION</span>, <span class="ident">StatusCode</span>},
     <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>, <span class="ident">Responder</span>,
 };
+<span class="kw">use</span> <span class="ident">tracing::debug</span>;
 
 <span class="doccomment">/// An HTTP service for redirecting one path to another path or URL.</span>
 <span class="doccomment">///</span>
@@ -350,7 +352,7 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">hdr_val</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">to</span>.<span class="ident">parse</span>() {
             <span class="ident">res</span>.<span class="ident">headers_mut</span>().<span class="ident">insert</span>(<span class="ident">LOCATION</span>, <span class="ident">hdr_val</span>);
         } <span class="kw">else</span> {
-            <span class="macro">log::debug!</span>(
+            <span class="macro">debug!</span>(
                 <span class="string">&quot;redirect target location can not be converted to header value: {:?}&quot;</span>,
                 <span class="self">self</span>.<span class="ident">to</span>
             );
@@ -418,5 +420,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (03918badd 2022-03-07)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1eb72580d 2022-03-08)" ></div>
 </body></html>

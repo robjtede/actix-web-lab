@@ -203,6 +203,7 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
+<span id="201">201</span>
 </pre><pre class="rust"><code><span class="doccomment">//! For query parameter extractor documentation, see [`Query`].</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -214,6 +215,7 @@
 <span class="kw">use</span> <span class="ident">serde::de::DeserializeOwned</span>;
 
 <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">dev::Payload</span>, <span class="ident">error::QueryPayloadError</span>, <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>};
+<span class="kw">use</span> <span class="ident">tracing::debug</span>;
 
 <span class="doccomment">/// Extract typed information from the request&#39;s query.</span>
 <span class="doccomment">///</span>
@@ -328,7 +330,7 @@
             .<span class="ident">unwrap_or_else</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">QueryPayloadError::Deserialize</span>(<span class="ident">e</span>);
 
-                <span class="macro">log::debug!</span>(
+                <span class="macro">debug!</span>(
                     <span class="string">&quot;Failed during Query extractor deserialization. \
                      Request path: {:?}&quot;</span>,
                     <span class="ident">req</span>.<span class="ident">path</span>()
@@ -404,5 +406,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (03918badd 2022-03-07)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1eb72580d 2022-03-08)" ></div>
 </body></html>
