@@ -75,6 +75,7 @@
 <span id="70">70</span>
 <span id="71">71</span>
 <span id="72">72</span>
+<span id="73">73</span>
 </pre><pre class="rust"><code><span class="doccomment">//! In-progress extractors and middleware for Actix Web.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # What Is This Crate?</span>
@@ -108,7 +109,6 @@
 <span class="kw">mod</span> <span class="ident">cache_control</span>;
 <span class="kw">mod</span> <span class="ident">channel_body</span>;
 <span class="kw">mod</span> <span class="ident">csv</span>;
-<span class="kw">mod</span> <span class="ident">data_swap</span>;
 <span class="kw">mod</span> <span class="ident">display_stream</span>;
 <span class="kw">mod</span> <span class="ident">err_handler</span>;
 <span class="kw">mod</span> <span class="ident">hsts</span>;
@@ -116,6 +116,7 @@
 <span class="kw">mod</span> <span class="ident">infallible_body_stream</span>;
 <span class="kw">mod</span> <span class="ident">json</span>;
 <span class="kw">mod</span> <span class="ident">lazy_data</span>;
+<span class="kw">mod</span> <span class="ident">local_data</span>;
 <span class="kw">mod</span> <span class="ident">middleware_from_fn</span>;
 <span class="kw">mod</span> <span class="ident">ndjson</span>;
 <span class="kw">mod</span> <span class="ident">path</span>;
@@ -125,6 +126,7 @@
 <span class="kw">mod</span> <span class="ident">redirect_to_www</span>;
 <span class="kw">mod</span> <span class="ident">request_hash</span>;
 <span class="kw">mod</span> <span class="ident">spa</span>;
+<span class="kw">mod</span> <span class="ident">swap_data</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test_header_macros</span>;
 <span class="kw">mod</span> <span class="ident">test_request_macros</span>;
