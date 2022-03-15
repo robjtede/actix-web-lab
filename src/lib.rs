@@ -31,6 +31,7 @@ mod buffered_serializing_stream;
 mod cache_control;
 mod channel_body;
 mod csv;
+mod data_swap;
 mod display_stream;
 mod err_handler;
 mod hsts;
