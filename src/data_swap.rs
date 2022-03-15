@@ -32,7 +32,7 @@ impl<T> DataSwap<T> {
 
     /// Replaces the value inside this instance.
     ///
-    /// Further `load`s will yield this new value.
+    /// Further `load`s will yield the new value.
     pub fn store(&self, item: T) {
         self.swap.store(Arc::new(item))
     }

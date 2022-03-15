@@ -39,6 +39,7 @@ mod html;
 mod infallible_body_stream;
 mod json;
 mod lazy_data;
+mod local_data;
 mod middleware_from_fn;
 mod ndjson;
 mod path;
