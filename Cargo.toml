@@ -13,7 +13,7 @@ categories = [
 repository = "https://github.com/robjtede/actix-web-lab.git"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-rust-version = "1.58"
+rust-version = "1.59"
 
 [features]
 nightly = []
@@ -48,7 +48,7 @@ tokio = { version = "1.13.1", features = ["sync", "macros"] }
 tracing = { version = "0.1.30", features = ["log"] }
 
 [dev-dependencies]
-actix-web = "4.0.0-rc.2"
+actix-web = "4"
 
 base64 = "0.13"
 env_logger = "0.9"
