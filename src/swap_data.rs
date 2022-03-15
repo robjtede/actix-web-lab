@@ -11,11 +11,11 @@ use tracing::debug;
 ///
 /// Currently exposes some internals of `arc-swap` and may change in the future.
 #[derive(Debug)]
-pub struct DataSwap<T> {
+pub struct SwapData<T> {
     swap: Arc<ArcSwap<T>>,
 }
 
-impl<T> DataSwap<T> {
+impl<T> SwapData<T> {
     /// Constructs new swappable data item.
     pub fn new(item: T) -> Self {
         Self {
@@ -38,7 +38,7 @@ impl<T> DataSwap<T> {
     }
 }
 
-impl<T> Clone for DataSwap<T> {
+impl<T> Clone for SwapData<T> {
     fn clone(&self) -> Self {
         Self {
             swap: Arc::clone(&self.swap),
@@ -46,13 +46,13 @@ impl<T> Clone for DataSwap<T> {
     }
 }
 
-impl<T: 'static> FromRequest for DataSwap<T> {
+impl<T: 'static> FromRequest for SwapData<T> {
     type Error = Error;
     type Future = Ready<Result<Self, Self::Error>>;
 
     fn from_request(req: &HttpRequest, _pl: &mut dev::Payload) -> Self::Future {
-        if let Some(data) = req.app_data::<DataSwap<T>>() {
-            ready(Ok(DataSwap {
+        if let Some(data) = req.app_data::<SwapData<T>>() {
+            ready(Ok(SwapData {
                 swap: Arc::clone(&data.swap),
             }))
         } else {
@@ -83,17 +83,17 @@ mod tests {
 
     #[actix_web::test]
     async fn deref() {
-        let data = DataSwap::new(NonCopy(42));
+        let data = SwapData::new(NonCopy(42));
         let inner_data = data.load();
         let _inner_data: &NonCopy = &inner_data;
     }
 
     #[actix_web::test]
     async fn extract_success() {
-        let data = DataSwap::new(NonCopy(42));
+        let data = SwapData::new(NonCopy(42));
 
         let req = TestRequest::default().app_data(data).to_http_request();
-        let extracted_data = DataSwap::<NonCopy>::extract(&req).await.unwrap();
+        let extracted_data = SwapData::<NonCopy>::extract(&req).await.unwrap();
 
         assert_eq!(**extracted_data.load(), NonCopy(42));
     }
@@ -101,25 +101,25 @@ mod tests {
     #[actix_web::test]
     async fn extract_fail() {
         let req = TestRequest::default().to_http_request();
-        DataSwap::<()>::extract(&req).await.unwrap_err();
+        SwapData::<()>::extract(&req).await.unwrap_err();
     }
 
     #[actix_web::test]
     async fn store_and_reload() {
-        let data = DataSwap::new(NonCopy(42));
+        let data = SwapData::new(NonCopy(42));
         let initial_data = Guard::into_inner(data.load());
 
         let req = TestRequest::default().app_data(data).to_http_request();
 
         // first load in handler loads initial value
-        let extracted_data = DataSwap::<NonCopy>::extract(&req).await.unwrap();
+        let extracted_data = SwapData::<NonCopy>::extract(&req).await.unwrap();
         assert_eq!(**extracted_data.load(), NonCopy(42));
 
         // change data
         extracted_data.store(NonCopy(80));
 
         // next load in handler loads new value
-        let extracted_data = DataSwap::<NonCopy>::extract(&req).await.unwrap();
+        let extracted_data = SwapData::<NonCopy>::extract(&req).await.unwrap();
         assert_eq!(**extracted_data.load(), NonCopy(80));
 
         // initial extracted data stays the same

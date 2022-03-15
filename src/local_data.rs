@@ -130,26 +130,26 @@ mod tests {
     #[actix_web::test]
     async fn test_data_from_rc() {
         let data_new = LocalData::new(String::from("test-123"));
-        let data_from_arc = LocalData::from(Rc::new(String::from("test-123")));
-        assert_eq!(data_new.0, data_from_arc.0);
+        let data_from_rc = LocalData::from(Rc::new(String::from("test-123")));
+        assert_eq!(data_new.0, data_from_rc.0);
     }
 
     #[actix_web::test]
     async fn test_data_from_dyn_rc() {
         // This works when Sized is required
-        let dyn_arc_box: Rc<Box<dyn TestTrait>> = Rc::new(Box::new(A {}));
-        let data_arc_box = LocalData::from(dyn_arc_box);
+        let dyn_rc_box: Rc<Box<dyn TestTrait>> = Rc::new(Box::new(A {}));
+        let data_arc_box = LocalData::from(dyn_rc_box);
 
         // This works when Data Sized Bound is removed
-        let dyn_arc: Rc<dyn TestTrait> = Rc::new(A {});
-        let data_arc = LocalData::from(dyn_arc);
+        let dyn_rc: Rc<dyn TestTrait> = Rc::new(A {});
+        let data_arc = LocalData::from(dyn_rc);
         assert_eq!(data_arc_box.get_num(), data_arc.get_num())
     }
 
     #[actix_web::test]
     async fn test_get_ref_from_dyn_data() {
-        let dyn_arc: Rc<dyn TestTrait> = Rc::new(A {});
-        let data_arc = LocalData::from(dyn_arc);
+        let dyn_rc: Rc<dyn TestTrait> = Rc::new(A {});
+        let data_arc = LocalData::from(dyn_rc);
         let ref_data: &dyn TestTrait = &*data_arc;
         assert_eq!(data_arc.get_num(), ref_data.get_num())
     }

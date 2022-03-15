@@ -31,7 +31,8 @@
 ### Extractors
 
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/0.15.0/actix_web_lab/extract/struct.LazyData.html)
-- `DataSwap`: app data/state that can be replaced at runtime (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.15.0/actix_web_lab/extract/struct.DataSwap.html)
+- `SwapData`: app data/state that can be replaced at runtime (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.15.0/actix_web_lab/extract/struct.SwapData.html)
+- `LocalData`: app data/state that can be replaced at runtime (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.15.0/actix_web_lab/extract/struct.DataSwap.html)
 - `Json`: simplified JSON extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.15.0/actix_web_lab/extract/struct.Json.html)
 - `Path`: simplified path parameter extractor that supports destructuring [(docs)](https://docs.rs/actix-web-lab/0.15.0/actix_web_lab/extract/struct.Path.html)
 - `Query`: simplified query-string extractor [(docs)](https://docs.rs/actix-web-lab/0.15.0/actix_web_lab/extract/struct.Query.html)
