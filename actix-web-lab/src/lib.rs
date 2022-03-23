@@ -7,8 +7,7 @@
 //! Any kind of feedback is welcome.
 //!
 //! # Complete Examples
-//! See [the `examples` folder](https://github.com/robjtede/actix-web-lab/tree/HEAD/examples) for
-//! some complete examples of items in this crate.
+//! See [the `examples` folder][examples] for some complete examples of items in this crate.
 //!
 //! # Things To Know About This Crate
 //! - It will never reach v1.0.
@@ -18,6 +17,8 @@
 //! - Items that graduate to Actix Web crate will be marked deprecated here for a reasonable amount
 //!   of time so you can migrate.
 //! - Migrating will often be as easy as dropping the `_lab` suffix from imports when migrating.
+//!
+//! [examples]: https://github.com/robjtede/actix-web-lab/tree/HEAD/actix-web-lab/examples
 
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs)]
