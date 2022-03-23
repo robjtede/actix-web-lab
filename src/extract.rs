@@ -12,4 +12,8 @@ pub use crate::path::Path;
 pub use crate::query::Query;
 #[doc(hidden)]
 pub use crate::request_hash::{RequestHash, RequestHasher};
+#[doc(hidden)]
+pub use crate::request_signature::{
+    RequestSignature, RequestSignatureError, RequestSignatureScheme,
+};
 pub use crate::swap_data::SwapData;
