@@ -106,6 +106,7 @@
 <span id="101">101</span>
 <span id="102">102</span>
 <span id="103">103</span>
+<span id="104">104</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">dev</span>, <span class="ident">web::Bytes</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>};
 <span class="kw">use</span> <span class="ident">digest</span>::{<span class="ident">generic_array::GenericArray</span>, <span class="ident">Digest</span>};
 <span class="kw">use</span> <span class="ident">futures_core::future::LocalBoxFuture</span>;
@@ -138,6 +139,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Example</span>
 <span class="doccomment">/// ```</span>
+<span class="doccomment">/// # extern crate alg_sha2 as sha2;</span>
 <span class="doccomment">/// use actix_web::{Responder, web};</span>
 <span class="doccomment">/// use actix_web_lab::extract::BodyHash;</span>
 <span class="doccomment">/// use sha2::Sha256;</span>
