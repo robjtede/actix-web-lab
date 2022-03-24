@@ -35,7 +35,7 @@ actix-web = { version = "4", default-features = false }
 futures-core = "0.3.7"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 local-channel = "0.1"
-tokio = { version = "1.13.1", features = ["sync"] }
+tokio = { version = "1.13.1", features = ["sync", "macros"] }
 tracing = { version = "0.1.30", features = ["log"] }
 
 digest = "0.10"
