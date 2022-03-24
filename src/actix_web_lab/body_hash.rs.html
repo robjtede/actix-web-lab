@@ -177,7 +177,12 @@
 <span id="172">172</span>
 <span id="173">173</span>
 <span id="174">174</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">dev</span>, <span class="ident">web::Bytes</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>};
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+
+<span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">dev</span>, <span class="ident">web::Bytes</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>};
 <span class="kw">use</span> <span class="ident">digest</span>::{<span class="ident">generic_array::GenericArray</span>, <span class="ident">Digest</span>};
 <span class="kw">use</span> <span class="ident">futures_core::future::LocalBoxFuture</span>;
 
@@ -208,6 +213,7 @@
 <span class="doccomment">///     &quot;Ok&quot;</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
+<span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.16.0&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Migrated to `actix-hash` crate.&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BodyHash</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">D</span>: <span class="ident">Digest</span><span class="op">&gt;</span> {
     <span class="ident">body</span>: <span class="ident">T</span>,
@@ -352,5 +358,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (5f3700105 2022-03-22)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9f4dc0b4d 2022-03-23)" ></div>
 </body></html>

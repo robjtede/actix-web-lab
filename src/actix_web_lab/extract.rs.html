@@ -21,12 +21,12 @@
 <span id="16">16</span>
 <span id="17">17</span>
 <span id="18">18</span>
-<span id="19">19</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Experimental extractors.</span>
 
 <span class="doccomment">/// An alias for [`actix_web::web::Data&lt;T&gt;`] with a more descriptive name.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SharedData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">actix_web::web::Data</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
 
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::body_hash::BodyHash</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::body_hmac</span>::{<span class="ident">BodyHmac</span>, <span class="ident">HmacConfig</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::json</span>::{<span class="ident">Json</span>, <span class="ident">DEFAULT_JSON_LIMIT</span>};
@@ -35,12 +35,10 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::path::Path</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::query::Query</span>;
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::request_hash</span>::{<span class="ident">RequestHash</span>, <span class="ident">RequestHasher</span>};
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::request_signature</span>::{
     <span class="ident">RequestSignature</span>, <span class="ident">RequestSignatureError</span>, <span class="ident">RequestSignatureScheme</span>,
 };
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::swap_data::SwapData</span>;
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (5f3700105 2022-03-22)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9f4dc0b4d 2022-03-23)" ></div>
 </body></html>
