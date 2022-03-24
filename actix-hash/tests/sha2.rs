@@ -1,0 +1,84 @@
+extern crate alg_sha2 as sha2;
+
+use actix_hash::BodyHash;
+use actix_web::{
+    http::StatusCode,
+    test,
+    web::{self, Bytes},
+    App,
+};
+use actix_web_lab::extract::Json;
+use hex_literal::hex;
+use sha2::{Sha256, Sha512};
+
+#[actix_web::test]
+async fn correctly_hashes_payload() {
+    let app = test::init_service(
+        App::new()
+            .route(
+                "/sha512",
+                web::get().to(|body: BodyHash<Bytes, Sha512>| async move {
+                    Bytes::copy_from_slice(body.hash())
+                }),
+            )
+            .route(
+                "/",
+                web::get().to(|body: BodyHash<Bytes, Sha256>| async move {
+                    Bytes::copy_from_slice(body.hash())
+                }),
+            ),
+    )
+    .await;
+
+    let req = test::TestRequest::default().to_request();
+    let body = test::call_and_read_body(&app, req).await;
+    assert_eq!(
+        body,
+        hex!("e3b0c442 98fc1c14 9afbf4c8 996fb924 27ae41e4 649b934c a495991b 7852b855").as_ref()
+    );
+
+    let req = test::TestRequest::default().set_payload("abc").to_request();
+    let body = test::call_and_read_body(&app, req).await;
+    assert_eq!(
+        body,
+        hex!("ba7816bf 8f01cfea 414140de 5dae2223 b00361a3 96177a9c b410ff61 f20015ad").as_ref()
+    );
+
+    let req = test::TestRequest::with_uri("/sha512").to_request();
+    let body = test::call_and_read_body(&app, req).await;
+    assert_eq!(
+        &body[..],
+        hex!(
+            "cf83e135 7eefb8bd f1542850 d66d8007 d620e405 0b5715dc 83f4a921 d36ce9ce
+                 47d0d13c 5d85f2b0 ff8318d2 877eec2f 63b931bd 47417a81 a538327a f927da3e"
+        )
+    );
+}
+
+#[actix_web::test]
+async fn respects_inner_extractor_errors() {
+    let app = test::init_service(App::new().route(
+        "/",
+        web::get().to(|body: BodyHash<Json<u64, 4>, Sha256>| async move {
+            Bytes::copy_from_slice(body.hash())
+        }),
+    ))
+    .await;
+
+    let req = test::TestRequest::default().set_json(1234).to_request();
+    let body = test::call_and_read_body(&app, req).await;
+    assert_eq!(
+        body,
+        hex!("03ac6742 16f3e15c 761ee1a5 e255f067 953623c8 b388b445 9e13f978 d7c846f4").as_ref()
+    );
+
+    // no body would expect a 400 content type error
+    let req = test::TestRequest::default().to_request();
+    let body = test::call_service(&app, req).await;
+    assert_eq!(body.status(), StatusCode::BAD_REQUEST);
+
+    // body too big would expect a 413 request payload too large
+    let req = test::TestRequest::default().set_json(12345).to_request();
+    let body = test::call_service(&app, req).await;
+    assert_eq!(body.status(), StatusCode::PAYLOAD_TOO_LARGE);
+}

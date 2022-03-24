@@ -47,7 +47,6 @@ mod query;
 mod redirect;
 mod redirect_to_https;
 mod redirect_to_www;
-mod request_hash;
 mod request_signature;
 mod spa;
 mod swap_data;

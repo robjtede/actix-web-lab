@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- Deprecate `BodyHash`; it has migrated to the [`actix-hash`](https://crates.io/crates/actix-hash) crate.
 
 
 ## 0.15.0 - 2022-03-07

@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use actix_web::{dev, web::Bytes, FromRequest, HttpRequest};
 use digest::{generic_array::GenericArray, Digest};
 use futures_core::future::LocalBoxFuture;
@@ -29,6 +31,7 @@ use crate::body_extractor_fold::body_extractor_fold;
 ///     "Ok"
 /// }
 /// ```
+#[deprecated(since = "0.16.0", note = "Migrated to `actix-hash` crate.")]
 #[derive(Debug, Clone)]
 pub struct BodyHash<T, D: Digest> {
     body: T,
