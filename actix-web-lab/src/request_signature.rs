@@ -35,10 +35,23 @@ pub trait RequestSignatureScheme: Sized {
     /// - post-body hash updates
     /// - finalization
     /// - hash output
-    async fn finalize(&mut self, req: &HttpRequest) -> Result<CtOutput<Self::Output>, Self::Error>;
+    async fn finalize(self, req: &HttpRequest) -> Result<CtOutput<Self::Output>, Self::Error>;
+
+    /// todo
+    ///
+    /// - return signature if valid
+    /// - return error if not
+    /// - by default the signature not checked and returned as-is
+    #[allow(unused_variables)]
+    fn verify(
+        signature: CtOutput<Self::Output>,
+        req: &HttpRequest,
+    ) -> Result<CtOutput<Self::Output>, Self::Error> {
+        Ok(signature)
+    }
 }
 
-/// Wraps an extractor and calculates a request checksum hash alongside.
+/// Wraps an extractor and calculates a request signature hash alongside.
 ///
 /// Warning: Currently, this will always take the body meaning that if a body extractor is used,
 /// this needs to wrap it or else it will not work.
@@ -114,23 +127,33 @@ where
             let body_fut =
                 T::from_request(&req, &mut proxy_payload).map_err(RequestSignatureError::Extractor);
 
+            trace!("initializing signature scheme");
             let mut sig_scheme = S::init(&req)
                 .await
                 .map_err(RequestSignatureError::Signature)?;
 
             // run update function as chunks are yielded from channel
-            let hash_fut = actix_web::rt::spawn(async move {
-                while let Some(chunk) = rx.recv().await {
-                    sig_scheme.digest_chunk(&req, chunk).await?;
-                }
+            let hash_fut = actix_web::rt::spawn({
+                let req = req.clone();
 
-                sig_scheme.finalize(&req).await
+                async move {
+                    while let Some(chunk) = rx.recv().await {
+                        trace!("digesting chunk");
+                        sig_scheme.digest_chunk(&req, chunk).await?;
+                    }
+
+                    trace!("finalizing signature");
+                    sig_scheme.finalize(&req).await
+                }
             })
             .map(Result::unwrap)
             .map_err(RequestSignatureError::Signature);
 
             trace!("driving both futures");
             let (body, signature) = try_join!(body_fut, hash_fut)?;
+
+            trace!("verifying signature");
+            let signature = S::verify(signature, &req).map_err(RequestSignatureError::Signature)?;
 
             let out = Self {
                 extractor: body,
@@ -186,11 +209,8 @@ mod tests {
             Ok(())
         }
 
-        async fn finalize(
-            &mut self,
-            _req: &HttpRequest,
-        ) -> Result<CtOutput<Self::Output>, Self::Error> {
-            let hash = self.0.finalize_reset();
+        async fn finalize(self, _req: &HttpRequest) -> Result<CtOutput<Self::Output>, Self::Error> {
+            let hash = self.0.finalize();
             Ok(CtOutput::new(hash))
         }
     }

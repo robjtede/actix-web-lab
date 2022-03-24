@@ -10,6 +10,7 @@ use actix_web::{
 use actix_web_lab::extract::{RequestSignature, RequestSignatureScheme};
 use async_trait::async_trait;
 use digest::{CtOutput, Digest, Mac};
+use generic_array::GenericArray;
 use hmac::SimpleHmac;
 use sha2::{Sha256, Sha512};
 use tracing::info;
@@ -22,20 +23,31 @@ async fn lookup_public_key_in_db<T>(_db: &(), val: T) -> T {
 }
 
 /// Extracts user's public key from request and pretends to look up secret key in the DB.
-async fn cf_extract_key(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
+async fn get_base64_api_key(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
     // public key, not encryption key
-    let hdr = req.headers().get("Api-Key");
-    let pub_key = hdr
+    let pub_key = req
+        .headers()
+        .get("Api-Key")
         .map(HeaderValue::as_bytes)
         .map(base64::decode)
         .transpose()
-        .map_err(error::ErrorInternalServerError)?
-        .ok_or_else(|| error::ErrorUnauthorized("key not provided"))?;
+        .map_err(|_| error::ErrorInternalServerError("invalid api key"))?
+        .ok_or_else(|| error::ErrorUnauthorized("api key not provided"))?;
 
     // let db = req.app_data::<DbPool>().unwrap();
     let secret_key = lookup_public_key_in_db(&db, pub_key).await;
 
     Ok(secret_key)
+}
+
+fn get_user_signature(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
+    req.headers()
+        .get("Signature")
+        .map(HeaderValue::as_bytes)
+        .map(base64::decode)
+        .transpose()
+        .map_err(|_| error::ErrorInternalServerError("invalid signature"))?
+        .ok_or_else(|| error::ErrorUnauthorized("signature not provided"))
 }
 
 #[derive(Debug, Default)]
@@ -53,7 +65,7 @@ impl RequestSignatureScheme for ExampleApi {
     type Error = Error;
 
     async fn init(req: &HttpRequest) -> Result<Self, Self::Error> {
-        let key = cf_extract_key(req).await?;
+        let key = get_base64_api_key(req).await?;
 
         let mut hasher = Sha256::new();
 
@@ -62,7 +74,6 @@ impl RequestSignatureScheme for ExampleApi {
             Digest::update(&mut hasher, nonce.as_bytes());
         }
 
-        // path is not optional but easier to write like this
         if let Some(path) = req.uri().path_and_query() {
             Digest::update(&mut hasher, path.as_str().as_bytes())
         }
@@ -75,19 +86,32 @@ impl RequestSignatureScheme for ExampleApi {
         Ok(())
     }
 
-    async fn finalize(
-        &mut self,
-        _req: &HttpRequest,
-    ) -> Result<CtOutput<Self::Output>, Self::Error> {
+    async fn finalize(self, _req: &HttpRequest) -> Result<CtOutput<Self::Output>, Self::Error> {
         println!("using key: {:X?}", &self.key);
 
         let mut hmac = <SimpleHmac<Sha512>>::new_from_slice(&self.key).unwrap();
 
-        let payload_hash = self.hasher.finalize_reset();
+        let payload_hash = self.hasher.finalize();
         println!("payload hash: {payload_hash:X?}");
         Mac::update(&mut hmac, &payload_hash);
 
         Ok(hmac.finalize())
+    }
+
+    fn verify(
+        signature: CtOutput<Self::Output>,
+        req: &HttpRequest,
+    ) -> Result<CtOutput<Self::Output>, Self::Error> {
+        let user_sig = get_user_signature(req)?;
+        let user_sig = CtOutput::new(GenericArray::from_slice(&user_sig).to_owned());
+
+        if signature == user_sig {
+            Ok(signature)
+        } else {
+            Err(error::ErrorUnauthorized(
+                "given signature does not match calculated signature",
+            ))
+        }
     }
 }
 
@@ -101,12 +125,6 @@ async fn main() -> io::Result<()> {
         App::new().wrap(Logger::default().log_target("@")).route(
             "/",
             web::post().to(|body: RequestSignature<Bytes, ExampleApi>| async move {
-                // if !body.verify_slice(b"correct-signature") {
-                //     return "HMAC signature not correct";
-                // }
-
-                // "OK"
-
                 let (body, sig) = body.into_parts();
                 format!("{body:?}\n\n{sig:x?}")
             }),
