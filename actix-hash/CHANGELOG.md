@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.3.0 - 2022-03-28
 - Removed `BodyHashParts::body_bytes` field.
 - Rename `BodyHashParts::{body => inner}` field.
 - Improve fault tolerance when placed on non-body extractors.
