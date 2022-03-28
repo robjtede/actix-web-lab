@@ -1,8 +1,4 @@
-use std::{
-    error::Error as StdError,
-    fmt,
-    io::{self, Write as _},
-};
+use std::{error::Error as StdError, fmt, io::Write as _};
 
 use actix_web::{
     body::{BodyStream, MessageBody},
@@ -10,12 +6,10 @@ use actix_web::{
 };
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
+use futures_util::TryStreamExt as _;
 use pin_project_lite::pin_project;
 
-use crate::{
-    buffered_serializing_stream::BufferedSerializingStream,
-    util::{InfallibleStream, MutWriter},
-};
+use crate::util::{InfallibleStream, MutWriter};
 
 pin_project! {
     /// A buffered line formatting body stream.
@@ -91,12 +85,17 @@ where
 
     /// Creates a stream of serialized chunks.
     pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, E>> {
-        BufferedSerializingStream::new(self.stream, write_display)
+        self.stream.map_ok(write_display)
     }
 }
 
-fn write_display<T: fmt::Display>(wrt: &mut MutWriter<'_, BytesMut>, item: &T) -> io::Result<()> {
-    writeln!(wrt, "{}", item)
+fn write_display(item: impl fmt::Display) -> Bytes {
+    let mut buf = BytesMut::new();
+    let mut wrt = MutWriter(&mut buf);
+
+    writeln!(wrt, "{}", item).unwrap();
+
+    buf.freeze()
 }
 
 #[cfg(test)]

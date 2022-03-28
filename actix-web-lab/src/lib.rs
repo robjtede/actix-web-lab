@@ -28,7 +28,6 @@ mod acceptable;
 mod body_extractor_fold;
 mod body_hash;
 mod body_hmac;
-mod buffered_serializing_stream;
 mod cache_control;
 mod channel_body;
 mod csv;

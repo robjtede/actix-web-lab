@@ -1,4 +1,4 @@
-use std::{convert::Infallible, error::Error as StdError, io};
+use std::{convert::Infallible, error::Error as StdError};
 
 use actix_web::{
     body::{BodyStream, MessageBody},
@@ -6,14 +6,12 @@ use actix_web::{
 };
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
+use futures_util::TryStreamExt as _;
 use mime::Mime;
 use pin_project_lite::pin_project;
 use serde::Serialize;
 
-use crate::{
-    buffered_serializing_stream::BufferedSerializingStream,
-    util::{InfallibleStream, MutWriter},
-};
+use crate::util::{InfallibleStream, MutWriter};
 
 pin_project! {
     /// A buffered CSV serializing body stream.
@@ -85,7 +83,7 @@ where
 
     /// Creates a stream of serialized chunks.
     pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, E>> {
-        BufferedSerializingStream::new(self.stream, serialize_csv_row)
+        self.stream.map_ok(serialize_csv_row)
     }
 }
 
@@ -96,11 +94,17 @@ impl Csv<Infallible> {
     }
 }
 
-fn serialize_csv_row<T: Serialize>(wrt: &mut MutWriter<'_, BytesMut>, item: &T) -> io::Result<()> {
+fn serialize_csv_row(item: impl Serialize) -> Bytes {
+    let mut buf = BytesMut::new();
+    let wrt = MutWriter(&mut buf);
+
     // serialize CSV row to buffer
     let mut csv_wrt = csv::Writer::from_writer(wrt);
     csv_wrt.serialize(&item).unwrap();
-    csv_wrt.flush()
+    csv_wrt.flush().unwrap();
+
+    drop(csv_wrt);
+    buf.freeze()
 }
 
 #[cfg(test)]

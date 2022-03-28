@@ -1,8 +1,4 @@
-use std::{
-    convert::Infallible,
-    error::Error as StdError,
-    io::{self, Write as _},
-};
+use std::{convert::Infallible, error::Error as StdError, io::Write as _};
 
 use actix_web::{
     body::{BodyStream, MessageBody},
@@ -10,15 +6,13 @@ use actix_web::{
 };
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
+use futures_util::TryStreamExt as _;
 use mime::Mime;
 use once_cell::sync::Lazy;
 use pin_project_lite::pin_project;
 use serde::Serialize;
 
-use crate::{
-    buffered_serializing_stream::BufferedSerializingStream,
-    util::{InfallibleStream, MutWriter},
-};
+use crate::util::{InfallibleStream, MutWriter};
 
 static NDJSON_MIME: Lazy<Mime> = Lazy::new(|| "application/x-ndjson".parse().unwrap());
 
@@ -94,7 +88,7 @@ where
 
     /// Creates a stream of serialized chunks.
     pub fn into_chunk_stream(self) -> impl Stream<Item = Result<Bytes, E>> {
-        BufferedSerializingStream::new(self.stream, serialize_json_line)
+        self.stream.map_ok(serialize_json_line)
     }
 }
 
@@ -105,15 +99,17 @@ impl NdJson<Infallible> {
     }
 }
 
-fn serialize_json_line<T: Serialize>(
-    mut wrt: &mut MutWriter<'_, BytesMut>,
-    item: &T,
-) -> io::Result<()> {
+fn serialize_json_line(item: impl Serialize) -> Bytes {
+    let mut buf = BytesMut::new();
+    let mut wrt = MutWriter(&mut buf);
+
     // serialize JSON line to buffer
-    serde_json::to_writer(&mut wrt, &item)?;
+    serde_json::to_writer(&mut wrt, &item).unwrap();
 
     // add line break to buffer
-    wrt.write_all(b"\n")
+    wrt.write_all(b"\n").unwrap();
+
+    buf.freeze()
 }
 
 #[cfg(test)]
