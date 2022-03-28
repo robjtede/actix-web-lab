@@ -3,19 +3,24 @@
 //! # Crate Features
 //! All features are enabled by default.
 //! - `blake2`: Blake2 types
-//! - `md5`: MD5 types
-//! - `md4`: MD4 types
-//! - `sha1`: SHA-1 types
+//! - `md4`: MD4 types 🚩
+//! - `md5`: MD5 types 🚩
+//! - `sha1`: SHA-1 types 🚩
 //! - `sha2`: SHA-2 types
 //! - `sha3`: SHA-3 types
+//!
+//! # Security Warning 🚩
+//! The `md4`, `md5`, and `sha1` types are included for completeness and interoperability but they
+//! are considered cryptographically broken by modern standards. For security critical use cases,
+//! you should move to using the other algorithms.
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-mod body_extractor_fold;
 mod body_hash;
+mod util;
 
 pub use self::body_hash::{BodyHash, BodyHashParts};
 
@@ -29,7 +34,7 @@ macro_rules! body_hash_alias {
         ///
         #[doc = concat!("async fn handler(body: ", stringify!($name), "<String>) -> String {")]
         #[doc = concat!("    assert_eq!(body.hash().len(), ", $out_size, ");")]
-        ///     body.into_parts().body
+        ///     body.into_parts().inner
         /// }
         /// #
         /// # // test that the documented hash size is correct

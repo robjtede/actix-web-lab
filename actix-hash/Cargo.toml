@@ -40,6 +40,7 @@ futures-core = "0.3.7"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 local-channel = "0.1"
 tokio = { version = "1.13.1", features = ["sync", "macros"] }
+pin-project-lite = "0.2"
 tracing = { version = "0.1.30", features = ["log"] }
 
 digest = "0.10"
@@ -59,9 +60,9 @@ env_logger = "0.9"
 hex-literal = "0.3"
 
 [[test]]
-name = "sha2"
+name = "body_hash"
 required-features = ["sha2"]
 
 [[example]]
-name = "sha2"
+name = "body_sha2"
 required-features = ["sha2"]
