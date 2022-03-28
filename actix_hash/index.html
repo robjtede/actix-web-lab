@@ -4,17 +4,21 @@
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../actix_hash/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"><a href="#">Crate actix_hash</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.2.0</li><li><a id="all-types" href="all.html">All Items</a></li></div></ul><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#types">Type Definitions</a></li></ul></div></section><div id="sidebar-vars" data-name="actix_hash" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../actix_hash/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
-    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_hash</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_hash/lib.rs.html#1-70">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Hashing utilities for Actix Web.</p>
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_hash</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_hash/lib.rs.html#1-75">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Hashing utilities for Actix Web.</p>
 <h2 id="crate-features"><a href="#crate-features">Crate Features</a></h2>
 <p>All features are enabled by default.</p>
 <ul>
 <li><code>blake2</code>: Blake2 types</li>
-<li><code>md5</code>: MD5 types</li>
-<li><code>md4</code>: MD4 types</li>
-<li><code>sha1</code>: SHA-1 types</li>
+<li><code>md4</code>: MD4 types 🚩</li>
+<li><code>md5</code>: MD5 types 🚩</li>
+<li><code>sha1</code>: SHA-1 types 🚩</li>
 <li><code>sha2</code>: SHA-2 types</li>
 <li><code>sha3</code>: SHA-3 types</li>
 </ul>
+<h2 id="security-warning-"><a href="#security-warning-">Security Warning 🚩</a></h2>
+<p>The <code>md4</code>, <code>md5</code>, and <code>sha1</code> types are included for completeness and interoperability but they
+are considered cryptographically broken by modern standards. For security critical use cases,
+you should move to using the other algorithms.</p>
 </div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BodyHash.html" title="actix_hash::BodyHash struct">BodyHash</a></div><div class="item-right docblock-short"><p>Wraps an extractor and calculates a body checksum hash alongside.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BodyHashParts.html" title="actix_hash::BodyHashParts struct">BodyHashParts</a></div><div class="item-right docblock-short"><p>Parts of the resulting body hash extractor.</p>
@@ -32,5 +36,5 @@
 </div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.BodySha256.html" title="actix_hash::BodySha256 type">BodySha256</a></div><div class="item-right docblock-short"><p>Wraps an extractor and calculates a <code>SHA-256</code> body checksum hash alongside.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.BodySha384.html" title="actix_hash::BodySha384 type">BodySha384</a></div><div class="item-right docblock-short"><p>Wraps an extractor and calculates a <code>SHA-384</code> body checksum hash alongside.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.BodySha512.html" title="actix_hash::BodySha512 type">BodySha512</a></div><div class="item-right docblock-short"><p>Wraps an extractor and calculates a <code>SHA-512</code> body checksum hash alongside.</p>
-</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_hash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9f4dc0b4d 2022-03-23)" ></div>
+</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_hash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (ab0c2e18d 2022-03-27)" ></div>
 </body></html>
