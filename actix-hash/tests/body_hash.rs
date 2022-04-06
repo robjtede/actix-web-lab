@@ -1,6 +1,6 @@
 extern crate alg_sha2 as sha2;
 
-use actix_hash::BodyHash;
+use actix_hash::{BodyHash, BodySha256};
 use actix_http::BoxedPayloadStream;
 use actix_web::{
     dev,
@@ -72,6 +72,34 @@ async fn correctly_hashes_payload() {
         body,
         hex!("ba7816bf 8f01cfea 414140de 5dae2223 b00361a3 96177a9c b410ff61 f20015ad").as_ref()
     );
+}
+
+#[actix_web::test]
+async fn type_alias_equivalence() {
+    let app = test::init_service(
+        App::new()
+            .route(
+                "/alias",
+                web::get().to(|body: BodySha256<Bytes>| async move {
+                    Bytes::copy_from_slice(body.hash())
+                }),
+            )
+            .route(
+                "/expanded",
+                web::get().to(|body: BodyHash<Bytes, Sha256>| async move {
+                    Bytes::copy_from_slice(body.hash())
+                }),
+            ),
+    )
+    .await;
+
+    let req = test::TestRequest::with_uri("/alias").to_request();
+    let body_alias = test::call_and_read_body(&app, req).await;
+
+    let req = test::TestRequest::with_uri("/expanded").to_request();
+    let body_expanded = test::call_and_read_body(&app, req).await;
+
+    assert_eq!(body_alias, body_expanded);
 }
 
 #[actix_web::test]
