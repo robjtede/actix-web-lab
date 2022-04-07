@@ -57,8 +57,8 @@ impl<T: 'static> FromRequest for SwapData<T> {
             }))
         } else {
             debug!(
-                "Failed to extract `LazyData<{}>` for `{}` handler. For the Data extractor to work \
-                correctly, wrap the data with `LazyData::new()` and pass it to `App::app_data()`. \
+                "Failed to extract `SwapData<{}>` for `{}` handler. For the Data extractor to work \
+                correctly, wrap the data with `SwapData::new()` and pass it to `App::app_data()`. \
                 Ensure that types align in both the set and retrieve calls.",
                 core::any::type_name::<T>(),
                 req.match_name().unwrap_or_else(|| req.path())

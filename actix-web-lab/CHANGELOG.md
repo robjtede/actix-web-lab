@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.15.1 - 2022-04-07
+- Add `RequestSignatureScheme` trait and `RequestSignature` extractor.
+- Add `SwapData` extractor.
+- Add `LocalData` extractor.
 - Deprecate `BodyHash`; it has migrated to the [`actix-hash`](https://crates.io/crates/actix-hash) crate.
 
 
