@@ -34,10 +34,7 @@ impl RequestSignatureScheme for AbcApi {
     type Error = Error;
 
     async fn init(req: &HttpRequest) -> Result<Self, Self::Error> {
-        let key = get_signing_key::<AbcSigningKey>(req).await.map_err(|err| {
-            tracing::error!("{err}");
-            err
-        })?;
+        let key = get_signing_key::<AbcSigningKey>(req).await?;
 
         Ok(AbcApi {
             hmac: SimpleHmac::new_from_slice(&key).unwrap(),
@@ -58,6 +55,7 @@ impl RequestSignatureScheme for AbcApi {
         _req: &HttpRequest,
     ) -> Result<CtOutput<Self::Output>, Self::Error> {
         // pass-through signature since verification is not required for this scheme
+        // (shown for completeness, this is the default impl of `verify` and could be removed)
         Ok(signature)
     }
 }
