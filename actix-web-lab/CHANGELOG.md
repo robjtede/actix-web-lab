@@ -3,6 +3,10 @@
 ## Unreleased - 2022-xx-xx
 
 
+## 0.15.2 - 2022-04-08
+- No significant changes since `0.15.1`.
+
+
 ## 0.15.1 - 2022-04-07
 - Add `RequestSignatureScheme` trait and `RequestSignature` extractor.
 - Add `SwapData` extractor.

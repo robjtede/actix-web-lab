@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-lab"
-version = "0.15.1"
+version = "0.15.2"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "In-progress extractors and middleware for Actix Web"
 keywords = ["actix", "http", "web", "framework", "async"]
