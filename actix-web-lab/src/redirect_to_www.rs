@@ -21,6 +21,8 @@ pub async fn redirect_to_www(
     req: ServiceRequest,
     next: Next<impl MessageBody + 'static>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
+    #![allow(clippy::await_holding_refcell_ref)] // RefCell is dropped before await
+
     let (req, pl) = req.into_parts();
     let conn_info = req.connection_info();
 

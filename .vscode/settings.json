@@ -9,6 +9,7 @@
         "hsts",
         "ndjson",
         "rdef",
+        "refcell",
         "serde"
     ]
 }

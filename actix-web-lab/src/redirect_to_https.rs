@@ -96,6 +96,8 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
+        #![allow(clippy::await_holding_refcell_ref)] // RefCell is dropped before await
+
         let service = Rc::clone(&self.service);
         let hsts = self.hsts;
         let port = self.port;
@@ -115,6 +117,8 @@ where
                     Some(port) => format!("https://{hostname}:{port}{path}"),
                     None => format!("https://{hostname}{path}"),
                 };
+
+                // all connection info is acquired
                 drop(conn_info);
 
                 // create redirection response
