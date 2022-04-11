@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use actix_web::{http, web};
+use actix_web::web;
 use actix_web_lab_derive::FromRequest;
 
 #[derive(Debug, FromRequest)]

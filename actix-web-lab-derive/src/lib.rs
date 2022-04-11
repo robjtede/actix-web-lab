@@ -9,11 +9,12 @@ use syn::{parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput};
 ///
 /// # Examples
 /// ```
-/// use actix_web_derive::FromRequest;
+/// use actix_web::{Responder, http, get, web};
+/// use actix_web_lab::FromRequest;
 ///
 /// #[derive(Debug, FromRequest)]
 /// struct RequestParts {
-///     method: Method,
+///     method: http::Method,
 ///     pool: web::Data<u32>,
 /// }
 ///
