@@ -66,8 +66,13 @@ pub mod test;
 pub mod util;
 pub mod web;
 
+pub use actix_web_lab_derive::FromRequest;
+
 // private re-exports for macros
 #[doc(hidden)]
 pub mod __reexports {
+    pub use ::actix_web;
+    pub use ::futures_util;
     pub use ::serde_json;
+    pub use ::tokio;
 }

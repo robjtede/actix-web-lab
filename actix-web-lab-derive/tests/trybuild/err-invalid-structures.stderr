@@ -1,0 +1,15 @@
+error: Deriving FromRequest is only supported on structs for now.
+ --> tests/trybuild/err-invalid-structures.rs:3:10
+  |
+3 | #[derive(FromRequest)]
+  |          ^^^^^^^^^^^
+  |
+  = note: this error originates in the derive macro `FromRequest` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: Deriving FromRequest is only supported on structs with named fields for now.
+ --> tests/trybuild/err-invalid-structures.rs:8:10
+  |
+8 | #[derive(FromRequest)]
+  |          ^^^^^^^^^^^
+  |
+  = note: this error originates in the derive macro `FromRequest` (in Nightly builds, run with -Z macro-backtrace for more info)

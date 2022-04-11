@@ -157,8 +157,9 @@ impl<T, S: RequestSignatureScheme> RequestSignature<T, S> {
     }
 }
 
-/// Errors
+/// Errors that can occur when extracting and processing request signatures.
 #[derive(Display)]
+#[non_exhaustive]
 pub enum RequestSignatureError<T, S>
 where
     T: FromRequest,

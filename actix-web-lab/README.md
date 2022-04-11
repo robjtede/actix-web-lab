@@ -38,6 +38,10 @@
 - `Query`: simplified query-string extractor [(docs)](https://docs.rs/actix-web-lab/0.15.2/actix_web_lab/extract/struct.Query.html)
 - `RequestSignature`: wraps an extractor and calculates a request signature alongside [(docs)](https://docs.rs/actix-web-lab/0.15.2/actix_web_lab/extract/struct.RequestSignature.html)
 
+### Macros
+
+- `FromRequest`: Derive macro to implement `FromRequest` on an aggregate struct of other extractors [(docs)](https://docs.rs/actix-web-lab/0.15.2/actix_web_lab/derive.FromRequest.html)
+
 ### Headers
 
 - `Hsts`: Strict-Transport-Security (HSTS) [(docs)](https://docs.rs/actix-web-lab/0.15.2/actix_web_lab/header/struct.Hsts.html)

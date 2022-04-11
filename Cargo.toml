@@ -2,4 +2,10 @@
 members = [
     "./actix-hash",
     "./actix-web-lab",
+    "./actix-web-lab-derive",
 ]
+
+[patch.crates-io]
+actix-hash = { path = "./actix-hash" }
+actix-web-lab = { path = "./actix-web-lab" }
+actix-web-lab-derive = { path = "./actix-web-lab-derive" }

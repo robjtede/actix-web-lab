@@ -1,8 +1,8 @@
 [package]
 name = "actix-web-lab"
 version = "0.15.2"
-authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "In-progress extractors and middleware for Actix Web"
+authors = ["Rob Ede <robjtede@icloud.com>"]
 keywords = ["actix", "http", "web", "framework", "async"]
 categories = [
     "network-programming",
@@ -30,6 +30,7 @@ actix-router = "0.5"
 actix-utils = "3"
 actix-files = "0.6"
 
+actix-web-lab-derive = "=0.15.0"
 ahash = "0.7"
 arc-swap = "1.1"
 async-trait = "0.1"
