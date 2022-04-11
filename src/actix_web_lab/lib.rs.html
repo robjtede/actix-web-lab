@@ -76,6 +76,11 @@
 <span id="71">71</span>
 <span id="72">72</span>
 <span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
 </pre><pre class="rust"><code><span class="doccomment">//! In-progress extractors and middleware for Actix Web.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # What Is This Crate?</span>
@@ -144,10 +149,15 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">util</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">web</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">actix_web_lab_derive::FromRequest</span>;
+
 <span class="comment">// private re-exports for macros</span>
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">__reexports</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">::actix_web</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">::futures_util</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">::serde_json</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">::tokio</span>;
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (1f7fb6413 2022-04-10)" ></div>

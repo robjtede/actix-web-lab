@@ -401,6 +401,7 @@
 <span id="396">396</span>
 <span id="397">397</span>
 <span id="398">398</span>
+<span id="399">399</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="kw">use</span> <span class="ident">actix_http::BoxedPayloadStream</span>;
@@ -560,8 +561,9 @@
     }
 }
 
-<span class="doccomment">/// Errors</span>
+<span class="doccomment">/// Errors that can occur when extracting and processing request signatures.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Display</span>)]</span>
+<span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RequestSignatureError</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">FromRequest</span>,

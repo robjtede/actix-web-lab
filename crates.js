@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["actix_hash","actix_web_lab"];
+window.ALL_CRATES = ["actix_hash","actix_web_lab","actix_web_lab_derive"];
