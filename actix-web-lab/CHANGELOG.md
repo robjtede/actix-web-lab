@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.16.0 - 2022-04-11
 - Add very basic `FromRequest` derive macro.
 - `RequestSignatureScheme` associated types are no longer bound to RustCrypto ecosystem.
 - Deprecate `BodyHmac`; migrate to `RequestSignature[Scheme]`.

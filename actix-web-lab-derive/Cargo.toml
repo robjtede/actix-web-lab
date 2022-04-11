@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-lab-derive"
-version = "0.15.0"
+version = "0.16.0"
 description = "Experimental macros for Actix Web"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 keywords = ["actix", "http", "web", "framework", "async"]
@@ -26,7 +26,7 @@ syn = { version = "1", features = ["full", "parsing"] }
 [dev-dependencies]
 actix-test = "0.1.0-beta.13"
 actix-web = "4.0.0"
-actix-web-lab = "=0.15.2"
+actix-web-lab = "=0.16.0"
 
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 trybuild = "1"
