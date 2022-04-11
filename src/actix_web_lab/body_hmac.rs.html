@@ -432,7 +432,13 @@
 <span id="427">427</span>
 <span id="428">428</span>
 <span id="429">429</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+
+<span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">fmt</span>,
     <span class="ident">future</span>::{<span class="ident">ready</span>, <span class="ident">Future</span>},
 };
@@ -480,9 +486,11 @@
 <span class="doccomment">///     .app_data(HmacConfig::static_key(key))</span>
 <span class="doccomment">/// # ;</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Todo</span>
-<span class="doccomment">/// - [ ] Concurrently acquire key and feed wrapped extractor.</span>
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.16.0&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Prefer `RequestSignatureScheme` + `RequestSignature`. See `body_hmac` example.&quot;</span>
+)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BodyHmac</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">D</span><span class="op">&gt;</span>
 <span class="kw">where</span>

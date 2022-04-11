@@ -570,12 +570,12 @@
     <span class="ident">S</span>: <span class="ident">RequestSignatureScheme</span>,
     <span class="ident">S::Error</span>: <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">fmt::Display</span>,
 {
-    <span class="doccomment">/// todo</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;inner extractor error&quot;</span>)]</span>
+    <span class="doccomment">/// Inner extractor error.</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Inner extractor error: {_0}&quot;</span>)]</span>
     <span class="ident">Extractor</span>(<span class="ident">T::Error</span>),
 
-    <span class="doccomment">/// todo</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;inner extractor error&quot;</span>)]</span>
+    <span class="doccomment">/// Signature calculation error.</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Signature calculation error: {_0}&quot;</span>)]</span>
     <span class="ident">Signature</span>(<span class="ident">S::Error</span>),
 }
 
