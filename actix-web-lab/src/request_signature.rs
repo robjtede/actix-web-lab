@@ -1,8 +1,9 @@
 use std::fmt;
 
 use actix_http::BoxedPayloadStream;
-use actix_web::{dev, web::Bytes, Error, FromRequest, HttpRequest, ResponseError};
+use actix_web::{dev, web::Bytes, Error, FromRequest, HttpRequest};
 use async_trait::async_trait;
+use derive_more::Display;
 use futures_core::future::LocalBoxFuture;
 use futures_util::{FutureExt as _, StreamExt as _, TryFutureExt as _};
 use local_channel::mpsc;
@@ -156,33 +157,71 @@ impl<T, S: RequestSignatureScheme> RequestSignature<T, S> {
     }
 }
 
-/// todo
-pub enum RequestSignatureError<T: FromRequest, S: RequestSignatureScheme> {
+/// Errors
+#[derive(Display)]
+pub enum RequestSignatureError<T, S>
+where
+    T: FromRequest,
+    T::Error: fmt::Debug + fmt::Display,
+
+    S: RequestSignatureScheme,
+    S::Error: fmt::Debug + fmt::Display,
+{
     /// todo
+    #[display(fmt = "inner extractor error")]
     Extractor(T::Error),
 
     /// todo
+    #[display(fmt = "inner extractor error")]
     Signature(S::Error),
 }
 
-impl<T: FromRequest, S: RequestSignatureScheme> fmt::Debug for RequestSignatureError<T, S> {
+impl<T, S> fmt::Debug for RequestSignatureError<T, S>
+where
+    T: FromRequest,
+    T::Error: fmt::Debug + fmt::Display,
+
+    S: RequestSignatureScheme,
+    S::Error: fmt::Debug + fmt::Display,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("RequestSignatureError")
+        match self {
+            Self::Extractor(arg0) => f
+                .debug_tuple("RequestSignatureError::Extractor")
+                .field(arg0)
+                .finish(),
+
+            Self::Signature(arg0) => f
+                .debug_tuple("RequestSignatureError::Signature")
+                .field(arg0)
+                .finish(),
+        }
     }
 }
 
-impl<T: FromRequest, S: RequestSignatureScheme> fmt::Display for RequestSignatureError<T, S> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("RequestSignatureError")
+impl<T, S> From<RequestSignatureError<T, S>> for actix_web::Error
+where
+    T: FromRequest,
+    T::Error: fmt::Debug + fmt::Display,
+
+    S: RequestSignatureScheme,
+    S::Error: fmt::Debug + fmt::Display,
+{
+    fn from(err: RequestSignatureError<T, S>) -> Self {
+        match err {
+            RequestSignatureError::Extractor(err) => err.into(),
+            RequestSignatureError::Signature(err) => err.into(),
+        }
     }
 }
-
-impl<T: FromRequest, S: RequestSignatureScheme> ResponseError for RequestSignatureError<T, S> {}
 
 impl<T, S> FromRequest for RequestSignature<T, S>
 where
     T: FromRequest + 'static,
+    T::Error: fmt::Debug + fmt::Display,
+
     S: RequestSignatureScheme + 'static,
+    S::Error: fmt::Debug + fmt::Display,
 {
     type Error = RequestSignatureError<T, S>;
     type Future = LocalBoxFuture<'static, Result<Self, Self::Error>>;
@@ -325,8 +364,6 @@ mod tests {
         );
     }
 
-    /// TODO: fix test
-    #[ignore]
     #[actix_web::test]
     async fn respects_inner_extractor_errors() {
         let app = test::init_service(App::new().route(
