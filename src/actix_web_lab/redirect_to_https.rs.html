@@ -272,6 +272,10 @@
 <span id="267">267</span>
 <span id="268">268</span>
 <span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>},
     <span class="ident">rc::Rc</span>,
@@ -370,6 +374,8 @@
     <span class="macro">forward_ready!</span>(<span class="ident">service</span>);
 
     <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="ident">ServiceRequest</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
+        <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::await_holding_refcell_ref</span>)]</span> <span class="comment">// RefCell is dropped before await</span>
+
         <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">service</span>);
         <span class="kw">let</span> <span class="ident">hsts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">hsts</span>;
         <span class="kw">let</span> <span class="ident">port</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">port</span>;
@@ -389,6 +395,8 @@
                     <span class="prelude-val">Some</span>(<span class="ident">port</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;https://{hostname}:{port}{path}&quot;</span>),
                     <span class="prelude-val">None</span> =&gt; <span class="macro">format!</span>(<span class="string">&quot;https://{hostname}{path}&quot;</span>),
                 };
+
+                <span class="comment">// all connection info is acquired</span>
                 <span class="ident">drop</span>(<span class="ident">conn_info</span>);
 
                 <span class="comment">// create redirection response</span>
@@ -542,5 +550,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (e745b4ddb 2022-04-07)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (1f7fb6413 2022-04-10)" ></div>
 </body></html>

@@ -284,55 +284,223 @@
 <span id="279">279</span>
 <span id="280">280</span>
 <span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="kw">use</span> <span class="ident">actix_http::BoxedPayloadStream</span>;
 <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">dev</span>, <span class="ident">web::Bytes</span>, <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>, <span class="ident">ResponseError</span>};
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">digest</span>::{<span class="ident">CtOutput</span>, <span class="ident">OutputSizeUser</span>};
 <span class="kw">use</span> <span class="ident">futures_core::future::LocalBoxFuture</span>;
 <span class="kw">use</span> <span class="ident">futures_util</span>::{<span class="ident">FutureExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">StreamExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">TryFutureExt</span> <span class="kw">as</span> <span class="kw">_</span>};
-<span class="kw">use</span> <span class="ident">generic_array::GenericArray</span>;
 <span class="kw">use</span> <span class="ident">local_channel::mpsc</span>;
 <span class="kw">use</span> <span class="ident">tokio::try_join</span>;
 <span class="kw">use</span> <span class="ident">tracing::trace</span>;
 
-<span class="doccomment">/// todo</span>
+<span class="doccomment">/// Define a scheme for deriving and verifying some kind of signature from request parts.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// There are 4 phases to calculating a signature while a request is being received:</span>
+<span class="doccomment">/// 1. [Initialize](Self::init): Construct the signature scheme type and perform any pre-body</span>
+<span class="doccomment">///   calculation steps with request head parts.</span>
+<span class="doccomment">/// 1. [Consume body](Self::consume_chunk): For each body chunk received, fold it to the signature</span>
+<span class="doccomment">///   calculation.</span>
+<span class="doccomment">/// 1. [Finalize](Self::finalize): Perform post-body calculation steps and finalize signature type.</span>
+<span class="doccomment">/// 1. [Verify](Self::verify): Check the _true signature_ against a _candidate signature_; for</span>
+<span class="doccomment">///   example, a header added by the client. This phase is optional.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// You&#39;ll need to use the [`async-trait`](https://docs.rs/async-trait) when implementing. Annotate</span>
+<span class="doccomment">/// your implementations with `#[async_trait(?Send)]`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Bring Your Own Crypto</span>
+<span class="doccomment">/// It is up to the implementor to ensure that best security practices are being followed when</span>
+<span class="doccomment">/// implementing this trait, and in particular the `verify` method. There is no inherent preference</span>
+<span class="doccomment">/// for certain crypto ecosystems though many of the examples shown here will use types from</span>
+<span class="doccomment">/// [RustCrypto](https://github.com/RustCrypto).</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # `RequestSignature` Extractor</span>
+<span class="doccomment">/// Types that implement this trait can be used with the [`RequestSignature`] extractor to</span>
+<span class="doccomment">/// declaratively derive the request signature alongside the desired body extractor.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// This trait can be used to define:</span>
+<span class="doccomment">/// - API authentication schemes that requires a signature to be attached to the request, either</span>
+<span class="doccomment">///   with static keys or dynamic, per-user keys that are looked asynchronously from a database.</span>
+<span class="doccomment">/// - Request hashes derived from specific parts for cache lookups.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This example implementation does a simple HMAC calculation on the body using a static key.</span>
+<span class="doccomment">/// It does not implement verification.</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use actix_web::{Error, HttpRequest, web::Bytes};</span>
+<span class="doccomment">/// use actix_web_lab::extract::RequestSignatureScheme;</span>
+<span class="doccomment">/// use async_trait::async_trait;</span>
+<span class="doccomment">/// use hmac::{SimpleHmac, Mac, digest::CtOutput};</span>
+<span class="doccomment">/// use sha2::Sha256;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// struct AbcApi {</span>
+<span class="doccomment">///     /// Running state.</span>
+<span class="doccomment">///     hmac: SimpleHmac&lt;Sha256&gt;,</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// #[async_trait(?Send)]</span>
+<span class="doccomment">/// impl RequestSignatureScheme for AbcApi {</span>
+<span class="doccomment">///     /// The constant-time verifiable output of the HMAC type.</span>
+<span class="doccomment">///     type Signature = CtOutput&lt;SimpleHmac&lt;Sha256&gt;&gt;;</span>
+<span class="doccomment">///     type Error = Error;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     async fn init(req: &amp;HttpRequest) -&gt; Result&lt;Self, Self::Error&gt; {</span>
+<span class="doccomment">///         // acquire HMAC signing key</span>
+<span class="doccomment">///         let key = req.app_data::&lt;[u8; 32]&gt;().unwrap();</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///         // construct HMAC signer</span>
+<span class="doccomment">///         let hmac = SimpleHmac::new_from_slice(&amp;key[..]).unwrap();</span>
+<span class="doccomment">///         Ok(AbcApi { hmac })</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     async fn consume_chunk(&amp;mut self, _req: &amp;HttpRequest, chunk: Bytes) -&gt; Result&lt;(), Self::Error&gt; {</span>
+<span class="doccomment">///         // digest body chunk</span>
+<span class="doccomment">///         self.hmac.update(&amp;chunk);</span>
+<span class="doccomment">///         Ok(())</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     async fn finalize(self, _req: &amp;HttpRequest) -&gt; Result&lt;Self::Signature, Self::Error&gt; {</span>
+<span class="doccomment">///         // construct signature type</span>
+<span class="doccomment">///         Ok(self.hmac.finalize())</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">async_trait</span>(<span class="question-mark">?</span><span class="ident">Send</span>)]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RequestSignatureScheme</span>: <span class="ident">Sized</span> {
-    <span class="doccomment">/// todo</span>
-    <span class="kw">type</span> <span class="ident">Output</span>: <span class="ident">OutputSizeUser</span>;
+    <span class="doccomment">/// The signature type returned from [`finalize`](Self::finalize) and checked in</span>
+    <span class="doccomment">/// [`verify`](Self::verify).</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Ideally, this type has constant-time equality capabilities.</span>
+    <span class="kw">type</span> <span class="ident">Signature</span>;
 
-    <span class="doccomment">/// todo</span>
+    <span class="doccomment">/// Error type used by all trait methods to signal missing precondition, processing errors, or</span>
+    <span class="doccomment">/// verification failures.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Must be convertible to an error response; i.e., implements [`ResponseError`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`ResponseError`]: https://docs.rs/actix-web/4/actix_web/trait.ResponseError.html</span>
     <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Error</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// todo</span>
+    <span class="doccomment">/// Initialize signature scheme for incoming request.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// - initialize signature scheme struct</span>
-    <span class="doccomment">/// - key derivation / hashing</span>
-    <span class="doccomment">/// - pre-body hash updates</span>
+    <span class="doccomment">/// Possible steps that should be included in `init` implementations:</span>
+    <span class="doccomment">/// - initialization of signature scheme type</span>
+    <span class="doccomment">/// - key lookup / initialization</span>
+    <span class="doccomment">/// - pre-body digest updates</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// todo</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">digest_chunk</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>, <span class="ident">chunk</span>: <span class="ident">Bytes</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
-
-    <span class="doccomment">/// todo</span>
+    <span class="doccomment">/// Fold received body chunk into signature.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// - post-body hash updates</span>
-    <span class="doccomment">/// - finalization</span>
-    <span class="doccomment">/// - hash output</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CtOutput</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// If processing the request body one chunk at a time is not equivalent to processing it all at</span>
+    <span class="doccomment">/// once, then the chunks will need to be added to a buffer.</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">consume_chunk</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>, <span class="ident">chunk</span>: <span class="ident">Bytes</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// todo</span>
+    <span class="doccomment">/// Finalize and output `Signature` type.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// - return signature if valid</span>
-    <span class="doccomment">/// - return error if not</span>
-    <span class="doccomment">/// - by default the signature not checked and returned as-is</span>
+    <span class="doccomment">/// Possible steps that should be included in `finalize` implementations:</span>
+    <span class="doccomment">/// - post-body digest updates</span>
+    <span class="doccomment">/// - signature finalization</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Signature</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// Verify _true signature_ against _candidate signature_.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The _true signature_ is what has been calculated during request processing by the other</span>
+    <span class="doccomment">/// methods in this trait. The _candidate signature_ might be a signature provided by the client</span>
+    <span class="doccomment">/// in order to prove ownership of a key or some other known signature to validate against.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Implementations should return `signature` if it is valid and return an error if it is not.</span>
+    <span class="doccomment">/// The default implementation does no checks and just returns `signature` as-is.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Security</span>
+    <span class="doccomment">/// To avoid timing attacks, equality checks should be constant-time; check the docs of your</span>
+    <span class="doccomment">/// chosen crypto library.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">verify</span>(
-        <span class="ident">signature</span>: <span class="ident">CtOutput</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span>,
+        <span class="ident">signature</span>: <span class="ident"><span class="self">Self</span>::Signature</span>,
         <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CtOutput</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Signature</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">signature</span>)
     }
 }
@@ -344,21 +512,13 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RequestSignature</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span>: <span class="ident">RequestSignatureScheme</span><span class="op">&gt;</span> {
     <span class="ident">extractor</span>: <span class="ident">T</span>,
-    <span class="ident">signature</span>: <span class="ident">CtOutput</span><span class="op">&lt;</span><span class="ident">S::Output</span><span class="op">&gt;</span>,
+    <span class="ident">signature</span>: <span class="ident">S::Signature</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span>: <span class="ident">RequestSignatureScheme</span><span class="op">&gt;</span> <span class="ident">RequestSignature</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Verifies HMAC hash against provides `tag` using constant-time equality.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tag</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">bool</span> {
-        <span class="kw">use</span> <span class="ident">subtle::ConstantTimeEq</span> <span class="kw">as</span> <span class="kw">_</span>;
-        <span class="self">self</span>.<span class="ident">signature</span>
-            .<span class="ident">ct_eq</span>(<span class="kw-2">&amp;</span><span class="ident">CtOutput::new</span>(<span class="ident">GenericArray::from_slice</span>(<span class="ident">tag</span>).<span class="ident">to_owned</span>()))
-            .<span class="ident">into</span>()
-    }
-
     <span class="doccomment">/// Returns tuple containing body type, and owned hash.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident">T</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        (<span class="self">self</span>.<span class="ident">extractor</span>, <span class="self">self</span>.<span class="ident">signature</span>.<span class="ident">into_bytes</span>().<span class="ident">to_vec</span>())
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident">T</span>, <span class="ident">S::Signature</span>) {
+        (<span class="self">self</span>.<span class="ident">extractor</span>, <span class="self">self</span>.<span class="ident">signature</span>)
     }
 }
 
@@ -425,7 +585,7 @@
                 <span class="kw">async</span> <span class="kw">move</span> {
                     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">chunk</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">recv</span>().<span class="kw">await</span> {
                         <span class="macro">trace!</span>(<span class="string">&quot;digesting chunk&quot;</span>);
-                        <span class="ident">sig_scheme</span>.<span class="ident">digest_chunk</span>(<span class="kw-2">&amp;</span><span class="ident">req</span>, <span class="ident">chunk</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                        <span class="ident">sig_scheme</span>.<span class="ident">consume_chunk</span>(<span class="kw-2">&amp;</span><span class="ident">req</span>, <span class="ident">chunk</span>).<span class="kw">await</span><span class="question-mark">?</span>;
                     }
 
                     <span class="macro">trace!</span>(<span class="string">&quot;finalizing signature&quot;</span>);
@@ -461,7 +621,7 @@
         <span class="ident">web</span>::{<span class="self">self</span>, <span class="ident">Bytes</span>},
         <span class="ident">App</span>,
     };
-    <span class="kw">use</span> <span class="ident">digest::Digest</span> <span class="kw">as</span> <span class="kw">_</span>;
+    <span class="kw">use</span> <span class="ident">digest</span>::{<span class="ident">CtOutput</span>, <span class="ident">Digest</span> <span class="kw">as</span> <span class="kw">_</span>};
     <span class="kw">use</span> <span class="ident">hex_literal::hex</span>;
     <span class="kw">use</span> <span class="ident">sha2::Sha256</span>;
 
@@ -473,7 +633,7 @@
 
     <span class="attribute">#[<span class="ident">async_trait</span>(<span class="question-mark">?</span><span class="ident">Send</span>)]</span>
     <span class="kw">impl</span> <span class="ident">RequestSignatureScheme</span> <span class="kw">for</span> <span class="ident">JustHash</span> {
-        <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">sha2::Sha256</span>;
+        <span class="kw">type</span> <span class="ident">Signature</span> <span class="op">=</span> <span class="ident">CtOutput</span><span class="op">&lt;</span><span class="ident">sha2::Sha256</span><span class="op">&gt;</span>;
         <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Infallible</span>;
 
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">head</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
@@ -486,7 +646,7 @@
             <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">hasher</span>))
         }
 
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">digest_chunk</span>(
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">consume_chunk</span>(
             <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
             <span class="ident">_req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>,
             <span class="ident">chunk</span>: <span class="ident">Bytes</span>,
@@ -495,7 +655,7 @@
             <span class="prelude-val">Ok</span>(())
         }
 
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="self">self</span>, <span class="ident">_req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">CtOutput</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">finalize</span>(<span class="self">self</span>, <span class="ident">_req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Signature</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">finalize</span>();
             <span class="prelude-val">Ok</span>(<span class="ident">CtOutput::new</span>(<span class="ident">hash</span>))
         }
@@ -507,7 +667,7 @@
             <span class="string">&quot;/service/path&quot;</span>,
             <span class="ident">web::get</span>().<span class="ident">to</span>(<span class="op">|</span><span class="ident">body</span>: <span class="ident">RequestSignature</span><span class="op">&lt;</span><span class="ident">Bytes</span>, <span class="ident">JustHash</span><span class="op">&gt;</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
                 <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">sig</span>) <span class="op">=</span> <span class="ident">body</span>.<span class="ident">into_parts</span>();
-                <span class="ident">sig</span>
+                <span class="ident">sig</span>.<span class="ident">into_bytes</span>().<span class="ident">to_vec</span>()
             }),
         ))
         .<span class="kw">await</span>;
@@ -540,7 +700,7 @@
             <span class="ident">web::get</span>().<span class="ident">to</span>(
                 <span class="op">|</span><span class="ident">body</span>: <span class="ident">RequestSignature</span><span class="op">&lt;</span><span class="ident">Json</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="number">4</span><span class="op">&gt;</span>, <span class="ident">JustHash</span><span class="op">&gt;</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
                     <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">sig</span>) <span class="op">=</span> <span class="ident">body</span>.<span class="ident">into_parts</span>();
-                    <span class="ident">sig</span>
+                    <span class="ident">sig</span>.<span class="ident">into_bytes</span>().<span class="ident">to_vec</span>()
                 },
             ),
         ))
@@ -566,5 +726,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (e745b4ddb 2022-04-07)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (1f7fb6413 2022-04-10)" ></div>
 </body></html>
