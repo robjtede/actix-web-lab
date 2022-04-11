@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 - `RequestSignatureScheme` associated types are no longer bound to RustCrypto ecosystem.
+- Deprecate `BodyHmac`, recommending `RequestSignature`.
 
 
 ## 0.15.2 - 2022-04-08

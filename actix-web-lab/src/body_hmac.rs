@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use std::{
     fmt,
     future::{ready, Future},
@@ -46,9 +48,11 @@ use crate::body_extractor_fold::body_extractor_fold;
 ///     .app_data(HmacConfig::static_key(key))
 /// # ;
 /// ```
-///
-/// # Todo
-/// - [ ] Concurrently acquire key and feed wrapped extractor.
+#[doc(hidden)]
+#[deprecated(
+    since = "0.16.0",
+    note = "Prefer `RequestSignatureScheme` + `RequestSignature`. See `body_hmac` example."
+)]
 #[derive(Debug, Clone)]
 pub struct BodyHmac<T, D>
 where

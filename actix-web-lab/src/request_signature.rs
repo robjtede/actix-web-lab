@@ -167,12 +167,12 @@ where
     S: RequestSignatureScheme,
     S::Error: fmt::Debug + fmt::Display,
 {
-    /// todo
-    #[display(fmt = "inner extractor error")]
+    /// Inner extractor error.
+    #[display(fmt = "Inner extractor error: {_0}")]
     Extractor(T::Error),
 
-    /// todo
-    #[display(fmt = "inner extractor error")]
+    /// Signature calculation error.
+    #[display(fmt = "Signature calculation error: {_0}")]
     Signature(S::Error),
 }
 
