@@ -6,9 +6,8 @@ use std::{
     ops,
 };
 
-use serde::de::DeserializeOwned;
-
 use actix_web::{dev::Payload, error::QueryPayloadError, Error, FromRequest, HttpRequest};
+use serde::de::DeserializeOwned;
 use tracing::debug;
 
 /// Extract typed information from the request's query.

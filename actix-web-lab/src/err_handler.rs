@@ -8,16 +8,15 @@ use std::{
 };
 
 use actix_service::{Service, Transform};
-use ahash::AHashMap;
-use futures_core::{future::LocalBoxFuture, ready};
-use pin_project_lite::pin_project;
-
 use actix_web::{
     body::EitherBody,
     dev::{ServiceRequest, ServiceResponse},
     http::StatusCode,
     Error, Result,
 };
+use ahash::AHashMap;
+use futures_core::{future::LocalBoxFuture, ready};
+use pin_project_lite::pin_project;
 
 type ErrorHandlerRes<B> = Result<ServiceResponse<EitherBody<B>>>;
 type ErrorHandler<B> = dyn Fn(ServiceResponse<B>) -> LocalBoxFuture<'static, ErrorHandlerRes<B>>;

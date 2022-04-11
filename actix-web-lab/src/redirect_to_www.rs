@@ -51,9 +51,8 @@ mod test_super {
         test, web, App, HttpResponse,
     };
 
-    use crate::middleware::from_fn;
-
     use super::*;
+    use crate::middleware::from_fn;
 
     fn test_app() -> App<
         impl ServiceFactory<

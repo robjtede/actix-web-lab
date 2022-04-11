@@ -164,9 +164,8 @@ mod tests {
         test, web, App, Error, HttpResponse,
     };
 
-    use crate::{assert_response_matches, test_request};
-
     use super::*;
+    use crate::{assert_response_matches, test_request};
 
     fn test_app() -> App<
         impl ServiceFactory<
