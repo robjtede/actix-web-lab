@@ -30,30 +30,30 @@ struct AbcApi {
 
 #[async_trait(?Send)]
 impl RequestSignatureScheme for AbcApi {
-    type Output = SimpleHmac<Sha256>;
+    type Signature = CtOutput<SimpleHmac<Sha256>>;
     type Error = Error;
 
     async fn init(req: &HttpRequest) -> Result<Self, Self::Error> {
         let key = get_signing_key::<AbcSigningKey>(req).await?;
 
-        Ok(AbcApi {
+        Ok(Self {
             hmac: SimpleHmac::new_from_slice(&key).unwrap(),
         })
     }
 
-    async fn digest_chunk(&mut self, _req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error> {
+    async fn consume_chunk(&mut self, _req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error> {
         self.hmac.update(&chunk);
         Ok(())
     }
 
-    async fn finalize(self, _req: &HttpRequest) -> Result<CtOutput<Self::Output>, Self::Error> {
+    async fn finalize(self, _req: &HttpRequest) -> Result<Self::Signature, Self::Error> {
         Ok(self.hmac.finalize())
     }
 
     fn verify(
-        signature: CtOutput<Self::Output>,
+        signature: Self::Signature,
         _req: &HttpRequest,
-    ) -> Result<CtOutput<Self::Output>, Self::Error> {
+    ) -> Result<Self::Signature, Self::Error> {
         // pass-through signature since verification is not required for this scheme
         // (shown for completeness, this is the default impl of `verify` and could be removed)
         Ok(signature)
@@ -74,6 +74,7 @@ async fn main() -> io::Result<()> {
                 "/",
                 web::post().to(|body: RequestSignature<Bytes, AbcApi>| async move {
                     let (body, sig) = body.into_parts();
+                    let sig = sig.into_bytes().to_vec();
                     format!("{body:?}\n\n{sig:x?}")
                 }),
             )

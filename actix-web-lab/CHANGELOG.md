@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- `RequestSignatureScheme` associated types are no longer bound to RustCrypto ecosystem.
 
 
 ## 0.15.2 - 2022-04-08

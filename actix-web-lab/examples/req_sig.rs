@@ -34,7 +34,8 @@ async fn get_base64_api_key(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
         .map_err(|_| error::ErrorInternalServerError("invalid api key"))?
         .ok_or_else(|| error::ErrorUnauthorized("api key not provided"))?;
 
-    // let db = req.app_data::<DbPool>().unwrap();
+    // in a real app it would be something like:
+    // let db = req.app_data::<Data<DbPool>>().unwrap();
     let secret_key = lookup_public_key_in_db(&db, pub_key).await;
 
     Ok(secret_key)
@@ -61,7 +62,7 @@ struct ExampleApi {
 
 #[async_trait(?Send)]
 impl RequestSignatureScheme for ExampleApi {
-    type Output = SimpleHmac<Sha512>;
+    type Signature = CtOutput<SimpleHmac<Sha512>>;
     type Error = Error;
 
     async fn init(req: &HttpRequest) -> Result<Self, Self::Error> {
@@ -81,12 +82,12 @@ impl RequestSignatureScheme for ExampleApi {
         Ok(Self { key, hasher })
     }
 
-    async fn digest_chunk(&mut self, _req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error> {
+    async fn consume_chunk(&mut self, _req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error> {
         Digest::update(&mut self.hasher, &chunk);
         Ok(())
     }
 
-    async fn finalize(self, _req: &HttpRequest) -> Result<CtOutput<Self::Output>, Self::Error> {
+    async fn finalize(self, _req: &HttpRequest) -> Result<Self::Signature, Self::Error> {
         println!("using key: {:X?}", &self.key);
 
         let mut hmac = <SimpleHmac<Sha512>>::new_from_slice(&self.key).unwrap();
@@ -99,9 +100,9 @@ impl RequestSignatureScheme for ExampleApi {
     }
 
     fn verify(
-        signature: CtOutput<Self::Output>,
+        signature: Self::Signature,
         req: &HttpRequest,
-    ) -> Result<CtOutput<Self::Output>, Self::Error> {
+    ) -> Result<Self::Signature, Self::Error> {
         let user_sig = get_user_signature(req)?;
         let user_sig = CtOutput::new(GenericArray::from_slice(&user_sig).to_owned());
 
@@ -126,6 +127,7 @@ async fn main() -> io::Result<()> {
             "/",
             web::post().to(|body: RequestSignature<Bytes, ExampleApi>| async move {
                 let (body, sig) = body.into_parts();
+                let sig = sig.into_bytes().to_vec();
                 format!("{body:?}\n\n{sig:x?}")
             }),
         )

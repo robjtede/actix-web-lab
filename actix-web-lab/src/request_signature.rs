@@ -3,50 +3,138 @@ use std::fmt;
 use actix_http::BoxedPayloadStream;
 use actix_web::{dev, web::Bytes, Error, FromRequest, HttpRequest, ResponseError};
 use async_trait::async_trait;
-use digest::{CtOutput, OutputSizeUser};
 use futures_core::future::LocalBoxFuture;
 use futures_util::{FutureExt as _, StreamExt as _, TryFutureExt as _};
-use generic_array::GenericArray;
 use local_channel::mpsc;
 use tokio::try_join;
 use tracing::trace;
 
-/// todo
+/// Define a scheme for deriving and verifying some kind of signature from request parts.
+///
+/// There are 4 phases to calculating a signature while a request is being received:
+/// 1. [Initialize](Self::init): Construct the signature scheme type and perform any pre-body
+///   calculation steps with request head parts.
+/// 1. [Consume body](Self::consume_chunk): For each body chunk received, fold it to the signature
+///   calculation.
+/// 1. [Finalize](Self::finalize): Perform post-body calculation steps and finalize signature type.
+/// 1. [Verify](Self::verify): Check the _true signature_ against a _candidate signature_; for
+///   example, a header added by the client. This phase is optional.
+///
+/// You'll need to use the [`async-trait`](https://docs.rs/async-trait) when implementing. Annotate
+/// your implementations with `#[async_trait(?Send)]`.
+///
+/// # Bring Your Own Crypto
+/// It is up to the implementor to ensure that best security practices are being followed when
+/// implementing this trait, and in particular the `verify` method. There is no inherent preference
+/// for certain crypto ecosystems though many of the examples shown here will use types from
+/// [RustCrypto](https://github.com/RustCrypto).
+///
+/// # `RequestSignature` Extractor
+/// Types that implement this trait can be used with the [`RequestSignature`] extractor to
+/// declaratively derive the request signature alongside the desired body extractor.
+///
+/// # Examples
+/// This trait can be used to define:
+/// - API authentication schemes that requires a signature to be attached to the request, either
+///   with static keys or dynamic, per-user keys that are looked asynchronously from a database.
+/// - Request hashes derived from specific parts for cache lookups.
+///
+/// This example implementation does a simple HMAC calculation on the body using a static key.
+/// It does not implement verification.
+/// ```
+/// use actix_web::{Error, HttpRequest, web::Bytes};
+/// use actix_web_lab::extract::RequestSignatureScheme;
+/// use async_trait::async_trait;
+/// use hmac::{SimpleHmac, Mac, digest::CtOutput};
+/// use sha2::Sha256;
+///
+/// struct AbcApi {
+///     /// Running state.
+///     hmac: SimpleHmac<Sha256>,
+/// }
+///
+/// #[async_trait(?Send)]
+/// impl RequestSignatureScheme for AbcApi {
+///     /// The constant-time verifiable output of the HMAC type.
+///     type Signature = CtOutput<SimpleHmac<Sha256>>;
+///     type Error = Error;
+///
+///     async fn init(req: &HttpRequest) -> Result<Self, Self::Error> {
+///         // acquire HMAC signing key
+///         let key = req.app_data::<[u8; 32]>().unwrap();
+///
+///         // construct HMAC signer
+///         let hmac = SimpleHmac::new_from_slice(&key[..]).unwrap();
+///         Ok(AbcApi { hmac })
+///     }
+///
+///     async fn consume_chunk(&mut self, _req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error> {
+///         // digest body chunk
+///         self.hmac.update(&chunk);
+///         Ok(())
+///     }
+///
+///     async fn finalize(self, _req: &HttpRequest) -> Result<Self::Signature, Self::Error> {
+///         // construct signature type
+///         Ok(self.hmac.finalize())
+///     }
+/// }
+/// ```
 #[async_trait(?Send)]
 pub trait RequestSignatureScheme: Sized {
-    /// todo
-    type Output: OutputSizeUser;
+    /// The signature type returned from [`finalize`](Self::finalize) and checked in
+    /// [`verify`](Self::verify).
+    ///
+    /// Ideally, this type has constant-time equality capabilities.
+    type Signature;
 
-    /// todo
+    /// Error type used by all trait methods to signal missing precondition, processing errors, or
+    /// verification failures.
+    ///
+    /// Must be convertible to an error response; i.e., implements [`ResponseError`].
+    ///
+    /// [`ResponseError`]: https://docs.rs/actix-web/4/actix_web/trait.ResponseError.html
     type Error: Into<Error>;
 
-    /// todo
+    /// Initialize signature scheme for incoming request.
     ///
-    /// - initialize signature scheme struct
-    /// - key derivation / hashing
-    /// - pre-body hash updates
+    /// Possible steps that should be included in `init` implementations:
+    /// - initialization of signature scheme type
+    /// - key lookup / initialization
+    /// - pre-body digest updates
     async fn init(req: &HttpRequest) -> Result<Self, Self::Error>;
 
-    /// todo
-    async fn digest_chunk(&mut self, req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error>;
-
-    /// todo
+    /// Fold received body chunk into signature.
     ///
-    /// - post-body hash updates
-    /// - finalization
-    /// - hash output
-    async fn finalize(self, req: &HttpRequest) -> Result<CtOutput<Self::Output>, Self::Error>;
+    /// If processing the request body one chunk at a time is not equivalent to processing it all at
+    /// once, then the chunks will need to be added to a buffer.
+    async fn consume_chunk(&mut self, req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error>;
 
-    /// todo
+    /// Finalize and output `Signature` type.
     ///
-    /// - return signature if valid
-    /// - return error if not
-    /// - by default the signature not checked and returned as-is
+    /// Possible steps that should be included in `finalize` implementations:
+    /// - post-body digest updates
+    /// - signature finalization
+    async fn finalize(self, req: &HttpRequest) -> Result<Self::Signature, Self::Error>;
+
+    /// Verify _true signature_ against _candidate signature_.
+    ///
+    /// The _true signature_ is what has been calculated during request processing by the other
+    /// methods in this trait. The _candidate signature_ might be a signature provided by the client
+    /// in order to prove ownership of a key or some other known signature to validate against.
+    ///
+    /// Implementations should return `signature` if it is valid and return an error if it is not.
+    /// The default implementation does no checks and just returns `signature` as-is.
+    ///
+    /// # Security
+    /// To avoid timing attacks, equality checks should be constant-time; check the docs of your
+    /// chosen crypto library.
     #[allow(unused_variables)]
+    #[inline]
     fn verify(
-        signature: CtOutput<Self::Output>,
+        signature: Self::Signature,
         req: &HttpRequest,
-    ) -> Result<CtOutput<Self::Output>, Self::Error> {
+    ) -> Result<Self::Signature, Self::Error> {
         Ok(signature)
     }
 }
@@ -58,21 +146,13 @@ pub trait RequestSignatureScheme: Sized {
 #[derive(Clone)]
 pub struct RequestSignature<T, S: RequestSignatureScheme> {
     extractor: T,
-    signature: CtOutput<S::Output>,
+    signature: S::Signature,
 }
 
 impl<T, S: RequestSignatureScheme> RequestSignature<T, S> {
-    /// Verifies HMAC hash against provides `tag` using constant-time equality.
-    pub fn verify_slice(&self, tag: &[u8]) -> bool {
-        use subtle::ConstantTimeEq as _;
-        self.signature
-            .ct_eq(&CtOutput::new(GenericArray::from_slice(tag).to_owned()))
-            .into()
-    }
-
     /// Returns tuple containing body type, and owned hash.
-    pub fn into_parts(self) -> (T, Vec<u8>) {
-        (self.extractor, self.signature.into_bytes().to_vec())
+    pub fn into_parts(self) -> (T, S::Signature) {
+        (self.extractor, self.signature)
     }
 }
 
@@ -139,7 +219,7 @@ where
                 async move {
                     while let Some(chunk) = rx.recv().await {
                         trace!("digesting chunk");
-                        sig_scheme.digest_chunk(&req, chunk).await?;
+                        sig_scheme.consume_chunk(&req, chunk).await?;
                     }
 
                     trace!("finalizing signature");
@@ -175,7 +255,7 @@ mod tests {
         web::{self, Bytes},
         App,
     };
-    use digest::Digest as _;
+    use digest::{CtOutput, Digest as _};
     use hex_literal::hex;
     use sha2::Sha256;
 
@@ -187,7 +267,7 @@ mod tests {
 
     #[async_trait(?Send)]
     impl RequestSignatureScheme for JustHash {
-        type Output = sha2::Sha256;
+        type Signature = CtOutput<sha2::Sha256>;
         type Error = Infallible;
 
         async fn init(head: &HttpRequest) -> Result<Self, Self::Error> {
@@ -200,7 +280,7 @@ mod tests {
             Ok(Self(hasher))
         }
 
-        async fn digest_chunk(
+        async fn consume_chunk(
             &mut self,
             _req: &HttpRequest,
             chunk: Bytes,
@@ -209,7 +289,7 @@ mod tests {
             Ok(())
         }
 
-        async fn finalize(self, _req: &HttpRequest) -> Result<CtOutput<Self::Output>, Self::Error> {
+        async fn finalize(self, _req: &HttpRequest) -> Result<Self::Signature, Self::Error> {
             let hash = self.0.finalize();
             Ok(CtOutput::new(hash))
         }
@@ -221,7 +301,7 @@ mod tests {
             "/service/path",
             web::get().to(|body: RequestSignature<Bytes, JustHash>| async move {
                 let (_, sig) = body.into_parts();
-                sig
+                sig.into_bytes().to_vec()
             }),
         ))
         .await;
@@ -254,7 +334,7 @@ mod tests {
             web::get().to(
                 |body: RequestSignature<Json<u64, 4>, JustHash>| async move {
                     let (_, sig) = body.into_parts();
-                    sig
+                    sig.into_bytes().to_vec()
                 },
             ),
         ))
