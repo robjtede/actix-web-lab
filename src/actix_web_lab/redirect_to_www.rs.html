@@ -107,7 +107,6 @@
 <span id="102">102</span>
 <span id="103">103</span>
 <span id="104">104</span>
-<span id="105">105</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">body::MessageBody</span>,
     <span class="ident">dev</span>::{<span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>},
@@ -161,9 +160,8 @@
         <span class="ident">test</span>, <span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpResponse</span>,
     };
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::middleware::from_fn</span>;
-
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::middleware::from_fn</span>;
 
     <span class="kw">fn</span> <span class="ident">test_app</span>() -&gt; <span class="ident">App</span><span class="op">&lt;</span>
         <span class="kw">impl</span> <span class="ident">ServiceFactory</span><span class="op">&lt;</span>

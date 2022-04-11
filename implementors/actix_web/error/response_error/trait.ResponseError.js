@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["actix_web_lab"] = [{"text":"impl&lt;T:&nbsp;FromRequest, S:&nbsp;<a class=\"trait\" href=\"actix_web_lab/extract/trait.RequestSignatureScheme.html\" title=\"trait actix_web_lab::extract::RequestSignatureScheme\">RequestSignatureScheme</a>&gt; ResponseError for <a class=\"enum\" href=\"actix_web_lab/extract/enum.RequestSignatureError.html\" title=\"enum actix_web_lab::extract::RequestSignatureError\">RequestSignatureError</a>&lt;T, S&gt;","synthetic":false,"types":["actix_web_lab::request_signature::RequestSignatureError"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

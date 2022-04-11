@@ -408,7 +408,6 @@
 <span id="403">403</span>
 <span id="404">404</span>
 <span id="405">405</span>
-<span id="406">406</span>
 </pre><pre class="rust"><code><span class="doccomment">//! JSON extractor with const-generic payload size limit.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -418,16 +417,15 @@
     <span class="ident">task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>},
 };
 
-<span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>, <span class="ident">Display</span>};
-<span class="kw">use</span> <span class="ident">futures_core</span>::{<span class="ident">ready</span>, <span class="ident">Stream</span> <span class="kw">as</span> <span class="kw">_</span>};
-<span class="kw">use</span> <span class="ident">serde::de::DeserializeOwned</span>;
-
 <span class="comment">// #[cfg(feature = &quot;__compress&quot;)]</span>
 <span class="comment">// use crate::dev::Decompress;</span>
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">dev::Payload</span>, <span class="ident">error::JsonPayloadError</span>, <span class="ident">http::header</span>, <span class="ident">web</span>, <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>,
     <span class="ident">HttpRequest</span>,
 };
+<span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>, <span class="ident">Display</span>};
+<span class="kw">use</span> <span class="ident">futures_core</span>::{<span class="ident">ready</span>, <span class="ident">Stream</span> <span class="kw">as</span> <span class="kw">_</span>};
+<span class="kw">use</span> <span class="ident">serde::de::DeserializeOwned</span>;
 <span class="kw">use</span> <span class="ident">tracing::debug</span>;
 
 <span class="doccomment">/// Default JSON payload size limit of 2MiB.</span>
