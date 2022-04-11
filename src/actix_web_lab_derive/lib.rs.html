@@ -98,6 +98,7 @@
 <span id="93">93</span>
 <span id="94">94</span>
 <span id="95">95</span>
+<span id="96">96</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Experimental macros for Actix Web.</span>
 
 <span class="kw">use</span> <span class="ident">quote</span>::{<span class="ident">format_ident</span>, <span class="ident">quote</span>};
@@ -109,11 +110,12 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// use actix_web_derive::FromRequest;</span>
+<span class="doccomment">/// use actix_web::{Responder, http, get, web};</span>
+<span class="doccomment">/// use actix_web_lab::FromRequest;</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// #[derive(Debug, FromRequest)]</span>
 <span class="doccomment">/// struct RequestParts {</span>
-<span class="doccomment">///     method: Method,</span>
+<span class="doccomment">///     method: http::Method,</span>
 <span class="doccomment">///     pool: web::Data&lt;u32&gt;,</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">///</span>
