@@ -57,8 +57,10 @@ tracing = { version = "0.1.30", features = ["log"] }
 actix-web = "4"
 
 base64 = "0.13"
+ed25519-dalek = "1.0.1"
 env_logger = "0.9"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
+hex = "0.4"
 hex-literal = "0.3"
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }

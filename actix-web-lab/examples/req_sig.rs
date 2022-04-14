@@ -1,8 +1,8 @@
 use std::io;
 
-use actix_http::header::HeaderValue;
 use actix_web::{
     error,
+    http::header::HeaderValue,
     middleware::Logger,
     web::{self, Bytes},
     App, Error, HttpRequest, HttpServer,
