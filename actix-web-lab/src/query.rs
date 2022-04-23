@@ -12,12 +12,15 @@ use tracing::debug;
 
 /// Extract typed information from the request's query.
 ///
-/// This currently identical in purpose to the `Query` extractor in `actix-web` but it will be able
-/// to track version bumps of `serde-urlencoded` more closely. This version also does away with the
-/// custom error handler config.
-///
 /// To extract typed data from the URL query string, the inner type `T` must implement the
 /// [`DeserializeOwned`] trait.
+///
+/// # Differences From `actix_web::web::Query`
+/// This extractor uses `serde_html_form` under-the-hood which supports multi-value items. These are
+/// sent by HTML select inputs when multiple options are chosen and can be collected into a `Vec`.
+///
+/// This version also removes the custom error handler config; users should instead prefer to handle
+/// errors using the explicit `Result<Query<T>, E>` extractor in their handlers.
 ///
 /// # Panics
 /// A query string consists of unordered `key=value` pairs, therefore it cannot be decoded into any
@@ -25,42 +28,40 @@ use tracing::debug;
 ///
 /// # Examples
 /// ```
-/// use actix_web::get;
+/// use actix_web::{get, Responder};
 /// use actix_web_lab::extract::Query;
 /// use serde::Deserialize;
 ///
 /// #[derive(Debug, Deserialize)]
-/// pub enum ResponseType {
-///    Token,
-///    Code
+/// #[serde(rename_all = "lowercase")]
+/// enum LogType {
+///     Reports,
+///     Actions,
 /// }
 ///
 /// #[derive(Debug, Deserialize)]
-/// pub struct AuthRequest {
-///    id: u64,
-///    response_type: ResponseType,
+/// pub struct LogsParams {
+///    #[serde(rename = "type")]
+///    log_type: u64,
+///
+///    #[serde(rename = "user")]
+///    users: Vec<String>,
 /// }
 ///
-/// // Deserialize `AuthRequest` struct from query string.
+/// // Deserialize `LogsParams` struct from query string.
 /// // This handler gets called only if the request's query parameters contain both fields.
-/// // A valid request path for this handler would be `/?id=64&response_type=Code"`.
-/// #[get("/")]
-/// async fn index(info: Query<AuthRequest>) -> String {
-///     format!("Authorization request for id={} and type={:?}!", info.id, info.response_type)
-/// }
-///
-/// // To access the entire underlying query struct, use `.into_inner()`.
-/// #[get("/debug1")]
-/// async fn debug1(info: Query<AuthRequest>) -> String {
-///     dbg!("Authorization object = {:?}", info.into_inner());
-///     "OK".to_string()
+/// // A valid request path for this handler would be `/logs?type=reports&user=foo&user=bar"`.
+/// #[get("/logs")]
+/// async fn index(info: Query<LogsParams>) -> impl Responder {
+///     let LogsParams { log_type, users } = info.into_inner();
+///     format!("Logs request for type={log_type} and user list={users:?}!")
 /// }
 ///
 /// // Or use destructuring, which is equivalent to `.into_inner()`.
 /// #[get("/debug2")]
-/// async fn debug2(Query(info): Query<AuthRequest>) -> String {
-///     dbg!("Authorization object = {:?}", info);
-///     "OK".to_string()
+/// async fn debug2(Query(info): Query<LogsParams>) -> impl Responder {
+///     dbg!("Authorization object = {info:?}");
+///     "OK"
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

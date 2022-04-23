@@ -1,7 +1,11 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.16.1 - 2022-04-23
 - `Query` extractor now supports collecting multi-value items into a `Vec`.
+- Add `derive` crate feature (on-by-default) that enables derive macros.
 
 
 ## 0.16.0 - 2022-04-11
