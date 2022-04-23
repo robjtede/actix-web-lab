@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- `Query` extractor now supports collecting multi-value items into a `Vec`.
 
 
 ## 0.16.0 - 2022-04-11

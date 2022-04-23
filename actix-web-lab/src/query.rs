@@ -85,7 +85,7 @@ impl<T: DeserializeOwned> Query<T> {
     /// assert!(numbers.get("three").is_none());
     /// ```
     pub fn from_query(query_str: &str) -> Result<Self, QueryPayloadError> {
-        serde_urlencoded::from_str::<T>(query_str)
+        serde_html_form::from_str::<T>(query_str)
             .map(Self)
             .map_err(QueryPayloadError::Deserialize)
     }
@@ -118,7 +118,7 @@ impl<T: DeserializeOwned> FromRequest for Query<T> {
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        serde_urlencoded::from_str::<T>(req.query_string())
+        serde_html_form::from_str::<T>(req.query_string())
             .map(|val| ready(Ok(Query(val))))
             .unwrap_or_else(move |e| {
                 let err = QueryPayloadError::Deserialize(e);
@@ -164,6 +164,21 @@ mod tests {
         s.id = "test1".to_string();
         let s = s.into_inner();
         assert_eq!(s.id, "test1");
+    }
+
+    #[actix_web::test]
+    async fn extract_array() {
+        #[derive(Debug, Deserialize)]
+        struct Test {
+            #[serde(rename = "user")]
+            users: Vec<String>,
+        }
+
+        let req = TestRequest::with_uri("/?user=foo&user=bar").to_srv_request();
+        let s = Query::<Test>::from_query(req.query_string()).unwrap();
+
+        assert_eq!(s.users[0], "foo");
+        assert_eq!(s.users[1], "bar");
     }
 
     #[actix_web::test]

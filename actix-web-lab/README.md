@@ -35,7 +35,7 @@
 - `LocalData`: app data/state that uses an `Rc` internally, avoiding atomic overhead (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.16.0/actix_web_lab/extract/struct.DataSwap.html)
 - `Json`: simplified JSON extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.16.0/actix_web_lab/extract/struct.Json.html)
 - `Path`: simplified path parameter extractor that supports destructuring [(docs)](https://docs.rs/actix-web-lab/0.16.0/actix_web_lab/extract/struct.Path.html)
-- `Query`: simplified query-string extractor [(docs)](https://docs.rs/actix-web-lab/0.16.0/actix_web_lab/extract/struct.Query.html)
+- `Query`: simplified query-string extractor that can also collect multi-value items [(docs)](https://docs.rs/actix-web-lab/0.16.0/actix_web_lab/extract/struct.Query.html)
 - `RequestSignature`: wraps an extractor and calculates a request signature alongside [(docs)](https://docs.rs/actix-web-lab/0.16.0/actix_web_lab/extract/struct.RequestSignature.html)
 
 ### Macros
