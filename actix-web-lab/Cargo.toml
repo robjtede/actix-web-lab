@@ -75,7 +75,7 @@ actix-web = { version = "4", features = ["rustls"] }
 async_zip = { version = "0.0.15", features = ["deflate", "tokio"] }
 base64 = "0.21"
 digest = "0.10"
-ed25519-dalek = "1.0.1"
+ed25519-dalek = { git = "https://github.com/robjtede/ed25519-dalek.git", branch = "verify-digest" }
 env_logger = "0.10"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 generic-array = "0.14"
