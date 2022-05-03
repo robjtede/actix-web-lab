@@ -5,6 +5,9 @@ use actix_web::{
 
 /// A guard that verifies that an `Accept` header is present and it contains a compatible MIME type.
 ///
+/// An exception is that matching `*/*` must be explicitly enabled because most browsers send this
+/// as part of their `Accept` header for almost every request.
+///
 /// # Examples
 /// ```
 /// use actix_web::{web, HttpResponse};
