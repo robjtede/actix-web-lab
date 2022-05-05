@@ -47,6 +47,7 @@ mod redirect;
 mod redirect_to_https;
 mod redirect_to_www;
 mod request_signature;
+mod size_limit;
 mod spa;
 mod strict_transport_security;
 mod swap_data;

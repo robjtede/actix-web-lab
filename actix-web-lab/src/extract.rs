@@ -15,4 +15,5 @@ pub use crate::query::Query;
 pub use crate::request_signature::{
     RequestSignature, RequestSignatureError, RequestSignatureScheme,
 };
+pub use crate::size_limit::BodyLimit;
 pub use crate::swap_data::SwapData;
