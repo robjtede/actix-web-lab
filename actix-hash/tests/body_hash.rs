@@ -1,5 +1,3 @@
-extern crate alg_sha2 as sha2;
-
 use actix_hash::{BodyHash, BodySha256};
 use actix_http::BoxedPayloadStream;
 use actix_web::{
