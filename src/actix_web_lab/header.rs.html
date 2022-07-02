@@ -8,10 +8,12 @@
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
+<span id="5">5</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Experimental typed headers.</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache_control</span>::{<span class="ident">CacheControl</span>, <span class="ident">CacheDirective</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::hsts::Hsts</span>;
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::strict_transport_security</span>::{<span class="ident">Hsts</span>, <span class="ident">StrictTransportSecurity</span>};
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (46b8c23f3 2022-07-01)" ></div>
 </body></html>

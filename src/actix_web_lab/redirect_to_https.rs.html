@@ -289,7 +289,7 @@
 };
 <span class="kw">use</span> <span class="ident">futures_core::future::LocalBoxFuture</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">header::Hsts</span>, <span class="ident">web::Redirect</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">header::StrictTransportSecurity</span>, <span class="ident">web::Redirect</span>};
 
 <span class="doccomment">/// A middleware to redirect traffic to HTTPS if connection is insecure.</span>
 <span class="doccomment">///</span>
@@ -298,31 +298,31 @@
 <span class="doccomment">/// HSTS for your site; misconfiguration can potentially leave parts of your site in an unusable</span>
 <span class="doccomment">/// state. By default it is disabled.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// See [`Hsts`] docs for more info.</span>
+<span class="doccomment">/// See [`StrictTransportSecurity`] docs for more info.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```rust</span>
 <span class="doccomment">/// # use std::time::Duration;</span>
 <span class="doccomment">/// # use actix_web::App;</span>
-<span class="doccomment">/// use actix_web_lab::{header::Hsts, middleware::RedirectHttps};</span>
+<span class="doccomment">/// use actix_web_lab::{header::StrictTransportSecurity, middleware::RedirectHttps};</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// App::new().wrap(RedirectHttps::default());</span>
 <span class="doccomment">/// App::new().wrap(RedirectHttps::default().to_port(8443));</span>
-<span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(Hsts::default()));</span>
-<span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(Hsts::new(Duration::from_secs(60 * 60))));</span>
-<span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(Hsts::recommended()));</span>
+<span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::default()));</span>
+<span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::new(Duration::from_secs(60 * 60))));</span>
+<span class="doccomment">/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::recommended()));</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [HTTP Strict Transport Security (HSTS)]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedirectHttps</span> {
-    <span class="ident">hsts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Hsts</span><span class="op">&gt;</span>,
+    <span class="ident">hsts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">StrictTransportSecurity</span><span class="op">&gt;</span>,
     <span class="ident">port</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">RedirectHttps</span> {
     <span class="doccomment">/// Construct new HTTP redirect middleware with</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_hsts</span>(<span class="ident">hsts</span>: <span class="ident">Hsts</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_hsts</span>(<span class="ident">hsts</span>: <span class="ident">StrictTransportSecurity</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">hsts</span>: <span class="prelude-val">Some</span>(<span class="ident">hsts</span>),
             ..<span class="ident"><span class="self">Self</span>::default</span>()
@@ -359,7 +359,7 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedirectHttpsMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="ident">service</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="ident">hsts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Hsts</span><span class="op">&gt;</span>,
+    <span class="ident">hsts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">StrictTransportSecurity</span><span class="op">&gt;</span>,
     <span class="ident">port</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>,
 }
 
@@ -423,7 +423,7 @@
 }
 
 <span class="doccomment">/// Apply HSTS config to an `HttpResponse`.</span>
-<span class="kw">fn</span> <span class="ident">apply_hsts</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(<span class="ident">res</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HttpResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">hsts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Hsts</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">apply_hsts</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(<span class="ident">res</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HttpResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">hsts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">StrictTransportSecurity</span><span class="op">&gt;</span>) {
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">hsts</span>) <span class="op">=</span> <span class="ident">hsts</span> {
         <span class="kw">let</span> (<span class="ident">name</span>, <span class="ident">val</span>) <span class="op">=</span> <span class="ident">hsts</span>.<span class="ident">try_into_pair</span>().<span class="ident">unwrap</span>();
         <span class="ident">res</span>.<span class="ident">headers_mut</span>().<span class="ident">insert</span>(<span class="ident">name</span>, <span class="ident">val</span>);
@@ -501,25 +501,25 @@
 
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;http://localhost/&quot;</span>).<span class="ident">to_srv_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">Hsts::name</span>()));
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">StrictTransportSecurity::name</span>()));
 
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;https://localhost:443/&quot;</span>).<span class="ident">to_srv_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">Hsts::name</span>()));
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">StrictTransportSecurity::name</span>()));
 
         <span class="comment">// with HSTS</span>
-        <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">RedirectHttps::with_hsts</span>(<span class="ident">Hsts::recommended</span>())
+        <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">RedirectHttps::with_hsts</span>(<span class="ident">StrictTransportSecurity::recommended</span>())
             .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
             .<span class="kw">await</span>
             .<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;http://localhost/&quot;</span>).<span class="ident">to_srv_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">Hsts::name</span>()));
+        <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">StrictTransportSecurity::name</span>()));
 
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="macro">test_request!</span>(<span class="ident">GET</span> <span class="string">&quot;https://localhost:443/&quot;</span>).<span class="ident">to_srv_request</span>();
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">Hsts::name</span>()));
+        <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">contains_key</span>(<span class="ident">StrictTransportSecurity::name</span>()));
     }
 
     <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
