@@ -1,1 +1,1 @@
-initSidebarItems({"derive":[["FromRequest","Derive a `FromRequest` implementation for an aggregate struct extractor."]]});
+window.SIDEBAR_ITEMS = {"derive":[["FromRequest","Derive a `FromRequest` implementation for an aggregate struct extractor."]]};

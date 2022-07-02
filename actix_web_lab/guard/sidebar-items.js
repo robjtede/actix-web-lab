@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Acceptable","A guard that verifies that an `Accept` header is present and it contains a compatible MIME type."]]});
+window.SIDEBAR_ITEMS = {"struct":[["Acceptable","A guard that verifies that an `Accept` header is present and it contains a compatible MIME type."]]};

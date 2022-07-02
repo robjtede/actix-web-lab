@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["InfallibleStream","Converts stream with item `T` into `Result<T, Infallible>`."]]});
+window.SIDEBAR_ITEMS = {"struct":[["InfallibleStream","Converts stream with item `T` into `Result<T, Infallible>`."]]};
