@@ -59,7 +59,6 @@ actix-web-lab-derive = "=0.16.0"
 
 actix-web = { version = "4", features = ["rustls"] }
 base64 = "0.13"
-ed25519-dalek = "1.0.1"
 env_logger = "0.9"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 hex = "0.4"
@@ -70,3 +69,5 @@ rustls-pemfile = "1.0.0"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
 static_assertions = "1.1"
+
+ed25519-dalek = { git = "https://github.com/robjtede/ed25519-dalek.git", branch = "verify-digest" }
