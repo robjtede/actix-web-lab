@@ -1,6 +1,6 @@
 [package]
 name = "actix-hash"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Hashing utilities for Actix Web"
 keywords = ["actix", "http", "web", "framework", "async"]
