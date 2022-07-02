@@ -1,3 +1,7 @@
+//! Strict-Transport-Security header.
+//!
+//! See [`StrictTransportSecurity`] docs.
+
 use std::{convert::Infallible, time::Duration};
 
 use actix_web::{
@@ -8,6 +12,11 @@ use actix_web::{
 };
 
 const SECS_IN_YEAR: u64 = 3600 * 24 * 365;
+
+/// Alias for [`StrictTransportSecurity`].
+#[doc(hidden)]
+#[deprecated(note = "Renamed to `StrictTransportSecurity`.", since = "0.16.2")]
+pub type Hsts = StrictTransportSecurity;
 
 /// HTTP Strict Transport Security (HSTS) configuration.
 ///
@@ -27,7 +36,8 @@ const SECS_IN_YEAR: u64 = 3600 * 24 * 365;
 ///
 /// [HSTS page on MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
 #[derive(Debug, Clone, Copy)]
-pub struct Hsts {
+#[doc(alias = "hsts", alias = "sts")]
+pub struct StrictTransportSecurity {
     duration: Duration,
 
     /// The `includeSubdomains` directive.
@@ -37,7 +47,7 @@ pub struct Hsts {
     pub preload: bool,
 }
 
-impl Hsts {
+impl StrictTransportSecurity {
     /// Constructs a new HSTS configuration using the given `duration`.
     ///
     /// Other values take their default.
@@ -74,7 +84,7 @@ impl Hsts {
     }
 }
 
-impl Default for Hsts {
+impl Default for StrictTransportSecurity {
     fn default() -> Self {
         Self {
             duration: Duration::from_secs(300),
@@ -84,7 +94,7 @@ impl Default for Hsts {
     }
 }
 
-impl TryIntoHeaderValue for Hsts {
+impl TryIntoHeaderValue for StrictTransportSecurity {
     type Error = Infallible;
 
     fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
@@ -104,7 +114,7 @@ impl TryIntoHeaderValue for Hsts {
     }
 }
 
-impl Header for Hsts {
+impl Header for StrictTransportSecurity {
     fn name() -> HeaderName {
         STRICT_TRANSPORT_SECURITY
     }
@@ -122,33 +132,55 @@ mod test {
 
     #[test]
     fn hsts_as_header() {
-        let res = HttpResponse::Ok().insert_header(Hsts::default()).finish();
+        let res = HttpResponse::Ok()
+            .insert_header(StrictTransportSecurity::default())
+            .finish();
         assert_eq!(
-            res.headers().get(Hsts::name()).unwrap().to_str().unwrap(),
+            res.headers()
+                .get(StrictTransportSecurity::name())
+                .unwrap()
+                .to_str()
+                .unwrap(),
             "max-age=300"
         );
 
         let res = HttpResponse::Ok()
-            .insert_header(Hsts::default().include_subdomains())
+            .insert_header(StrictTransportSecurity::default().include_subdomains())
             .finish();
         assert_eq!(
-            res.headers().get(Hsts::name()).unwrap().to_str().unwrap(),
+            res.headers()
+                .get(StrictTransportSecurity::name())
+                .unwrap()
+                .to_str()
+                .unwrap(),
             "max-age=300; includeSubDomains"
         );
 
         let res = HttpResponse::Ok()
-            .insert_header(Hsts::default().preload())
+            .insert_header(StrictTransportSecurity::default().preload())
             .finish();
         assert_eq!(
-            res.headers().get(Hsts::name()).unwrap().to_str().unwrap(),
+            res.headers()
+                .get(StrictTransportSecurity::name())
+                .unwrap()
+                .to_str()
+                .unwrap(),
             "max-age=300; preload"
         );
 
         let res = HttpResponse::Ok()
-            .insert_header(Hsts::default().include_subdomains().preload())
+            .insert_header(
+                StrictTransportSecurity::default()
+                    .include_subdomains()
+                    .preload(),
+            )
             .finish();
         assert_eq!(
-            res.headers().get(Hsts::name()).unwrap().to_str().unwrap(),
+            res.headers()
+                .get(StrictTransportSecurity::name())
+                .unwrap()
+                .to_str()
+                .unwrap(),
             "max-age=300; includeSubDomains; preload"
         );
     }
@@ -156,14 +188,10 @@ mod test {
     #[test]
     fn recommended_config() {
         let res = HttpResponse::Ok()
-            .insert_header(Hsts::recommended())
+            .insert_header(StrictTransportSecurity::recommended())
             .finish();
         assert_eq!(
-            res.headers()
-                .get("strict-transport-security")
-                .unwrap()
-                .to_str()
-                .unwrap(),
+            res.headers().get("strict-transport-security").unwrap(),
             "max-age=63072000; includeSubDomains"
         );
     }

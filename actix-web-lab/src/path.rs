@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(b.0, "name");
         assert_eq!(b.1, "user1");
 
-        let () = <()>::from_request(&req, &mut pl).await.unwrap();
+        <()>::from_request(&req, &mut pl).await.unwrap();
     }
 
     #[actix_web::test]

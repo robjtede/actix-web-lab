@@ -11,7 +11,7 @@ use actix_web::{
 };
 use futures_core::future::LocalBoxFuture;
 
-use crate::{header::Hsts, web::Redirect};
+use crate::{header::StrictTransportSecurity, web::Redirect};
 
 /// A middleware to redirect traffic to HTTPS if connection is insecure.
 ///
@@ -20,31 +20,31 @@ use crate::{header::Hsts, web::Redirect};
 /// HSTS for your site; misconfiguration can potentially leave parts of your site in an unusable
 /// state. By default it is disabled.
 ///
-/// See [`Hsts`] docs for more info.
+/// See [`StrictTransportSecurity`] docs for more info.
 ///
 /// # Examples
 /// ```rust
 /// # use std::time::Duration;
 /// # use actix_web::App;
-/// use actix_web_lab::{header::Hsts, middleware::RedirectHttps};
+/// use actix_web_lab::{header::StrictTransportSecurity, middleware::RedirectHttps};
 ///
 /// App::new().wrap(RedirectHttps::default());
 /// App::new().wrap(RedirectHttps::default().to_port(8443));
-/// App::new().wrap(RedirectHttps::with_hsts(Hsts::default()));
-/// App::new().wrap(RedirectHttps::with_hsts(Hsts::new(Duration::from_secs(60 * 60))));
-/// App::new().wrap(RedirectHttps::with_hsts(Hsts::recommended()));
+/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::default()));
+/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::new(Duration::from_secs(60 * 60))));
+/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::recommended()));
 /// ```
 ///
 /// [HTTP Strict Transport Security (HSTS)]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
 #[derive(Debug, Clone, Default)]
 pub struct RedirectHttps {
-    hsts: Option<Hsts>,
+    hsts: Option<StrictTransportSecurity>,
     port: Option<u16>,
 }
 
 impl RedirectHttps {
     /// Construct new HTTP redirect middleware with
-    pub fn with_hsts(hsts: Hsts) -> Self {
+    pub fn with_hsts(hsts: StrictTransportSecurity) -> Self {
         Self {
             hsts: Some(hsts),
             ..Self::default()
@@ -81,7 +81,7 @@ where
 
 pub struct RedirectHttpsMiddleware<S> {
     service: Rc<S>,
-    hsts: Option<Hsts>,
+    hsts: Option<StrictTransportSecurity>,
     port: Option<u16>,
 }
 
@@ -145,7 +145,7 @@ where
 }
 
 /// Apply HSTS config to an `HttpResponse`.
-fn apply_hsts<B>(res: &mut HttpResponse<B>, hsts: Option<Hsts>) {
+fn apply_hsts<B>(res: &mut HttpResponse<B>, hsts: Option<StrictTransportSecurity>) {
     if let Some(hsts) = hsts {
         let (name, val) = hsts.try_into_pair().unwrap();
         res.headers_mut().insert(name, val);
@@ -223,25 +223,25 @@ mod tests {
 
         let req = test_request!(GET "http://localhost/").to_srv_request();
         let res = test::call_service(&app, req).await;
-        assert!(!res.headers().contains_key(Hsts::name()));
+        assert!(!res.headers().contains_key(StrictTransportSecurity::name()));
 
         let req = test_request!(GET "https://localhost:443/").to_srv_request();
         let res = test::call_service(&app, req).await;
-        assert!(!res.headers().contains_key(Hsts::name()));
+        assert!(!res.headers().contains_key(StrictTransportSecurity::name()));
 
         // with HSTS
-        let app = RedirectHttps::with_hsts(Hsts::recommended())
+        let app = RedirectHttps::with_hsts(StrictTransportSecurity::recommended())
             .new_transform(test::ok_service())
             .await
             .unwrap();
 
         let req = test_request!(GET "http://localhost/").to_srv_request();
         let res = test::call_service(&app, req).await;
-        assert!(res.headers().contains_key(Hsts::name()));
+        assert!(res.headers().contains_key(StrictTransportSecurity::name()));
 
         let req = test_request!(GET "https://localhost:443/").to_srv_request();
         let res = test::call_service(&app, req).await;
-        assert!(res.headers().contains_key(Hsts::name()));
+        assert!(res.headers().contains_key(StrictTransportSecurity::name()));
     }
 
     #[actix_web::test]

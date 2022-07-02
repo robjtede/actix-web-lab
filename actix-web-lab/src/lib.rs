@@ -33,7 +33,6 @@ mod channel_body;
 mod csv;
 mod display_stream;
 mod err_handler;
-mod hsts;
 mod html;
 mod infallible_body_stream;
 mod json;
@@ -48,6 +47,7 @@ mod redirect_to_https;
 mod redirect_to_www;
 mod request_signature;
 mod spa;
+mod strict_transport_security;
 mod swap_data;
 #[cfg(test)]
 mod test_header_macros;
