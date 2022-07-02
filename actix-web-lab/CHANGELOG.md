@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.16.2 - 2022-07-02
 - Rename `Hsts` header to `StrictTransportSecurity`. Old name kept as alias for compatibility.
 
 
