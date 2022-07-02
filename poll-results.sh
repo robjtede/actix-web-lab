@@ -22,7 +22,7 @@ fi
 
 gh issue list \
     --repo="robjtede/actix-web-lab" \
-    --search="is:issue is:open sort:reactions-+1-desc" \
+    --search="is:issue is:open label:poll sort:reactions-+1-desc" \
     --json="title,url,reactionGroups" \
     --jq '
         .[]
