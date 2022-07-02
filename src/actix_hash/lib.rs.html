@@ -135,25 +135,25 @@
 }
 
 <span class="comment">// Obsolete</span>
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodyMd4</span>, <span class="ident">alg_md4::Md4</span>, <span class="string">&quot;md4&quot;</span>, <span class="string">&quot;MD4&quot;</span>, <span class="number">16</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodyMd5</span>, <span class="ident">alg_md5::Md5</span>, <span class="string">&quot;md5&quot;</span>, <span class="string">&quot;MD5&quot;</span>, <span class="number">16</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha1</span>, <span class="ident">alg_sha1::Sha1</span>, <span class="string">&quot;sha1&quot;</span>, <span class="string">&quot;SHA-1&quot;</span>, <span class="number">20</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodyMd4</span>, <span class="ident">md4::Md4</span>, <span class="string">&quot;md4&quot;</span>, <span class="string">&quot;MD4&quot;</span>, <span class="number">16</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodyMd5</span>, <span class="ident">md5::Md5</span>, <span class="string">&quot;md5&quot;</span>, <span class="string">&quot;MD5&quot;</span>, <span class="number">16</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha1</span>, <span class="ident">sha1::Sha1</span>, <span class="string">&quot;sha1&quot;</span>, <span class="string">&quot;SHA-1&quot;</span>, <span class="number">20</span>);
 
 <span class="comment">// SHA-2</span>
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha224</span>, <span class="ident">alg_sha2::Sha224</span>, <span class="string">&quot;sha2&quot;</span>, <span class="string">&quot;SHA-224&quot;</span>, <span class="number">28</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha256</span>, <span class="ident">alg_sha2::Sha256</span>, <span class="string">&quot;sha2&quot;</span>, <span class="string">&quot;SHA-256&quot;</span>, <span class="number">32</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha384</span>, <span class="ident">alg_sha2::Sha384</span>, <span class="string">&quot;sha2&quot;</span>, <span class="string">&quot;SHA-384&quot;</span>, <span class="number">48</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha512</span>, <span class="ident">alg_sha2::Sha512</span>, <span class="string">&quot;sha2&quot;</span>, <span class="string">&quot;SHA-512&quot;</span>, <span class="number">64</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha224</span>, <span class="ident">sha2::Sha224</span>, <span class="string">&quot;sha2&quot;</span>, <span class="string">&quot;SHA-224&quot;</span>, <span class="number">28</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha256</span>, <span class="ident">sha2::Sha256</span>, <span class="string">&quot;sha2&quot;</span>, <span class="string">&quot;SHA-256&quot;</span>, <span class="number">32</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha384</span>, <span class="ident">sha2::Sha384</span>, <span class="string">&quot;sha2&quot;</span>, <span class="string">&quot;SHA-384&quot;</span>, <span class="number">48</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha512</span>, <span class="ident">sha2::Sha512</span>, <span class="string">&quot;sha2&quot;</span>, <span class="string">&quot;SHA-512&quot;</span>, <span class="number">64</span>);
 
 <span class="comment">// SHA-3</span>
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha3_224</span>, <span class="ident">alg_sha3::Sha3_224</span>, <span class="string">&quot;sha3&quot;</span>, <span class="string">&quot;SHA-3-224&quot;</span>, <span class="number">28</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha3_256</span>, <span class="ident">alg_sha3::Sha3_256</span>, <span class="string">&quot;sha3&quot;</span>, <span class="string">&quot;SHA-3-256&quot;</span>, <span class="number">32</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha3_384</span>, <span class="ident">alg_sha3::Sha3_384</span>, <span class="string">&quot;sha3&quot;</span>, <span class="string">&quot;SHA-3-384&quot;</span>, <span class="number">48</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha3_512</span>, <span class="ident">alg_sha3::Sha3_512</span>, <span class="string">&quot;sha3&quot;</span>, <span class="string">&quot;SHA-3-512&quot;</span>, <span class="number">64</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha3_224</span>, <span class="ident">sha3::Sha3_224</span>, <span class="string">&quot;sha3&quot;</span>, <span class="string">&quot;SHA-3-224&quot;</span>, <span class="number">28</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha3_256</span>, <span class="ident">sha3::Sha3_256</span>, <span class="string">&quot;sha3&quot;</span>, <span class="string">&quot;SHA-3-256&quot;</span>, <span class="number">32</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha3_384</span>, <span class="ident">sha3::Sha3_384</span>, <span class="string">&quot;sha3&quot;</span>, <span class="string">&quot;SHA-3-384&quot;</span>, <span class="number">48</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodySha3_512</span>, <span class="ident">sha3::Sha3_512</span>, <span class="string">&quot;sha3&quot;</span>, <span class="string">&quot;SHA-3-512&quot;</span>, <span class="number">64</span>);
 
 <span class="comment">// Blake2</span>
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodyBlake2b</span>, <span class="ident">alg_blake2::Blake2b512</span>, <span class="string">&quot;blake2&quot;</span>, <span class="string">&quot;Blake2b&quot;</span>, <span class="number">64</span>);
-<span class="macro">body_hash_alias!</span>(<span class="ident">BodyBlake2s</span>, <span class="ident">alg_blake2::Blake2s256</span>, <span class="string">&quot;blake2&quot;</span>, <span class="string">&quot;Blake2s&quot;</span>, <span class="number">32</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodyBlake2b</span>, <span class="ident">blake2::Blake2b512</span>, <span class="string">&quot;blake2&quot;</span>, <span class="string">&quot;Blake2b&quot;</span>, <span class="number">64</span>);
+<span class="macro">body_hash_alias!</span>(<span class="ident">BodyBlake2s</span>, <span class="ident">blake2::Blake2s256</span>, <span class="string">&quot;blake2&quot;</span>, <span class="string">&quot;Blake2s&quot;</span>, <span class="number">32</span>);
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_hash" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (46b8c23f3 2022-07-01)" ></div>
 </body></html>
