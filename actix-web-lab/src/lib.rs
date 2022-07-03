@@ -28,6 +28,7 @@ mod acceptable;
 mod body_extractor_fold;
 mod body_hash;
 mod body_hmac;
+mod body_limit;
 mod cache_control;
 mod channel_body;
 mod content_length;

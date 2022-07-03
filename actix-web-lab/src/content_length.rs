@@ -82,6 +82,30 @@ impl From<usize> for ContentLength {
     }
 }
 
+impl PartialEq<usize> for ContentLength {
+    fn eq(&self, other: &usize) -> bool {
+        self.0 == *other
+    }
+}
+
+impl PartialEq<ContentLength> for usize {
+    fn eq(&self, other: &ContentLength) -> bool {
+        *self == other.0
+    }
+}
+
+impl PartialOrd<usize> for ContentLength {
+    fn partial_cmp(&self, other: &usize) -> Option<std::cmp::Ordering> {
+        self.0.partial_cmp(other)
+    }
+}
+
+impl PartialOrd<ContentLength> for usize {
+    fn partial_cmp(&self, other: &ContentLength) -> Option<std::cmp::Ordering> {
+        self.partial_cmp(&other.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -142,5 +166,19 @@ mod tests {
             ["18446744073709551615"],
             ContentLength(18_446_744_073_709_551_615),
         );
+    }
+
+    #[test]
+    fn equality() {
+        assert!(ContentLength(0) == ContentLength(0));
+        assert!(ContentLength(0) == 0);
+        assert!(0 != ContentLength(123));
+    }
+
+    #[test]
+    fn ordering() {
+        assert!(ContentLength(0) < ContentLength(123));
+        assert!(ContentLength(0) < 123);
+        assert!(0 < ContentLength(123));
     }
 }

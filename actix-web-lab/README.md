@@ -37,6 +37,7 @@
 - `Path`: simplified path parameter extractor that supports destructuring [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/extract/struct.Path.html)
 - `Query`: simplified query-string extractor that can also collect multi-value items [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/extract/struct.Query.html)
 - `RequestSignature`: wraps an extractor and calculates a request signature alongside [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/extract/struct.RequestSignature.html)
+- `BodyLimit`: wraps a body extractor and prevents DoS attacks by limiting payload size [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/extract/struct.BodyLimit.html)
 
 ### Macros
 
@@ -44,8 +45,9 @@
 
 ### Headers
 
-- `Hsts`: Strict-Transport-Security (HSTS) [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/header/struct.Hsts.html)
-- `CacheControl`: Cache-Control header with support for modern directives [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/header/struct.CacheControl.html)
+- `StrictTransportSecurity`: Strict-Transport-Security (HSTS) configuration [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/header/struct.StrictTransportSecurity.html)
+- `CacheControl`: Cache-Control typed header with support for modern directives [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/header/struct.CacheControl.html)
+- `ContentLength`: Content-Length typed header [(docs)](https://docs.rs/actix-web-lab/0.16.2/actix_web_lab/header/struct.CacheControl.html)
 
 ### Body Types
 
