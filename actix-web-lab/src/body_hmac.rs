@@ -126,6 +126,11 @@ where
 }
 
 /// Configuration for [`BodyHmac`] extractor.
+#[doc(hidden)]
+#[deprecated(
+    since = "0.16.0",
+    note = "Prefer `RequestSignatureScheme` + `RequestSignature`. See `body_hmac` example."
+)]
 pub struct HmacConfig {
     #[allow(clippy::type_complexity)]
     key_fn: Box<dyn Fn(HttpRequest) -> LocalBoxFuture<'static, Result<Vec<u8>, Error>> + 'static>,
