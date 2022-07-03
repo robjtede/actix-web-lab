@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.16.4 - 2022-07-03
 - Add alternative `NormalizePath` middleware with redirect option.
 
 
