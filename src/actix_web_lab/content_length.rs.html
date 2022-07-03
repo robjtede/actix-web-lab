@@ -150,7 +150,7 @@
 <span id="144">144</span>
 <span id="145">145</span>
 <span id="146">146</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Content-Length typed header</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Content-Length typed header.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! See [`ContentLength`] docs.</span>
 
@@ -180,7 +180,7 @@
 
 <span class="kw">impl</span> <span class="ident">ContentLength</span> {
     <span class="doccomment">/// Returns Content-Length value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="number">0</span>
     }
 }
@@ -222,14 +222,14 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ContentLength</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u64</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ContentLength</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">usize</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ContentLength</span>(<span class="ident">len</span>): <span class="ident">ContentLength</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">len</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ContentLength</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">len</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ContentLength</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">len</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">ContentLength</span>(<span class="ident">len</span>)
     }
 }
