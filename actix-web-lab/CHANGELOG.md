@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.16.3 - 2022-07-03
 - Add `ContentLength` typed header.
 - Add `BodyLimit` extractor wrapper.
 
