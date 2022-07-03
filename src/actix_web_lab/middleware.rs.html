@@ -12,12 +12,14 @@
 <span id="6">6</span>
 <span id="7">7</span>
 <span id="8">8</span>
+<span id="9">9</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Experimental middleware.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Analogous to the `middleware` module in Actix Web.</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::err_handler::ErrorHandlers</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::middleware_from_fn</span>::{<span class="ident">from_fn</span>, <span class="ident">MiddlewareFn</span>, <span class="ident">Next</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::normalize_path::NormalizePath</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::redirect_to_https::RedirectHttps</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::redirect_to_www::redirect_to_www</span>;
 </code></pre></div>
