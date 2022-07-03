@@ -1,4 +1,4 @@
-//! Content-Length typed header
+//! Content-Length typed header.
 //!
 //! See [`ContentLength`] docs.
 
@@ -28,7 +28,7 @@ pub struct ContentLength(usize);
 
 impl ContentLength {
     /// Returns Content-Length value.
-    pub fn into_inner(&self) -> u64 {
+    pub fn into_inner(&self) -> usize {
         self.0
     }
 }
@@ -70,14 +70,14 @@ impl Header for ContentLength {
     }
 }
 
-impl From<ContentLength> for u64 {
+impl From<ContentLength> for usize {
     fn from(ContentLength(len): ContentLength) -> Self {
         len
     }
 }
 
-impl From<u64> for ContentLength {
-    fn from(len: u64) -> Self {
+impl From<usize> for ContentLength {
+    fn from(len: usize) -> Self {
         ContentLength(len)
     }
 }

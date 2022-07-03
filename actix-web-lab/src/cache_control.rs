@@ -1,4 +1,4 @@
-//! Cache-Control typed header
+//! Cache-Control typed header.
 //!
 //! See [`CacheControl`] docs.
 
