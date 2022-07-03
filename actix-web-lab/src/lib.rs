@@ -42,6 +42,7 @@ mod lazy_data;
 mod local_data;
 mod middleware_from_fn;
 mod ndjson;
+mod normalize_path;
 mod path;
 mod query;
 mod redirect;
