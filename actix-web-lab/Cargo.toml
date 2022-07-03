@@ -64,6 +64,7 @@ env_logger = "0.9"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 hex = "0.4"
 hex-literal = "0.3"
+http = "0.2.7"
 rand = "0.8"
 rustls = "0.20"
 rustls-pemfile = "1.0.0"
