@@ -1,3 +1,7 @@
+//! Cache-Control typed header
+//!
+//! See [`CacheControl`] docs.
+
 use std::{fmt, str};
 
 use actix_http::{

@@ -1,4 +1,4 @@
-//! Strict-Transport-Security header.
+//! Strict-Transport-Security typed header.
 //!
 //! See [`StrictTransportSecurity`] docs.
 

@@ -30,6 +30,7 @@ mod body_hash;
 mod body_hmac;
 mod cache_control;
 mod channel_body;
+mod content_length;
 mod csv;
 mod display_stream;
 mod err_handler;

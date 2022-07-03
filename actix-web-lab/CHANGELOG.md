@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- Add `ContentLength` typed header.
 
 
 ## 0.16.2 - 2022-07-02
