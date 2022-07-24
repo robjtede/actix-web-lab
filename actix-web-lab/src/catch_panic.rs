@@ -13,7 +13,9 @@ use futures_util::FutureExt as _;
 
 /// A middleware to catch panics in wrapped handlers and middleware, returning empty 500 responses.
 ///
-/// This middleware should **never** be used as replacement for real error handling.
+/// **This middleware should never be used as replacement for proper error handling.** See [this
+/// thread](https://github.com/actix/actix-web/issues/1501#issuecomment-627517783) for historical
+/// discussion on why Actix Web does not do this by default.
 ///
 /// It is recommended that this middleware be registered last. That is, `wrap`ed after everything
 /// else except `Logger`.
