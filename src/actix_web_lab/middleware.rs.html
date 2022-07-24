@@ -13,15 +13,17 @@
 <span id="7">7</span>
 <span id="8">8</span>
 <span id="9">9</span>
+<span id="10">10</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Experimental middleware.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Analogous to the `middleware` module in Actix Web.</span>
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::catch_panic::CatchPanic</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::err_handler::ErrorHandlers</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::middleware_from_fn</span>::{<span class="ident">from_fn</span>, <span class="ident">MiddlewareFn</span>, <span class="ident">Next</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::normalize_path::NormalizePath</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::redirect_to_https::RedirectHttps</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::redirect_to_www::redirect_to_www</span>;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (f2d93935f 2022-07-02)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_lab" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (93ffde6f0 2022-07-23)" ></div>
 </body></html>
