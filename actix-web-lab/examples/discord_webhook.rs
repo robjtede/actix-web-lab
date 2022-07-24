@@ -26,7 +26,7 @@ const APP_PUBLIC_KEY_BYTES: &[u8] =
 static SIG_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-ed25519");
 static TS_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-timestamp");
 static APP_PUBLIC_KEY: Lazy<PublicKey> =
-    Lazy::new(|| PublicKey::from_bytes(&*APP_PUBLIC_KEY_BYTES).unwrap());
+    Lazy::new(|| PublicKey::from_bytes(APP_PUBLIC_KEY_BYTES).unwrap());
 
 #[derive(Debug)]
 struct DiscordWebhook {

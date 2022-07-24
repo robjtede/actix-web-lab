@@ -2,6 +2,7 @@
 //!
 //! Analogous to the `middleware` module in Actix Web.
 
+pub use crate::catch_panic::CatchPanic;
 pub use crate::err_handler::ErrorHandlers;
 pub use crate::middleware_from_fn::{from_fn, MiddlewareFn, Next};
 pub use crate::normalize_path::NormalizePath;
