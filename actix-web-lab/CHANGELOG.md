@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.16.5 - 2022-07-24
 - Add basic `CatchPanic` middleware.
 
 
