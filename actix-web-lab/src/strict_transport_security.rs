@@ -2,11 +2,13 @@
 //!
 //! See [`StrictTransportSecurity`] docs.
 
-use std::{convert::Infallible, time::Duration};
+use std::{convert::Infallible, str, time::Duration};
 
 use actix_web::{
+    error::ParseError,
     http::header::{
-        Header, HeaderName, HeaderValue, TryIntoHeaderValue, STRICT_TRANSPORT_SECURITY,
+        from_one_raw_str, Header, HeaderName, HeaderValue, TryIntoHeaderValue,
+        STRICT_TRANSPORT_SECURITY,
     },
     HttpMessage,
 };
@@ -35,7 +37,7 @@ pub type Hsts = StrictTransportSecurity;
 /// See the [HSTS page on MDN] for more information.
 ///
 /// [HSTS page on MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[doc(alias = "hsts", alias = "sts")]
 pub struct StrictTransportSecurity {
     duration: Duration,
@@ -94,6 +96,49 @@ impl Default for StrictTransportSecurity {
     }
 }
 
+impl str::FromStr for StrictTransportSecurity {
+    type Err = ParseError;
+
+    fn from_str(val: &str) -> Result<Self, Self::Err> {
+        let mut parts = val.split(';').map(str::trim);
+
+        // parse max-age/duration from first part of header
+        let duration = parts
+            .next()
+            .ok_or(ParseError::Header)?
+            .split_once('=')
+            .and_then(|(key, max_age)| {
+                if key.trim() != "max-age" {
+                    return None;
+                }
+
+                max_age.trim().parse().ok()
+            })
+            .map(Duration::from_secs)
+            .ok_or(ParseError::Header)?;
+
+        let mut include_subdomains = false;
+        let mut preload = false;
+
+        // find known attributes in remaining parts
+        for part in parts {
+            if part == "includeSubdomains" {
+                include_subdomains = true;
+            }
+
+            if part == "preload" {
+                preload = true;
+            }
+        }
+
+        Ok(Self {
+            duration,
+            include_subdomains,
+            preload,
+        })
+    }
+}
+
 impl TryIntoHeaderValue for StrictTransportSecurity {
     type Error = Infallible;
 
@@ -119,8 +164,8 @@ impl Header for StrictTransportSecurity {
         STRICT_TRANSPORT_SECURITY
     }
 
-    fn parse<M: HttpMessage>(_msg: &M) -> Result<Self, actix_http::error::ParseError> {
-        unimplemented!("Strict-Transport-Security header cannot yet be parsed");
+    fn parse<M: HttpMessage>(msg: &M) -> Result<Self, ParseError> {
+        from_one_raw_str(msg.headers().get(Self::name()))
     }
 }
 
@@ -193,6 +238,54 @@ mod test {
         assert_eq!(
             res.headers().get("strict-transport-security").unwrap(),
             "max-age=63072000; includeSubDomains"
+        );
+    }
+
+    #[test]
+    fn parsing() {
+        assert!("".parse::<StrictTransportSecurity>().is_err());
+        assert!("duration=1".parse::<StrictTransportSecurity>().is_err());
+
+        assert_eq!(
+            "max-age=1".parse::<StrictTransportSecurity>().unwrap(),
+            StrictTransportSecurity {
+                duration: Duration::from_secs(1),
+                include_subdomains: false,
+                preload: false,
+            }
+        );
+
+        assert_eq!(
+            "max-age=1; includeSubdomains"
+                .parse::<StrictTransportSecurity>()
+                .unwrap(),
+            StrictTransportSecurity {
+                duration: Duration::from_secs(1),
+                include_subdomains: true,
+                preload: false,
+            }
+        );
+
+        assert_eq!(
+            "max-age=1; preload"
+                .parse::<StrictTransportSecurity>()
+                .unwrap(),
+            StrictTransportSecurity {
+                duration: Duration::from_secs(1),
+                include_subdomains: false,
+                preload: true,
+            }
+        );
+
+        assert_eq!(
+            "max-age=1; includeSubdomains; preload"
+                .parse::<StrictTransportSecurity>()
+                .unwrap(),
+            StrictTransportSecurity {
+                duration: Duration::from_secs(1),
+                include_subdomains: true,
+                preload: true,
+            }
         );
     }
 }

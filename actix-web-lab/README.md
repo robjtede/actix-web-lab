@@ -78,4 +78,4 @@
 - Breaking changes will likely happen on most 0.x version bumps.
 - Documentation might be limited for some items.
 - Items that graduate to Actix Web crate will be marked deprecated here for a reasonable amount of time so you can migrate.
-- Migrating will often be as easy as dropping the `_lab` suffix from imports when migrating.
+- Migrating will often be as easy as dropping the `_lab` suffix from imports.
