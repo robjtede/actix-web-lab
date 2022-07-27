@@ -21,7 +21,7 @@ use futures_util::FutureExt as _;
 /// else except `Logger`.
 ///
 /// # Examples
-/// ```rust
+/// ```
 /// # use actix_web::App;
 /// use actix_web_lab::middleware::CatchPanic;
 ///

@@ -23,7 +23,7 @@ use crate::{header::StrictTransportSecurity, web::Redirect};
 /// See [`StrictTransportSecurity`] docs for more info.
 ///
 /// # Examples
-/// ```rust
+/// ```
 /// # use std::time::Duration;
 /// # use actix_web::App;
 /// use actix_web_lab::{header::StrictTransportSecurity, middleware::RedirectHttps};
