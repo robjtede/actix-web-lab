@@ -112,7 +112,7 @@ mod tests {
                 "/disco",
                 #[allow(unreachable_code)]
                 web::get().to(|| async {
-                    panic!("at the");
+                    panic!("the disco");
                     ""
                 }),
             )

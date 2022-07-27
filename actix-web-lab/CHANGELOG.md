@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- Add `PanicReporter` middleware.
 
 
 ## 0.16.5 - 2022-07-24
