@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.16.7 - 2022-07-27
 - Implement `FromStr` and `Header::parse` for `StrictTransportSecurity`.
 - Implement `PartialEq` and `Eq` for `StrictTransportSecurity`.
 
