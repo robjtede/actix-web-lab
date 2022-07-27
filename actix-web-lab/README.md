@@ -29,6 +29,7 @@
 - `ErrorHandlers`: alternative error handler middleware with simpler interface [(docs)](https://docs.rs/actix-web-lab/0.16.6/actix_web_lab/middleware/struct.ErrorHandlers.html)
 - `NormalizePath`: alternative path normalizing middleware with redirect option [(docs)](https://docs.rs/actix-web-lab/0.16.6/actix_web_lab/middleware/struct.NormalizePath.html)
 - `CatchPanic`: catch panics in wrapped handlers and middleware, returning empty 500 responses [(docs)](https://docs.rs/actix-web-lab/0.16.6/actix_web_lab/middleware/struct.CatchPanic.html)
+- `PanicReporter`: catch panics in wrapped handlers and middleware, returning empty 500 responses [(docs)](https://docs.rs/actix-web-lab/0.16.6/actix_web_lab/middleware/struct.PanicReporter.html)
 
 
 ### Extractors
