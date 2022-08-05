@@ -33,13 +33,12 @@ struct SseData {
 /// Server-sent events message containing one or more fields.
 #[derive(Debug)]
 enum SseMessage {
-    Retry(Duration),
     Data(SseData),
     Comment(ByteString),
 }
 
 impl SseMessage {
-    /// Split data into lines and prepend each line with `prefix`.
+    /// Splits data into lines and prepend each line with `prefix`.
     fn line_split_with_prefix(buf: &mut BytesMut, prefix: &'static str, data: ByteString) {
         // initial buffer size guess is len(data) + 10 lines of prefix + EOLs + EOF
         buf.reserve(data.len() + (10 * (prefix.len() + 1)) + 1);
@@ -52,13 +51,11 @@ impl SseMessage {
         }
     }
 
-    /// Serialize message into event-stream format.
+    /// Serializes message into event-stream format.
     fn into_bytes(self) -> Bytes {
         let mut buf = BytesMut::new();
 
         match self {
-            SseMessage::Retry(_) => todo!(),
-
             SseMessage::Data(SseData { id, event, data }) => {
                 if let Some(text) = id {
                     buf.put_slice(text.as_bytes())
@@ -79,6 +76,11 @@ impl SseMessage {
 
         buf.freeze()
     }
+
+    /// Serializes retry message into event-stream format.
+    fn retry_to_bytes(retry: Duration) -> Bytes {
+        Bytes::from(format!("retry: {}\n\n", retry.as_millis()))
+    }
 }
 
 /// Sender half of a server-sent events stream.
@@ -88,11 +90,20 @@ pub struct SseSender {
 }
 
 impl SseSender {
-    /// Send SSE comment.
-    pub async fn comment(&self, text: impl Into<ByteString>) -> Result<(), ()> {
+    /// Send SSE data with associated ID and `event` name.
+    pub async fn data_with_id_and_event(
+        &self,
+        id: Option<impl Into<ByteString>>,
+        event: Option<impl Into<ByteString>>,
+        data: impl Into<ByteString>,
+    ) -> Result<(), ()> {
         if self
             .tx
-            .send(SseMessage::Comment(text.into()))
+            .send(SseMessage::Data(SseData {
+                id: id.map(Into::into),
+                event: event.map(Into::into),
+                data: data.into(),
+            }))
             .await
             .is_err()
         {
@@ -102,15 +113,36 @@ impl SseSender {
         Ok(())
     }
 
+    /// Send SSE data with associated ID.
+    pub async fn data_with_id(
+        &self,
+        id: Option<impl Into<ByteString>>,
+        data: impl Into<ByteString>,
+    ) -> Result<(), ()> {
+        self.data_with_id_and_event(id, None::<String>, data).await
+    }
+
+    /// Send SSE data with associated `event` name.
+    pub async fn data_with_event(
+        &self,
+        event: Option<impl Into<ByteString>>,
+        data: impl Into<ByteString>,
+    ) -> Result<(), ()> {
+        self.data_with_id_and_event(None::<String>, event, data)
+            .await
+    }
+
     /// Send SSE data.
     pub async fn data(&self, data: impl Into<ByteString>) -> Result<(), ()> {
+        self.data_with_id_and_event(None::<String>, None::<String>, data)
+            .await
+    }
+
+    /// Send SSE comment.
+    pub async fn comment(&self, text: impl Into<ByteString>) -> Result<(), ()> {
         if self
             .tx
-            .send(SseMessage::Data(SseData {
-                id: None,
-                event: None,
-                data: data.into(),
-            }))
+            .send(SseMessage::Comment(text.into()))
             .await
             .is_err()
         {
@@ -132,6 +164,16 @@ pub struct Sse {
     rx: mpsc::Receiver<SseMessage>,
     keep_alive: bool,
     retry: Option<Duration>,
+}
+
+impl Sse {
+    /// Queues first event message to inform client of custom retry period.
+    ///
+    /// Browsers default to retry every 3 seconds or so.
+    pub fn with_retry_duration(mut self, retry: Duration) -> Self {
+        self.retry = Some(retry);
+        self
+    }
 }
 
 impl Responder for Sse {
@@ -156,6 +198,10 @@ impl MessageBody for Sse {
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<Bytes, Self::Error>>> {
+        if let Some(retry) = self.retry.take() {
+            return Poll::Ready(Some(Ok(SseMessage::retry_to_bytes(retry))));
+        }
+
         match ready!(self.rx.poll_recv(cx)) {
             Some(msg) => Poll::Ready(Some(Ok(msg.into_bytes()))),
             None => return Poll::Ready(None),
@@ -175,4 +221,32 @@ pub fn sse() -> (SseSender, Sse) {
             retry: None,
         },
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn format_retry_message() {
+        assert_eq!(
+            SseMessage::retry_to_bytes(Duration::from_millis(1)),
+            "retry: 1\n\n",
+        );
+        assert_eq!(
+            SseMessage::retry_to_bytes(Duration::from_secs(10)),
+            "retry: 10000\n\n",
+        );
+    }
+
+    #[test]
+    fn format_line_split() {
+        let mut buf = BytesMut::new();
+        SseMessage::line_split_with_prefix(&mut buf, "data: ", ByteString::from("foo"));
+        assert_eq!(buf, "data: foo\n");
+
+        let mut buf = BytesMut::new();
+        SseMessage::line_split_with_prefix(&mut buf, "data: ", ByteString::from("foo\nbar"));
+        assert_eq!(buf, "data: foo\ndata: bar\n");
+    }
 }
