@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "actix",
+        "bytestring",
         "clippy",
         "dalek",
         "deque",

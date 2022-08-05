@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- Add semantic `Sse` (server-sent events) responder with channel-like interface.
 
 
 ## 0.16.7 - 2022-07-27
