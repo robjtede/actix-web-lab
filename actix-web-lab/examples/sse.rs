@@ -4,13 +4,14 @@ use std::{
 };
 
 use actix_web::{get, App, HttpServer, Responder};
-use actix_web_lab::sse::sse;
+use actix_web_lab::{respond::Html, sse::sse};
+use time::format_description::well_known::Rfc3339;
 use tokio::time::sleep;
 use tracing::info;
 
 #[get("/")]
 async fn index() -> impl Responder {
-    "index"
+    Html(include_str!("./assets/sse.html").to_string())
 }
 
 #[get("/countdown")]
@@ -45,8 +46,10 @@ async fn timestamp() -> impl Responder {
 
     actix_web::rt::spawn(async move {
         loop {
+            let time = time::OffsetDateTime::now_utc();
+
             if sender
-                .data_with_event("timestamp", format!("{:?}", SystemTime::now()))
+                .data_with_event("timestamp", time.format(&Rfc3339).unwrap())
                 .await
                 .is_err()
             {

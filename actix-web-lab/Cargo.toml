@@ -74,3 +74,4 @@ rustls-pemfile = "1.0.0"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
 static_assertions = "1.1"
+time = { version = "0.3", features = ["formatting"] }
