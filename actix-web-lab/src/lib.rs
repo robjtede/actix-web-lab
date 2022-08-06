@@ -67,6 +67,7 @@ pub mod guard;
 pub mod header;
 pub mod middleware;
 pub mod respond;
+pub mod sse;
 pub mod test;
 pub mod util;
 pub mod web;
@@ -81,3 +82,5 @@ pub mod __reexports {
     pub use ::serde_json;
     pub use ::tokio;
 }
+
+pub(crate) type BoxError = Box<dyn std::error::Error>;
