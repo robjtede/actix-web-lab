@@ -17,13 +17,22 @@
     <div id="root"></div>
     <script>
       let root = document.getElementById('root')
-      let events = new EventSource('/time')
 
-      events.addEventListener('timestamp', () => {
+      function addLine(ev) {
         let data = document.createElement('p')
         let time = new Date().toLocaleTimeString()
-        data.innerText = time + ': ' + event.data
+        data.innerText = time + ': ' + ev
         root.appendChild(data)
+      }
+
+      let countdown_events = new EventSource('/countdown/16')
+      countdown_events.addEventListener('countdown', (event) => {
+        addLine(event.data)
+      })
+
+      let timestamp_events = new EventSource('/time')
+      timestamp_events.addEventListener('timestamp', (event) => {
+        addLine(event.data)
       })
     </script>
   </body>
