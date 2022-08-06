@@ -20,6 +20,7 @@
 - `NdJson`: efficient NDJSON streaming [(docs)](https://docs.rs/actix-web-lab/0.16.7/actix_web_lab/respond/struct.NdJson.html)
 - `DisplayStream`: efficient line-by-line `Display` streaming [(docs)](https://docs.rs/actix-web-lab/0.16.7/actix_web_lab/respond/struct.DisplayStream.html)
 - `Html`: basic string wrapper that responds with HTML Content-Type [(docs)](https://docs.rs/actix-web-lab/0.16.7/actix_web_lab/respond/struct.Html.html)
+- `Sse`: server-sent events (`text/event-stream`) responder [(docs)](https://docs.rs/actix-web-lab/0.16.7/actix_web_lab/sse/index.html)
 
 ### Middleware
 

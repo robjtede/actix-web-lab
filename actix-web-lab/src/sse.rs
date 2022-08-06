@@ -1,6 +1,6 @@
 //! Semantic server-sent events (SSE) responder with a channel-like interface.
 //!
-//! See docs for [`Sse`] and [`SseSender`].
+//! See docs for [`sse()`].
 
 use std::{
     pin::Pin,
@@ -108,23 +108,14 @@ pub struct SseSender {
 }
 
 impl SseSender {
-    /// Send SSE data with associated `id` and `event` name.
-    pub async fn data_with_id_and_event(
-        &self,
-        id: impl Into<ByteString>,
-        event: impl Into<ByteString>,
-        data: impl Into<ByteString>,
-    ) -> Result<(), SseSendError> {
-        self.send_data_message(Some(id), Some(event), data).await
-    }
-
-    /// Send SSE data with associated `id`.
-    pub async fn data_with_id(
-        &self,
-        id: impl Into<ByteString>,
-        data: impl Into<ByteString>,
-    ) -> Result<(), SseSendError> {
-        self.send_data_message(Some(id), None::<String>, data).await
+    /// Send SSE data.
+    ///
+    /// # Errors
+    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
+    /// disconnected.
+    pub async fn data(&self, data: impl Into<ByteString>) -> Result<(), SseSendError> {
+        self.send_data_message(None::<String>, None::<String>, data)
+            .await
     }
 
     /// Send SSE data with associated `event` name.
@@ -141,10 +132,31 @@ impl SseSender {
             .await
     }
 
-    /// Send SSE data.
-    pub async fn data(&self, data: impl Into<ByteString>) -> Result<(), SseSendError> {
-        self.send_data_message(None::<String>, None::<String>, data)
-            .await
+    /// Send SSE data with associated `id`.
+    ///
+    /// # Errors
+    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
+    /// disconnected.
+    pub async fn data_with_id(
+        &self,
+        id: impl Into<ByteString>,
+        data: impl Into<ByteString>,
+    ) -> Result<(), SseSendError> {
+        self.send_data_message(Some(id), None::<String>, data).await
+    }
+
+    /// Send SSE data with associated `id` and `event` name.
+    ///
+    /// # Errors
+    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
+    /// disconnected.
+    pub async fn data_with_id_and_event(
+        &self,
+        id: impl Into<ByteString>,
+        event: impl Into<ByteString>,
+        data: impl Into<ByteString>,
+    ) -> Result<(), SseSendError> {
+        self.send_data_message(Some(id), Some(event), data).await
     }
 
     /// Send SSE data message.
@@ -168,6 +180,10 @@ impl SseSender {
     }
 
     /// Send SSE comment.
+    ///
+    /// # Errors
+    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
+    /// disconnected.
     pub async fn comment(&self, text: impl Into<ByteString>) -> Result<(), SseSendError> {
         self.tx
             .send(SseMessage::Comment(text.into()))
@@ -178,9 +194,11 @@ impl SseSender {
 
 /// Server-sent events (`text/event-stream`) responder.
 #[doc(
+    alias = "server sent",
+    alias = "server-sent",
     alias = "server sent events",
     alias = "server-sent events",
-    alias = "event stream"
+    alias = "event-stream"
 )]
 #[derive(Debug)]
 pub struct Sse {
@@ -284,6 +302,13 @@ impl MessageBody for Sse {
 /// ```
 ///
 /// [mdn-sse]: https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
+#[doc(
+    alias = "server sent",
+    alias = "server-sent",
+    alias = "server sent events",
+    alias = "server-sent events",
+    alias = "event-stream"
+)]
 pub fn sse() -> (SseSender, Sse) {
     let (tx, rx) = mpsc::channel(10);
 
