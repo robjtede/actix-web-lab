@@ -4,7 +4,6 @@ use actix_web::{get, middleware::Logger, App, HttpServer, Responder};
 use actix_web_lab::{extract::Path, respond::Html, sse::sse};
 use time::format_description::well_known::Rfc3339;
 use tokio::time::sleep;
-use tracing::info;
 
 #[get("/")]
 async fn index() -> impl Responder {
@@ -22,7 +21,7 @@ async fn countdown_from(Path((n,)): Path<(u32,)>) -> impl Responder {
 }
 
 fn common_countdown(n: i32) -> impl Responder {
-    let (sender, sse) = sse();
+    let (sender, sse) = sse(2);
 
     actix_web::rt::spawn(async move {
         let mut n = n;
@@ -48,7 +47,7 @@ fn common_countdown(n: i32) -> impl Responder {
 
 #[get("/time")]
 async fn timestamp() -> impl Responder {
-    let (sender, sse) = sse();
+    let (sender, sse) = sse(2);
 
     actix_web::rt::spawn(async move {
         loop {
@@ -74,8 +73,7 @@ async fn timestamp() -> impl Responder {
 async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    let bind = ("127.0.0.1", 8080);
-    info!("staring server at http://{}:{}", &bind.0, &bind.1);
+    tracing::info!("starting HTTP server at http://localhost:8080");
 
     HttpServer::new(|| {
         App::new()
@@ -85,8 +83,8 @@ async fn main() -> io::Result<()> {
             .service(timestamp)
             .wrap(Logger::default())
     })
-    .workers(1)
-    .bind(bind)?
+    .workers(2)
+    .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }

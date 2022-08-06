@@ -1,6 +1,8 @@
 //! Semantic server-sent events (SSE) responder with a channel-like interface.
 //!
 //! See docs for [`sse()`].
+//!
+//! Usage examples can be found in the examples directory of the source code repo.
 
 use std::{
     pin::Pin,
@@ -179,6 +181,8 @@ impl SseSender {
         self.tx.send(msg).await.map_err(|_| SseSendError)
     }
 
+    // TODO: try_send
+
     /// Send SSE comment.
     ///
     /// # Errors
@@ -274,6 +278,8 @@ impl MessageBody for Sse {
 
 /// Create server-sent events (SSE) channel-like pair.
 ///
+/// The `buffer` argument controls how many unsent messages can be stored without waiting.
+///
 /// The first item in the tuple is the sender half. Much like a regular channel, it can be cloned,
 /// sent to another thread/task, and send event messages to the response stream. It provides several
 /// methods that represent the event-stream format.
@@ -291,7 +297,7 @@ impl MessageBody for Sse {
 ///
 /// #[get("/sse")]
 /// async fn events() -> impl Responder {
-///     let (sender, sse) = sse();
+///     let (sender, sse) = sse(10);
 ///
 ///     let _ = sender.comment("my comment").await;
 ///     let _ = sender.data_with_event("chat_msg", "my data").await;
@@ -309,8 +315,8 @@ impl MessageBody for Sse {
     alias = "server-sent events",
     alias = "event-stream"
 )]
-pub fn sse() -> (SseSender, Sse) {
-    let (tx, rx) = mpsc::channel(10);
+pub fn sse(buffer: usize) -> (SseSender, Sse) {
+    let (tx, rx) = mpsc::channel(buffer);
 
     (
         SseSender { tx },
@@ -368,6 +374,16 @@ mod tests {
 
         assert_eq!(
             SseMessage::Data(SseData {
+                id: None,
+                event: None,
+                data: "\n".into()
+            })
+            .into_bytes(),
+            "data: \ndata: \n\n"
+        );
+
+        assert_eq!(
+            SseMessage::Data(SseData {
                 id: Some("42".into()),
                 event: None,
                 data: "foo".into()
@@ -403,12 +419,12 @@ mod tests {
         let mut cx = Context::from_waker(&waker);
 
         {
-            let (_sender, mut sse) = sse();
+            let (_sender, mut sse) = sse(9);
             assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
         }
 
         {
-            let (_sender, sse) = sse();
+            let (_sender, sse) = sse(9);
             let mut sse = sse.with_retry_duration(Duration::from_millis(42));
             match Pin::new(&mut sse).poll_next(&mut cx) {
                 Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "retry: 42\n\n"),
@@ -419,7 +435,7 @@ mod tests {
 
     #[actix_web::test]
     async fn dropping_responder_causes_send_fails() {
-        let (sender, sse) = sse();
+        let (sender, sse) = sse(9);
         drop(sse);
 
         assert!(sender.data("late data").await.is_err());
@@ -427,7 +443,7 @@ mod tests {
 
     #[actix_web::test]
     async fn messages_are_received_from_sender() {
-        let (sender, mut sse) = sse();
+        let (sender, mut sse) = sse(9);
 
         assert!(poll_fn(|cx| Pin::new(&mut sse).poll_next(cx))
             .now_or_never()
@@ -446,7 +462,7 @@ mod tests {
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);
 
-        let (sender, sse) = sse();
+        let (sender, sse) = sse(9);
         let mut sse = sse.with_keep_alive(Duration::from_millis(4));
 
         assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
