@@ -27,24 +27,110 @@ use crate::{
     BoxError,
 };
 
-/// Error returned from sender operations when client has disconnected.
+/// Error returned from [`SseSender::send()`].
 #[derive(Debug, Display, Error)]
 #[display(fmt = "channel closed")]
 #[non_exhaustive]
 pub struct SseSendError;
 
+/// Error returned from [`SseSender::try_send()`].
+///
+/// In each case, the original message is returned back to you.
+#[derive(Debug, Display, Error)]
+#[non_exhaustive]
+pub enum SseTrySendError<M> {
+    /// The SSE send buffer is full.
+    #[display(fmt = "buffer full")]
+    Full(M),
+
+    /// The receiving ([`Sse`]) has been dropped, likely because the client disconnected.
+    #[display(fmt = "channel closed")]
+    Closed(M),
+}
+
 /// Server-sent events data message containing a `data` field and optional `id` and `event` fields.
+///
+/// Since it implements `Into<SseMessage>`, this can be passed directly to [`send`](SseSender::send)
+/// or [`try_send`](SseSender::try_send).
 #[derive(Debug)]
-struct SseData {
+pub struct SseData {
     id: Option<ByteString>,
     event: Option<ByteString>,
     data: ByteString,
 }
 
+impl SseData {
+    /// Constructs a new SSE data message with just the `data` field.
+    #[must_use]
+    pub fn new(data: impl Into<ByteString>) -> Self {
+        Self {
+            id: None,
+            event: None,
+            data: data.into(),
+        }
+    }
+
+    /// Sets `data` field.
+    pub fn set_data(&mut self, data: impl Into<ByteString>) {
+        self.data = data.into();
+    }
+
+    /// Sets `id` field, returning a new data message.
+    #[must_use]
+    pub fn id(mut self, id: impl Into<ByteString>) -> Self {
+        self.id = Some(id.into());
+        self
+    }
+
+    /// Sets `id` field.
+    pub fn set_id(&mut self, id: impl Into<ByteString>) {
+        self.id = Some(id.into());
+    }
+
+    /// Sets `event` name field, returning a new data message.
+    #[must_use]
+    pub fn event(mut self, event: impl Into<ByteString>) -> Self {
+        self.event = Some(event.into());
+        self
+    }
+
+    /// Sets `event` name field.
+    pub fn set_event(&mut self, event: impl Into<ByteString>) {
+        self.event = Some(event.into());
+    }
+}
+
+impl From<SseData> for SseMessage {
+    fn from(data: SseData) -> Self {
+        Self::Data(data)
+    }
+}
+
 /// Server-sent events message containing one or more fields.
 #[derive(Debug)]
-enum SseMessage {
+pub enum SseMessage {
+    /// A `data` message with optional ID and event name.
+    ///
+    /// Data messages looks like this in the response stream.
+    /// ```plain
+    /// event: foo
+    /// id: 42
+    /// data: my data
+    ///
+    /// data: {
+    /// data:   "multiline": "data"
+    /// data: }
+    /// ```
     Data(SseData),
+
+    /// A comment message.
+    ///
+    /// Comments look like this in the response stream.
+    /// ```plain
+    /// : my comment
+    ///
+    /// : another comment
+    /// ```
     Comment(ByteString),
 }
 
@@ -110,89 +196,95 @@ pub struct SseSender {
 }
 
 impl SseSender {
+    /// Send an SSE message.
+    ///
+    /// # Errors
+    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
+    ///
+    /// # Examples
+    /// ```
+    /// #[actix_web::main] async fn test() {
+    /// use actix_web_lab::sse::{sse, SseData, SseMessage};
+    ///
+    /// let (sender, sse_stream) = sse(5);
+    /// sender.send(SseData::new("my data").event("my event name")).await.unwrap();
+    /// sender.send(SseMessage::Comment("my comment".into())).await.unwrap();
+    /// # } test();
+    /// ```
+    pub async fn send(&self, msg: impl Into<SseMessage>) -> Result<(), SseSendError> {
+        self.tx.send(msg.into()).await.map_err(|_| SseSendError)
+    }
+
+    /// Tries to send SSE message.
+    ///
+    /// # Errors
+    /// Errors if:
+    /// - the the SSE buffer is currently full;
+    /// - the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
+    ///
+    /// # Examples
+    /// ```
+    /// #[actix_web::main] async fn test() {
+    /// use actix_web_lab::sse::{sse, SseData, SseMessage};
+    ///
+    /// let (sender, sse_stream) = sse(5);
+    /// sender.try_send(SseData::new("my data").event("my event name")).unwrap();
+    /// sender.try_send(SseMessage::Comment("my comment".into())).unwrap();
+    /// # } test();
+    /// ```
+    pub fn try_send(&self, msg: impl Into<SseMessage>) -> Result<(), SseTrySendError<SseMessage>> {
+        self.tx.try_send(msg.into()).map_err(|err| match err {
+            mpsc::error::TrySendError::Full(msg) => SseTrySendError::Full(msg),
+            mpsc::error::TrySendError::Closed(msg) => SseTrySendError::Closed(msg),
+        })
+    }
+
     /// Send SSE data.
     ///
     /// # Errors
-    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
-    /// disconnected.
+    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
+    #[doc(hidden)]
+    #[deprecated(since = "0.16.9", note = "Use `SseData` builder API with `send()`.")]
     pub async fn data(&self, data: impl Into<ByteString>) -> Result<(), SseSendError> {
-        self.send_data_message(None::<String>, None::<String>, data)
-            .await
+        self.send(SseData::new(data)).await
     }
 
     /// Send SSE data with associated `event` name.
     ///
     /// # Errors
-    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
-    /// disconnected.
+    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
+    #[doc(hidden)]
+    #[deprecated(since = "0.16.9", note = "Use `SseData` builder API with `send()`.")]
     pub async fn data_with_event(
         &self,
         event: impl Into<ByteString>,
         data: impl Into<ByteString>,
     ) -> Result<(), SseSendError> {
-        self.send_data_message(None::<String>, Some(event), data)
-            .await
+        self.send(SseData::new(data).event(event)).await
     }
 
     /// Send SSE data with associated `id`.
     ///
     /// # Errors
-    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
-    /// disconnected.
+    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
+    #[doc(hidden)]
+    #[deprecated(since = "0.16.9", note = "Use `SseData` builder API with `send()`.")]
     pub async fn data_with_id(
         &self,
         id: impl Into<ByteString>,
         data: impl Into<ByteString>,
     ) -> Result<(), SseSendError> {
-        self.send_data_message(Some(id), None::<String>, data).await
+        self.send(SseData::new(data).id(id)).await
     }
-
-    /// Send SSE data with associated `id` and `event` name.
-    ///
-    /// # Errors
-    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
-    /// disconnected.
-    pub async fn data_with_id_and_event(
-        &self,
-        id: impl Into<ByteString>,
-        event: impl Into<ByteString>,
-        data: impl Into<ByteString>,
-    ) -> Result<(), SseSendError> {
-        self.send_data_message(Some(id), Some(event), data).await
-    }
-
-    /// Send SSE data message.
-    ///
-    /// # Errors
-    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
-    /// disconnected.
-    async fn send_data_message(
-        &self,
-        id: Option<impl Into<ByteString>>,
-        event: Option<impl Into<ByteString>>,
-        data: impl Into<ByteString>,
-    ) -> Result<(), SseSendError> {
-        let msg = SseMessage::Data(SseData {
-            id: id.map(Into::into),
-            event: event.map(Into::into),
-            data: data.into(),
-        });
-
-        self.tx.send(msg).await.map_err(|_| SseSendError)
-    }
-
-    // TODO: try_send
 
     /// Send SSE comment.
     ///
     /// # Errors
-    /// Errors if used and the receiving end ([`Sse`]) has been dropped, likely because the client
-    /// disconnected.
+    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
+    #[doc(hidden)]
+    #[deprecated(since = "0.16.9", note = "Use `SseMessage` with `send()`.")]
     pub async fn comment(&self, text: impl Into<ByteString>) -> Result<(), SseSendError> {
-        self.tx
-            .send(SseMessage::Comment(text.into()))
-            .await
-            .map_err(|_| SseSendError)
+        self.send(SseMessage::Comment(text.into())).await
     }
 }
 
@@ -297,12 +389,12 @@ impl MessageBody for Sse {
 ///
 /// #[get("/sse")]
 /// async fn events() -> impl Responder {
-///     let (sender, sse) = sse(10);
+///     let (sender, sse_stream) = sse(10);
 ///
 ///     let _ = sender.comment("my comment").await;
 ///     let _ = sender.data_with_event("chat_msg", "my data").await;
 ///
-///     sse.with_keep_alive(Duration::from_secs(5))
+///     sse_stream.with_keep_alive(Duration::from_secs(5))
 ///         .with_retry_duration(Duration::from_secs(10))
 /// }
 /// ```
@@ -438,7 +530,7 @@ mod tests {
         let (sender, sse) = sse(9);
         drop(sse);
 
-        assert!(sender.data("late data").await.is_err());
+        assert!(sender.send(SseData::new("late data")).await.is_err());
     }
 
     #[actix_web::test]
@@ -449,7 +541,7 @@ mod tests {
             .now_or_never()
             .is_none());
 
-        sender.data_with_event("foo", "bar").await.unwrap();
+        sender.send(SseData::new("bar").event("foo")).await.unwrap();
 
         match poll_fn(|cx| Pin::new(&mut sse).poll_next(cx)).now_or_never() {
             Some(Some(Ok(bytes))) => assert_eq!(bytes, "event: foo\ndata: bar\n\n"),
@@ -476,7 +568,7 @@ mod tests {
 
         assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
 
-        sender.data("foo").await.unwrap();
+        sender.send(SseData::new("foo")).await.unwrap();
 
         match Pin::new(&mut sse).poll_next(&mut cx) {
             Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "data: foo\n\n"),

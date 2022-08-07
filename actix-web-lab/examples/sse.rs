@@ -1,7 +1,11 @@
 use std::{io, time::Duration};
 
 use actix_web::{get, middleware::Logger, App, HttpServer, Responder};
-use actix_web_lab::{extract::Path, respond::Html, sse::sse};
+use actix_web_lab::{
+    extract::Path,
+    respond::Html,
+    sse::{sse, SseData},
+};
 use time::format_description::well_known::Rfc3339;
 use tokio::time::sleep;
 
@@ -27,11 +31,9 @@ fn common_countdown(n: i32) -> impl Responder {
         let mut n = n;
 
         while n > 0 {
-            if sender
-                .data_with_event("countdown", n.to_string())
-                .await
-                .is_err()
-            {
+            let msg = SseData::new(n.to_string()).event("countdown");
+
+            if sender.send(msg).await.is_err() {
                 tracing::warn!("client disconnected at {n}; could not send SSE message");
                 break;
             }
@@ -52,12 +54,9 @@ async fn timestamp() -> impl Responder {
     actix_web::rt::spawn(async move {
         loop {
             let time = time::OffsetDateTime::now_utc();
+            let msg = SseData::new(time.format(&Rfc3339).unwrap()).event("timestamp");
 
-            if sender
-                .data_with_event("timestamp", time.format(&Rfc3339).unwrap())
-                .await
-                .is_err()
-            {
+            if sender.send(msg).await.is_err() {
                 tracing::warn!("client disconnected; could not send SSE message");
                 break;
             }
