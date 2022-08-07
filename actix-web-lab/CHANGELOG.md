@@ -1,12 +1,16 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.16.9 - 2022-08-07
 - Add `SseSender::send`.
 - Add `SseSender::try_send`.
 - Expose `SseData`.
 - Expose `SseMessage`.
 - Expose `SseSendError`.
 - Deprecate other `SseSender` methods.
+
 
 ## 0.16.8 - 2022-08-07
 - Add semantic `Sse` (server-sent events) responder with channel-like interface.
