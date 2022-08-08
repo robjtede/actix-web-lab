@@ -40,7 +40,7 @@ fn common_countdown(n: i32) -> impl Responder {
         }
     });
 
-    sse.with_retry_duration(Duration::from_secs(10))
+    sse.with_retry_duration(Duration::from_secs(5))
 }
 
 #[get("/time")]
