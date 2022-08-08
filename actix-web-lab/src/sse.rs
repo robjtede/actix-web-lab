@@ -44,6 +44,7 @@ use bytestring::ByteString;
 use derive_more::{Display, Error};
 use futures_core::Stream;
 use pin_project_lite::pin_project;
+use serde::Serialize;
 use tokio::{
     sync::mpsc,
     time::{interval, Interval},
@@ -93,6 +94,32 @@ pub type SseTrySendError = TrySendError;
 ///
 /// Since it implements `Into<SseMessage>`, this can be passed directly to [`send`](SseSender::send)
 /// or [`try_send`](SseSender::try_send).
+///
+/// # Examples
+/// ```
+/// # #[actix_web::main] async fn test() {
+/// use std::convert::Infallible;
+/// use actix_web::body;
+/// use serde::Serialize;
+/// use futures_util::stream;
+/// use actix_web_lab::sse;
+///
+/// #[derive(serde::Serialize)]
+/// struct Foo {
+///     bar: u32,
+/// }
+///
+/// let sse = sse::Sse::from_stream(stream::iter([
+///     Ok::<_, Infallible>(sse::Event::Data(sse::Data::new("foo"))),
+///     Ok::<_, Infallible>(sse::Event::Data(sse::Data::new_json(Foo { bar: 42 }).unwrap())),
+/// ]));
+///
+/// assert_eq!(
+///     body::to_bytes(sse).await.unwrap(),
+///     "data: foo\n\ndata: {\"bar\":42}\n\n",
+/// );
+/// # }; test();
+/// ```
 #[derive(Debug, Clone)]
 pub struct Data {
     id: Option<ByteString>,
@@ -106,6 +133,12 @@ pub type SseData = Data;
 
 impl Data {
     /// Constructs a new SSE data message with just the `data` field.
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_web_lab::sse;
+    /// let event = sse::Event::Data(sse::Data::new("foo"));
+    /// ```
     #[must_use]
     pub fn new(data: impl Into<ByteString>) -> Self {
         Self {
@@ -113,6 +146,28 @@ impl Data {
             event: None,
             data: data.into(),
         }
+    }
+
+    /// Constructs a new SSE data message the `data` field set to `data` serialized as JSON.
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_web_lab::sse;
+    ///
+    /// #[derive(serde::Serialize)]
+    /// struct Foo {
+    ///     bar: u32,
+    /// }
+    ///
+    /// let event = sse::Event::Data(sse::Data::new_json(Foo { bar: 42 }).unwrap());
+    /// ```
+    #[must_use]
+    pub fn new_json(data: impl Serialize) -> Result<Self, serde_json::Error> {
+        Ok(Self {
+            id: None,
+            event: None,
+            data: serde_json::to_string(&data)?.into(),
+        })
     }
 
     /// Sets `data` field.
