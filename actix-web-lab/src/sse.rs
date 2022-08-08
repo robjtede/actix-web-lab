@@ -1,10 +1,35 @@
 //! Semantic server-sent events (SSE) responder with a channel-like interface.
 //!
-//! See docs for [`sse()`].
+//! # Examples
+//! ```no_run
+//! use std::time::Duration;
+//! use actix_web::{Responder, get};
+//! use actix_web_lab::sse;
 //!
-//! Usage examples can be found in the examples directory of the source code repo.
+//! #[get("/sse")]
+//! async fn events() -> impl Responder {
+//!     let (sender, sse_stream) = sse::channel(10);
+//!
+//!     let _ = sender.send(sse::Event::Comment("my comment".into())).await;
+//!     let _ = sender.send(sse::Data::new("my data").event("chat_msg")).await;
+//!
+//!     sse_stream.with_keep_alive(Duration::from_secs(5))
+//!         .with_retry_duration(Duration::from_secs(10))
+//! }
+//! ```
+//!
+//! Complete usage examples can be found in the examples directory of the source code repo.
+
+#![doc(
+    alias = "server sent",
+    alias = "server-sent",
+    alias = "server sent events",
+    alias = "server-sent events",
+    alias = "event-stream"
+)]
 
 use std::{
+    convert::Infallible,
     pin::Pin,
     task::{Context, Poll},
     time::Duration,
@@ -17,6 +42,8 @@ use actix_web::{
 use bytes::{BufMut as _, Bytes, BytesMut};
 use bytestring::ByteString;
 use derive_more::{Display, Error};
+use futures_core::Stream;
+use pin_project_lite::pin_project;
 use tokio::{
     sync::mpsc,
     time::{interval, Interval},
@@ -31,35 +58,53 @@ use crate::{
 #[derive(Debug, Display, Error)]
 #[display(fmt = "channel closed")]
 #[non_exhaustive]
-pub struct SseSendError;
+pub struct SendError(#[error(not(source))] Event);
+
+#[doc(hidden)]
+#[deprecated(
+    since = "0.17.0",
+    note = "Renamed to `SendError`. Prefer `sse::SendError`."
+)]
+pub type SseSendError = SendError;
 
 /// Error returned from [`SseSender::try_send()`].
 ///
 /// In each case, the original message is returned back to you.
 #[derive(Debug, Display, Error)]
 #[non_exhaustive]
-pub enum SseTrySendError<M> {
+pub enum TrySendError {
     /// The SSE send buffer is full.
     #[display(fmt = "buffer full")]
-    Full(M),
+    Full(#[error(not(source))] Event),
 
     /// The receiving ([`Sse`]) has been dropped, likely because the client disconnected.
     #[display(fmt = "channel closed")]
-    Closed(M),
+    Closed(#[error(not(source))] Event),
 }
+
+#[doc(hidden)]
+#[deprecated(
+    since = "0.17.0",
+    note = "Renamed to `TrySendError`. Prefer `sse::TrySendError`."
+)]
+pub type SseTrySendError = TrySendError;
 
 /// Server-sent events data message containing a `data` field and optional `id` and `event` fields.
 ///
 /// Since it implements `Into<SseMessage>`, this can be passed directly to [`send`](SseSender::send)
 /// or [`try_send`](SseSender::try_send).
-#[derive(Debug)]
-pub struct SseData {
+#[derive(Debug, Clone)]
+pub struct Data {
     id: Option<ByteString>,
     event: Option<ByteString>,
     data: ByteString,
 }
 
-impl SseData {
+#[doc(hidden)]
+#[deprecated(since = "0.17.0", note = "Renamed to `Data`. Prefer `sse::Data`.")]
+pub type SseData = Data;
+
+impl Data {
     /// Constructs a new SSE data message with just the `data` field.
     #[must_use]
     pub fn new(data: impl Into<ByteString>) -> Self {
@@ -100,15 +145,15 @@ impl SseData {
     }
 }
 
-impl From<SseData> for SseMessage {
-    fn from(data: SseData) -> Self {
+impl From<Data> for Event {
+    fn from(data: Data) -> Self {
         Self::Data(data)
     }
 }
 
 /// Server-sent events message containing one or more fields.
-#[derive(Debug)]
-pub enum SseMessage {
+#[derive(Debug, Clone)]
+pub enum Event {
     /// A `data` message with optional ID and event name.
     ///
     /// Data messages looks like this in the response stream.
@@ -121,7 +166,7 @@ pub enum SseMessage {
     /// data:   "multiline": "data"
     /// data: }
     /// ```
-    Data(SseData),
+    Data(Data),
 
     /// A comment message.
     ///
@@ -134,7 +179,11 @@ pub enum SseMessage {
     Comment(ByteString),
 }
 
-impl SseMessage {
+#[doc(hidden)]
+#[deprecated(since = "0.17.0", note = "Renamed to `Event`. Prefer `sse::Event`.")]
+pub type SseMessage = Event;
+
+impl Event {
     /// Splits data into lines and prepend each line with `prefix`.
     fn line_split_with_prefix(buf: &mut BytesMut, prefix: &'static str, data: ByteString) {
         // initial buffer size guess is len(data) + 10 lines of prefix + EOLs + EOF
@@ -153,7 +202,7 @@ impl SseMessage {
         let mut buf = BytesMut::new();
 
         match self {
-            SseMessage::Data(SseData { id, event, data }) => {
+            Event::Data(Data { id, event, data }) => {
                 if let Some(text) = id {
                     buf.put_slice(b"id: ");
                     buf.put_slice(text.as_bytes());
@@ -169,7 +218,7 @@ impl SseMessage {
                 Self::line_split_with_prefix(&mut buf, "data: ", data);
             }
 
-            SseMessage::Comment(text) => Self::line_split_with_prefix(&mut buf, ": ", text),
+            Event::Comment(text) => Self::line_split_with_prefix(&mut buf, ": ", text),
         }
 
         // final newline to mark end of message
@@ -191,11 +240,15 @@ impl SseMessage {
 
 /// Sender half of a server-sent events stream.
 #[derive(Debug, Clone)]
-pub struct SseSender {
-    tx: mpsc::Sender<SseMessage>,
+pub struct Sender {
+    tx: mpsc::Sender<Event>,
 }
 
-impl SseSender {
+#[doc(hidden)]
+#[deprecated(since = "0.17.0", note = "Renamed to `Sender`. Prefer `sse::Sender`.")]
+pub type SseSender = Sender;
+
+impl Sender {
     /// Send an SSE message.
     ///
     /// # Errors
@@ -204,15 +257,18 @@ impl SseSender {
     /// # Examples
     /// ```
     /// #[actix_web::main] async fn test() {
-    /// use actix_web_lab::sse::{sse, SseData, SseMessage};
+    /// use actix_web_lab::sse;
     ///
-    /// let (sender, sse_stream) = sse(5);
-    /// sender.send(SseData::new("my data").event("my event name")).await.unwrap();
-    /// sender.send(SseMessage::Comment("my comment".into())).await.unwrap();
+    /// let (sender, sse_stream) = sse::channel(5);
+    /// sender.send(sse::Data::new("my data").event("my event name")).await.unwrap();
+    /// sender.send(sse::Event::Comment("my comment".into())).await.unwrap();
     /// # } test();
     /// ```
-    pub async fn send(&self, msg: impl Into<SseMessage>) -> Result<(), SseSendError> {
-        self.tx.send(msg.into()).await.map_err(|_| SseSendError)
+    pub async fn send(&self, msg: impl Into<Event>) -> Result<(), SendError> {
+        self.tx
+            .send(msg.into())
+            .await
+            .map_err(|mpsc::error::SendError(ev)| SendError(ev))
     }
 
     /// Tries to send SSE message.
@@ -225,85 +281,48 @@ impl SseSender {
     /// # Examples
     /// ```
     /// #[actix_web::main] async fn test() {
-    /// use actix_web_lab::sse::{sse, SseData, SseMessage};
+    /// use actix_web_lab::sse;
     ///
-    /// let (sender, sse_stream) = sse(5);
-    /// sender.try_send(SseData::new("my data").event("my event name")).unwrap();
-    /// sender.try_send(SseMessage::Comment("my comment".into())).unwrap();
+    /// let (sender, sse_stream) = sse::channel(5);
+    /// sender.try_send(sse::Data::new("my data").event("my event name")).unwrap();
+    /// sender.try_send(sse::Event::Comment("my comment".into())).unwrap();
     /// # } test();
     /// ```
-    pub fn try_send(&self, msg: impl Into<SseMessage>) -> Result<(), SseTrySendError<SseMessage>> {
+    pub fn try_send(&self, msg: impl Into<Event>) -> Result<(), TrySendError> {
         self.tx.try_send(msg.into()).map_err(|err| match err {
-            mpsc::error::TrySendError::Full(msg) => SseTrySendError::Full(msg),
-            mpsc::error::TrySendError::Closed(msg) => SseTrySendError::Closed(msg),
+            mpsc::error::TrySendError::Full(ev) => TrySendError::Full(ev),
+            mpsc::error::TrySendError::Closed(ev) => TrySendError::Closed(ev),
         })
     }
+}
 
-    /// Send SSE data.
-    ///
-    /// # Errors
-    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
-    #[doc(hidden)]
-    #[deprecated(since = "0.16.9", note = "Use `SseData` builder API with `send()`.")]
-    pub async fn data(&self, data: impl Into<ByteString>) -> Result<(), SseSendError> {
-        self.send(SseData::new(data)).await
-    }
-
-    /// Send SSE data with associated `event` name.
-    ///
-    /// # Errors
-    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
-    #[doc(hidden)]
-    #[deprecated(since = "0.16.9", note = "Use `SseData` builder API with `send()`.")]
-    pub async fn data_with_event(
-        &self,
-        event: impl Into<ByteString>,
-        data: impl Into<ByteString>,
-    ) -> Result<(), SseSendError> {
-        self.send(SseData::new(data).event(event)).await
-    }
-
-    /// Send SSE data with associated `id`.
-    ///
-    /// # Errors
-    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
-    #[doc(hidden)]
-    #[deprecated(since = "0.16.9", note = "Use `SseData` builder API with `send()`.")]
-    pub async fn data_with_id(
-        &self,
-        id: impl Into<ByteString>,
-        data: impl Into<ByteString>,
-    ) -> Result<(), SseSendError> {
-        self.send(SseData::new(data).id(id)).await
-    }
-
-    /// Send SSE comment.
-    ///
-    /// # Errors
-    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
-    #[doc(hidden)]
-    #[deprecated(since = "0.16.9", note = "Use `SseMessage` with `send()`.")]
-    pub async fn comment(&self, text: impl Into<ByteString>) -> Result<(), SseSendError> {
-        self.send(SseMessage::Comment(text.into())).await
+pin_project! {
+    /// Server-sent events (`text/event-stream`) responder.
+    #[derive(Debug)]
+    pub struct Sse<S> {
+        #[pin]
+        stream: S,
+        keep_alive: Option<Interval>,
+        retry_interval: Option<Duration>,
     }
 }
 
-/// Server-sent events (`text/event-stream`) responder.
-#[doc(
-    alias = "server sent",
-    alias = "server-sent",
-    alias = "server sent events",
-    alias = "server-sent events",
-    alias = "event-stream"
-)]
-#[derive(Debug)]
-pub struct Sse {
-    rx: mpsc::Receiver<SseMessage>,
-    keep_alive: Option<Interval>,
-    retry_interval: Option<Duration>,
+impl<S, E> Sse<S>
+where
+    S: Stream<Item = Result<Event, E>> + 'static,
+    E: Into<BoxError>,
+{
+    /// Create an SSE response from a stream that yields SSE [Event]s.
+    pub fn from_stream(stream: S) -> Self {
+        Self {
+            stream,
+            keep_alive: None,
+            retry_interval: None,
+        }
+    }
 }
 
-impl Sse {
+impl<S> Sse<S> {
     /// Enables "keep-alive" messages to be send in the event stream after a period of inactivity.
     ///
     /// By default, no keep-alive is set up.
@@ -324,7 +343,11 @@ impl Sse {
     }
 }
 
-impl Responder for Sse {
+impl<S, E> Responder for Sse<S>
+where
+    S: Stream<Item = Result<Event, E>> + 'static,
+    E: Into<BoxError>,
+{
     type Body = BoxBody;
 
     fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
@@ -335,7 +358,11 @@ impl Responder for Sse {
     }
 }
 
-impl MessageBody for Sse {
+impl<S, E> MessageBody for Sse<S>
+where
+    S: Stream<Item = Result<Event, E>>,
+    E: Into<BoxError>,
+{
     type Error = BoxError;
 
     fn size(&self) -> BodySize {
@@ -343,24 +370,27 @@ impl MessageBody for Sse {
     }
 
     fn poll_next(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<Bytes, Self::Error>>> {
-        if let Some(retry) = self.retry_interval.take() {
+        let this = self.project();
+
+        if let Some(retry) = this.retry_interval.take() {
             cx.waker().wake_by_ref();
-            return Poll::Ready(Some(Ok(SseMessage::retry_to_bytes(retry))));
+            return Poll::Ready(Some(Ok(Event::retry_to_bytes(retry))));
         }
 
-        if let Poll::Ready(msg) = self.rx.poll_recv(cx) {
+        if let Poll::Ready(msg) = this.stream.poll_next(cx) {
             return match msg {
-                Some(msg) => Poll::Ready(Some(Ok(msg.into_bytes()))),
+                Some(Ok(msg)) => Poll::Ready(Some(Ok(msg.into_bytes()))),
+                Some(Err(err)) => Poll::Ready(Some(Err(err.into()))),
                 None => Poll::Ready(None),
             };
         }
 
-        if let Some(ref mut keep_alive) = self.keep_alive {
+        if let Some(ref mut keep_alive) = this.keep_alive {
             if keep_alive.poll_tick(cx).is_ready() {
-                return Poll::Ready(Some(Ok(SseMessage::keep_alive_bytes())));
+                return Poll::Ready(Some(Ok(Event::keep_alive_bytes())));
             }
         }
 
@@ -368,7 +398,7 @@ impl MessageBody for Sse {
     }
 }
 
-/// Create server-sent events (SSE) channel-like pair.
+/// Create server-sent events (SSE) channel pair.
 ///
 /// The `buffer` argument controls how many unsent messages can be stored without waiting.
 ///
@@ -381,48 +411,38 @@ impl MessageBody for Sse {
 ///
 /// Read more about server-sent events in [this MDN article][mdn-sse].
 ///
-/// # Examples
-/// ```no_run
-/// use std::time::Duration;
-/// use actix_web::{Responder, get};
-/// use actix_web_lab::sse::sse;
-///
-/// #[get("/sse")]
-/// async fn events() -> impl Responder {
-///     let (sender, sse_stream) = sse(10);
-///
-///     let _ = sender.comment("my comment").await;
-///     let _ = sender.data_with_event("chat_msg", "my data").await;
-///
-///     sse_stream.with_keep_alive(Duration::from_secs(5))
-///         .with_retry_duration(Duration::from_secs(10))
-/// }
-/// ```
-///
 /// [mdn-sse]: https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
-#[doc(
-    alias = "server sent",
-    alias = "server-sent",
-    alias = "server sent events",
-    alias = "server-sent events",
-    alias = "event-stream"
-)]
-pub fn sse(buffer: usize) -> (SseSender, Sse) {
+pub fn channel(buffer: usize) -> (Sender, Sse<ChannelStream>) {
     let (tx, rx) = mpsc::channel(buffer);
 
     (
-        SseSender { tx },
+        Sender { tx },
         Sse {
-            rx,
+            stream: ChannelStream(rx),
             keep_alive: None,
             retry_interval: None,
         },
     )
 }
 
+/// Stream implementation for channel-based SSE [`Sender`].
+#[derive(Debug)]
+pub struct ChannelStream(mpsc::Receiver<Event>);
+
+impl Stream for ChannelStream {
+    type Item = Result<Event, Infallible>;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        self.0.poll_recv(cx).map(|ev| ev.map(Ok))
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use futures_util::{future::poll_fn, task::noop_waker, FutureExt as _};
+    use std::convert::Infallible;
+
+    use actix_web::body;
+    use futures_util::{future::poll_fn, stream, task::noop_waker, FutureExt as _, StreamExt as _};
     use tokio::time::sleep;
 
     use super::*;
@@ -430,11 +450,11 @@ mod tests {
     #[test]
     fn format_retry_message() {
         assert_eq!(
-            SseMessage::retry_to_bytes(Duration::from_millis(1)),
+            Event::retry_to_bytes(Duration::from_millis(1)),
             "retry: 1\n\n",
         );
         assert_eq!(
-            SseMessage::retry_to_bytes(Duration::from_secs(10)),
+            Event::retry_to_bytes(Duration::from_secs(10)),
             "retry: 10000\n\n",
         );
     }
@@ -442,20 +462,20 @@ mod tests {
     #[test]
     fn line_split_format() {
         let mut buf = BytesMut::new();
-        SseMessage::line_split_with_prefix(&mut buf, "data: ", ByteString::from("foo"));
+        Event::line_split_with_prefix(&mut buf, "data: ", ByteString::from("foo"));
         assert_eq!(buf, "data: foo\n");
 
         let mut buf = BytesMut::new();
-        SseMessage::line_split_with_prefix(&mut buf, "data: ", ByteString::from("foo\nbar"));
+        Event::line_split_with_prefix(&mut buf, "data: ", ByteString::from("foo\nbar"));
         assert_eq!(buf, "data: foo\ndata: bar\n");
     }
 
     #[test]
     fn into_bytes_format() {
-        assert_eq!(SseMessage::Comment("foo".into()).into_bytes(), ": foo\n\n");
+        assert_eq!(Event::Comment("foo".into()).into_bytes(), ": foo\n\n");
 
         assert_eq!(
-            SseMessage::Data(SseData {
+            Event::Data(Data {
                 id: None,
                 event: None,
                 data: "foo".into()
@@ -465,7 +485,7 @@ mod tests {
         );
 
         assert_eq!(
-            SseMessage::Data(SseData {
+            Event::Data(Data {
                 id: None,
                 event: None,
                 data: "\n".into()
@@ -475,7 +495,7 @@ mod tests {
         );
 
         assert_eq!(
-            SseMessage::Data(SseData {
+            Event::Data(Data {
                 id: Some("42".into()),
                 event: None,
                 data: "foo".into()
@@ -485,7 +505,7 @@ mod tests {
         );
 
         assert_eq!(
-            SseMessage::Data(SseData {
+            Event::Data(Data {
                 id: None,
                 event: Some("bar".into()),
                 data: "foo".into()
@@ -495,7 +515,7 @@ mod tests {
         );
 
         assert_eq!(
-            SseMessage::Data(SseData {
+            Event::Data(Data {
                 id: Some("42".into()),
                 event: Some("bar".into()),
                 data: "foo".into()
@@ -511,12 +531,12 @@ mod tests {
         let mut cx = Context::from_waker(&waker);
 
         {
-            let (_sender, mut sse) = sse(9);
+            let (_sender, mut sse) = channel(9);
             assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
         }
 
         {
-            let (_sender, sse) = sse(9);
+            let (_sender, sse) = channel(9);
             let mut sse = sse.with_retry_duration(Duration::from_millis(42));
             match Pin::new(&mut sse).poll_next(&mut cx) {
                 Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "retry: 42\n\n"),
@@ -527,21 +547,39 @@ mod tests {
 
     #[actix_web::test]
     async fn dropping_responder_causes_send_fails() {
-        let (sender, sse) = sse(9);
+        let (sender, sse) = channel(9);
         drop(sse);
 
-        assert!(sender.send(SseData::new("late data")).await.is_err());
+        assert!(sender.send(Data::new("late data")).await.is_err());
+    }
+
+    #[actix_web::test]
+    async fn sse_from_external_streams() {
+        let st = stream::empty::<Result<_, Infallible>>();
+        let sse = Sse::from_stream(st);
+        assert_eq!(body::to_bytes(sse).await.unwrap(), "");
+
+        let st = stream::once(async { Ok::<_, Infallible>(Event::Data(Data::new("foo"))) });
+        let sse = Sse::from_stream(st);
+        assert_eq!(body::to_bytes(sse).await.unwrap(), "data: foo\n\n");
+
+        let st = stream::repeat(Ok::<_, Infallible>(Event::Data(Data::new("foo")))).take(2);
+        let sse = Sse::from_stream(st);
+        assert_eq!(
+            body::to_bytes(sse).await.unwrap(),
+            "data: foo\n\ndata: foo\n\n",
+        );
     }
 
     #[actix_web::test]
     async fn messages_are_received_from_sender() {
-        let (sender, mut sse) = sse(9);
+        let (sender, mut sse) = channel(9);
 
         assert!(poll_fn(|cx| Pin::new(&mut sse).poll_next(cx))
             .now_or_never()
             .is_none());
 
-        sender.send(SseData::new("bar").event("foo")).await.unwrap();
+        sender.send(Data::new("bar").event("foo")).await.unwrap();
 
         match poll_fn(|cx| Pin::new(&mut sse).poll_next(cx)).now_or_never() {
             Some(Some(Ok(bytes))) => assert_eq!(bytes, "event: foo\ndata: bar\n\n"),
@@ -554,7 +592,7 @@ mod tests {
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);
 
-        let (sender, sse) = sse(9);
+        let (sender, sse) = channel(9);
         let mut sse = sse.with_keep_alive(Duration::from_millis(4));
 
         assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
@@ -568,7 +606,7 @@ mod tests {
 
         assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
 
-        sender.send(SseData::new("foo")).await.unwrap();
+        sender.send(Data::new("foo")).await.unwrap();
 
         match Pin::new(&mut sse).poll_next(&mut cx) {
             Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "data: foo\n\n"),
