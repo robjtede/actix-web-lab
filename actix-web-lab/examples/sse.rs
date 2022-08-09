@@ -1,7 +1,8 @@
-use std::{io, time::Duration};
+use std::{convert::Infallible, io, time::Duration};
 
 use actix_web::{get, middleware::Logger, App, HttpServer, Responder};
 use actix_web_lab::{extract::Path, respond::Html, sse};
+use futures_util::stream;
 use time::format_description::well_known::Rfc3339;
 use tokio::time::sleep;
 
@@ -21,26 +22,21 @@ async fn countdown_from(Path((n,)): Path<(u32,)>) -> impl Responder {
 }
 
 fn common_countdown(n: i32) -> impl Responder {
-    let (sender, sse) = sse::channel(2);
-
-    actix_web::rt::spawn(async move {
-        let mut n = n;
-
-        while n > 0 {
-            let msg = sse::Data::new(n.to_string()).event("countdown");
-
-            if sender.send(msg).await.is_err() {
-                tracing::warn!("client disconnected at {n}; could not send SSE message");
-                break;
-            }
-
-            n -= 1;
-
+    let countdown_stream = stream::unfold((false, n), |(started, n)| async move {
+        // allow first countdown value to yield immediately
+        if started {
             sleep(Duration::from_secs(1)).await;
+        }
+
+        if n > 0 {
+            let msg = sse::Event::Data(sse::Data::new(n.to_string()).event("countdown"));
+            Some((Ok::<_, Infallible>(msg), (true, n - 1)))
+        } else {
+            None
         }
     });
 
-    sse.with_retry_duration(Duration::from_secs(5))
+    sse::Sse::from_stream(countdown_stream).with_retry_duration(Duration::from_secs(5))
 }
 
 #[get("/time")]
