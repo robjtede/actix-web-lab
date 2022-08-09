@@ -7,8 +7,7 @@ jobs:
     steps:
       - checkout
       - run: cargo --version
-      - restore_cache:
-          key: clippy-cache
+      - restore_cache: { key: clippy-cache }
       - run: cargo clippy --workspace --all-targets --all-features
       - save_cache:
           key: clippy-cache
@@ -22,10 +21,10 @@ jobs:
     steps:
       - checkout
       - run: cargo --version
-      - restore_cache:
-          key: test-cache
+      - restore_cache: { key: test-cache }
+      - run: curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
       - run: |
-          cargo test --workspace --all-targets --all-features
+          cargo nextest --workspace --all-targets --all-features
           cargo test --workspace --doc --all-features
       - save_cache:
           key: test-cache
