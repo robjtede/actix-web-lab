@@ -2,19 +2,29 @@
 //!
 //! # Examples
 //! ```no_run
-//! use std::time::Duration;
+//! use std::{convert::Infallible, time::Duration};
 //! use actix_web::{Responder, get};
 //! use actix_web_lab::sse;
 //!
-//! #[get("/sse")]
-//! async fn events() -> impl Responder {
+//! #[get("/from-channel")]
+//! async fn from_channel() -> impl Responder {
 //!     let (sender, sse_stream) = sse::channel(10);
 //!
+//!     // note: sender will typically be spawned or handed off somewhere else
 //!     let _ = sender.send(sse::Event::Comment("my comment".into())).await;
 //!     let _ = sender.send(sse::Data::new("my data").event("chat_msg")).await;
 //!
-//!     sse_stream.with_keep_alive(Duration::from_secs(5))
-//!         .with_retry_duration(Duration::from_secs(10))
+//!     sse_stream.with_retry_duration(Duration::from_secs(10))
+//! }
+//!
+//! #[get("/from-stream")]
+//! async fn from_stream() -> impl Responder {
+//!     let event_stream = futures_util::stream::iter([
+//!         Ok::<_, Infallible>(sse::Event::Data(sse::Data::new("foo"))),
+//!     ]);
+//!
+//!     sse::Sse::from_stream(event_stream)
+//!         .with_keep_alive(Duration::from_secs(5))
 //! }
 //! ```
 //!
@@ -352,6 +362,8 @@ impl Sender {
 
 pin_project! {
     /// Server-sent events (`text/event-stream`) responder.
+    ///
+    /// Constructed with an [SSE channel](channel) or [using your own stream](Self::from_stream).
     #[must_use]
     #[derive(Debug)]
     pub struct Sse<S> {
@@ -465,6 +477,8 @@ where
 /// The stream will be closed after all [senders](SseSender) are dropped.
 ///
 /// Read more about server-sent events in [this MDN article][mdn-sse].
+///
+/// See [module docs](self) for usage example.
 ///
 /// [mdn-sse]: https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
 pub fn channel(buffer: usize) -> (Sender, Sse<ChannelStream>) {
