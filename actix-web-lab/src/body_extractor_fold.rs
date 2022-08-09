@@ -10,6 +10,8 @@ use local_channel::mpsc;
 use tokio::try_join;
 use tracing::trace;
 
+// potentially useful helper for extractors similar to BodyHash
+#[allow(dead_code)]
 pub(crate) fn body_extractor_fold<T, Init, Out>(
     req: &HttpRequest,
     payload: &mut dev::Payload,

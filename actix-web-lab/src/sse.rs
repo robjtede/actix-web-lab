@@ -120,6 +120,7 @@ pub type SseTrySendError = TrySendError;
 /// );
 /// # }; test();
 /// ```
+#[must_use]
 #[derive(Debug, Clone)]
 pub struct Data {
     id: Option<ByteString>,
@@ -139,7 +140,6 @@ impl Data {
     /// use actix_web_lab::sse;
     /// let event = sse::Event::Data(sse::Data::new("foo"));
     /// ```
-    #[must_use]
     pub fn new(data: impl Into<ByteString>) -> Self {
         Self {
             id: None,
@@ -161,7 +161,6 @@ impl Data {
     ///
     /// let event = sse::Event::Data(sse::Data::new_json(Foo { bar: 42 }).unwrap());
     /// ```
-    #[must_use]
     pub fn new_json(data: impl Serialize) -> Result<Self, serde_json::Error> {
         Ok(Self {
             id: None,
@@ -176,7 +175,6 @@ impl Data {
     }
 
     /// Sets `id` field, returning a new data message.
-    #[must_use]
     pub fn id(mut self, id: impl Into<ByteString>) -> Self {
         self.id = Some(id.into());
         self
@@ -188,7 +186,6 @@ impl Data {
     }
 
     /// Sets `event` name field, returning a new data message.
-    #[must_use]
     pub fn event(mut self, event: impl Into<ByteString>) -> Self {
         self.event = Some(event.into());
         self
@@ -207,6 +204,7 @@ impl From<Data> for Event {
 }
 
 /// Server-sent events message containing one or more fields.
+#[must_use]
 #[derive(Debug, Clone)]
 pub enum Event {
     /// A `data` message with optional ID and event name.
@@ -294,6 +292,7 @@ impl Event {
 }
 
 /// Sender half of a server-sent events stream.
+#[must_use]
 #[derive(Debug, Clone)]
 pub struct Sender {
     tx: mpsc::Sender<Event>,
@@ -353,6 +352,7 @@ impl Sender {
 
 pin_project! {
     /// Server-sent events (`text/event-stream`) responder.
+    #[must_use]
     #[derive(Debug)]
     pub struct Sse<S> {
         #[pin]

@@ -8,6 +8,9 @@
 - Rename `sse::{SseMessage => Event}()`.
 - Rename `sse::{SseSendError => SendError}`.
 - Rename `sse::{SseTrySendError => TrySendError}`.
+- Removed `extract::BodyHash` and associated types; promoted to `actix-hash` crate.
+- Removed `extract::BodyHmac` and associated types; prefer `RequestSignatureScheme` + `RequestSignature`. See `body_hmac` in examples folder.
+- Removed `header::Hsts` alias; use `header::StrictTransportSecurity`.
 
 
 ## 0.16.9 - 2022-08-07

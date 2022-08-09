@@ -15,11 +15,6 @@ use actix_web::{
 
 const SECS_IN_YEAR: u64 = 3600 * 24 * 365;
 
-/// Alias for [`StrictTransportSecurity`].
-#[doc(hidden)]
-#[deprecated(note = "Renamed to `StrictTransportSecurity`.", since = "0.16.2")]
-pub type Hsts = StrictTransportSecurity;
-
 /// HTTP Strict Transport Security (HSTS) configuration.
 ///
 /// Care should be taken when setting up HSTS for your site; misconfiguration can potentially leave

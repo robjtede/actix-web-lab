@@ -2,8 +2,7 @@
 
 pub use crate::cache_control::{CacheControl, CacheDirective};
 pub use crate::content_length::ContentLength;
-#[allow(deprecated)]
-pub use crate::strict_transport_security::{Hsts, StrictTransportSecurity};
+pub use crate::strict_transport_security::StrictTransportSecurity;
 
 #[cfg(test)]
 mod header_test_helpers {
