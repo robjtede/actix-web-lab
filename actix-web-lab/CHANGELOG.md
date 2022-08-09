@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.17.0 - 2022-08-09
 - Add `sse::Sse::from_stream()` constructor.
 - Add `sse::Data::new_json()` constructor.
 - Rename `sse::{sse => channel}()`.

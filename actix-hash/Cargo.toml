@@ -54,7 +54,7 @@ sha3 = { package = "sha3", version = "0.10", optional = true }
 
 [dev-dependencies]
 actix-web = "4"
-actix-web-lab = "0.16"
+actix-web-lab = "0.17"
 base64 = "0.13"
 env_logger = "0.9"
 hex-literal = "0.3"
