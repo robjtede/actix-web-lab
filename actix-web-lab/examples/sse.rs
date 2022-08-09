@@ -1,6 +1,6 @@
 use std::{convert::Infallible, io, time::Duration};
 
-use actix_web::{get, middleware::Logger, App, HttpServer, Responder};
+use actix_web::{get, middleware::Logger, App, HttpRequest, HttpServer, Responder};
 use actix_web_lab::{extract::Path, respond::Html, sse};
 use futures_util::stream;
 use time::format_description::well_known::Rfc3339;
@@ -11,13 +11,23 @@ async fn index() -> impl Responder {
     Html(include_str!("./assets/sse.html").to_string())
 }
 
+/// Countdown event stream starting from 8.
 #[get("/countdown")]
-async fn countdown() -> impl Responder {
+async fn countdown(req: HttpRequest) -> impl Responder {
+    // note: a more production-ready implementation might want to use the lastEventId header
+    // sent by the reconnecting browser after the _retry_ period
+    tracing::debug!("lastEventId: {:?}", req.headers().get("Last-Event-ID"));
+
     common_countdown(8)
 }
 
+/// Countdown event stream with given starting number.
 #[get("/countdown/{n:\\d+}")]
-async fn countdown_from(Path((n,)): Path<(u32,)>) -> impl Responder {
+async fn countdown_from(Path(n): Path<u32>, req: HttpRequest) -> impl Responder {
+    // note: a more production-ready implementation might want to use the lastEventId header
+    // sent by the reconnecting browser after the _retry_ period
+    tracing::debug!("lastEventId: {:?}", req.headers().get("Last-Event-ID"));
+
     common_countdown(n.try_into().unwrap())
 }
 
@@ -29,8 +39,11 @@ fn common_countdown(n: i32) -> impl Responder {
         }
 
         if n > 0 {
-            let msg = sse::Event::Data(sse::Data::new(n.to_string()).event("countdown"));
-            Some((Ok::<_, Infallible>(msg), (true, n - 1)))
+            let data = sse::Data::new(n.to_string())
+                .event("countdown")
+                .id(n.to_string());
+
+            Some((Ok::<_, Infallible>(sse::Event::Data(data)), (true, n - 1)))
         } else {
             None
         }
