@@ -48,6 +48,4 @@ jobs:
 workflows:
   version: 2
   all_checks:
-    jobs:
-      - clippy: { filters: { branches: { ignore: 'rustdoc-gh-pages' } } }
-      - test: { filters: { branches: { ignore: 'rustdoc-gh-pages' } } }
+    jobs: [clippy, test, doc-test]
