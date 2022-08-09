@@ -23,7 +23,7 @@ jobs:
       - run: cargo --version
       - restore_cache: { key: test-cache }
       - run: >
-          [ -f ${CARGO_HOME:-~/.cargo/bin}/cargo-nextest ] &&
+          [ -f ${CARGO_HOME:-~/.cargo/bin}/cargo-nextest ] ||
           curl -LsSf https://get.nexte.st/latest/linux |
           tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
       - run: |
