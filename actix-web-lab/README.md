@@ -37,7 +37,7 @@
 
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/extract/struct.LazyData.html)
 - `SwapData`: app data/state that can be replaced at runtime (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/extract/struct.SwapData.html)
-- `LocalData`: app data/state that uses an `Rc` internally, avoiding atomic overhead (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/extract/struct.DataSwap.html)
+- `LocalData`: app data/state that uses an `Rc` internally, avoiding atomic overhead (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/extract/struct.LocalData.html)
 - `Json`: simplified JSON extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/extract/struct.Json.html)
 - `Path`: simplified path parameter extractor that supports destructuring [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/extract/struct.Path.html)
 - `Query`: simplified query-string extractor that can also collect multi-value items [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/extract/struct.Query.html)
@@ -52,7 +52,7 @@
 
 - `StrictTransportSecurity`: Strict-Transport-Security (HSTS) configuration [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/header/struct.StrictTransportSecurity.html)
 - `CacheControl`: Cache-Control typed header with support for modern directives [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/header/struct.CacheControl.html)
-- `ContentLength`: Content-Length typed header [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/header/struct.CacheControl.html)
+- `ContentLength`: Content-Length typed header [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/header/struct.ContentLength.html)
 
 ### Body Types
 
@@ -69,7 +69,7 @@
 
 ### Test Utilities
 
-- `test_request`: Construct `TestRequest` using an HTTP-like DSL [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/test/macro.assert_response_matches.html)
+- `test_request`: Construct `TestRequest` using an HTTP-like DSL [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/test/macro.test_request.html)
 - `assert_response_matches`: quickly write tests that check various parts of a `ServiceResponse` [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/test/macro.assert_response_matches.html)
 
 ## Things To Know About This Crate
