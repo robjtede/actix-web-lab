@@ -2,10 +2,12 @@
 //!
 //! Analogous to the `middleware` module in Actix Web.
 
-pub use crate::catch_panic::CatchPanic;
-pub use crate::err_handler::ErrorHandlers;
-pub use crate::middleware_from_fn::{from_fn, MiddlewareFn, Next};
-pub use crate::normalize_path::NormalizePath;
-pub use crate::panic_reporter::PanicReporter;
-pub use crate::redirect_to_https::RedirectHttps;
-pub use crate::redirect_to_www::redirect_to_www;
+pub use crate::{
+    catch_panic::CatchPanic,
+    err_handler::ErrorHandlers,
+    middleware_from_fn::{from_fn, MiddlewareFn, Next},
+    normalize_path::NormalizePath,
+    panic_reporter::PanicReporter,
+    redirect_to_https::RedirectHttps,
+    redirect_to_www::redirect_to_www,
+};

@@ -1,8 +1,10 @@
 //! Experimental typed headers.
 
-pub use crate::cache_control::{CacheControl, CacheDirective};
-pub use crate::content_length::ContentLength;
-pub use crate::strict_transport_security::StrictTransportSecurity;
+pub use crate::{
+    cache_control::{CacheControl, CacheDirective},
+    content_length::ContentLength,
+    strict_transport_security::StrictTransportSecurity,
+};
 
 #[cfg(test)]
 mod header_test_helpers {
