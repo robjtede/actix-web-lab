@@ -24,11 +24,11 @@ quote = "1"
 syn = { version = "1", features = ["full", "parsing"] }
 
 [dev-dependencies]
-actix-test = "0.1.0-beta.13"
-actix-web = "4.0.0"
 actix-web-lab = "=0.17.0"
 
+actix-test = "0.1"
+actix-web = "4"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
-trybuild = "1"
 rustversion = "1"
 tokio = { version = "1.13.1", features = ["macros"] }
+trybuild = "1"
