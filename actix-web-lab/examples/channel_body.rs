@@ -1,11 +1,6 @@
 use std::io;
 
-use actix_web::{
-    get,
-    http::header::ContentType,
-    web::{self},
-    App, HttpResponse, HttpServer, Responder,
-};
+use actix_web::{get, http::header::ContentType, web, App, HttpResponse, HttpServer, Responder};
 use actix_web_lab::body;
 use tracing::info;
 
@@ -32,12 +27,11 @@ async fn index() -> impl Responder {
 async fn main() -> io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    let bind = ("127.0.0.1", 8080);
-    info!("staring server at http://{}:{}", &bind.0, &bind.1);
+    info!("staring server at http://localhost:8080");
 
     HttpServer::new(|| App::new().service(index))
-        .workers(1)
-        .bind(bind)?
+        .workers(2)
+        .bind(("127.0.0.1", 8080))?
         .run()
         .await
 }

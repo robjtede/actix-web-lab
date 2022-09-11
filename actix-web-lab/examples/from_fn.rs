@@ -1,9 +1,6 @@
 //! Shows a couple of ways to use the `from_fn` middleware.
 
-use std::{
-    io::{self},
-    rc::Rc,
-};
+use std::{io, rc::Rc};
 
 use actix_web::{
     body::MessageBody,
