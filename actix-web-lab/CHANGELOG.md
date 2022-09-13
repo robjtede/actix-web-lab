@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased - 2022-xx-xx
+- Add error type parameter to `body::channel` and `body::Sender`.
+- Add `body::Sender::close()` with optional error argument.
+- Unwrap `body::Sender::send()` return error type.
 
 
 ## 0.17.0 - 2022-08-09
