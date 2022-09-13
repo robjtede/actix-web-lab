@@ -3,6 +3,10 @@
 ## Unreleased - 2022-xx-xx
 
 
+## 0.18.1 - 2022-09-13
+- No significant changes since `0.18.0`.
+
+
 ## 0.18.0 - 2022-09-13
 
 - Add `body::{writer, Writer}` rudimentary async-write body adapter.
