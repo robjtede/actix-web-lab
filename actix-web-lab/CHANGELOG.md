@@ -2,10 +2,11 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Add `LoadShed` middleware.
 
 ## 0.18.1 - 2022-09-13
-- No significant changes since `0.18.0`.
 
+- No significant changes since `0.18.0`.
 
 ## 0.18.0 - 2022-09-13
 

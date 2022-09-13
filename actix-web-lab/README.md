@@ -31,6 +31,7 @@
 - `NormalizePath`: alternative path normalizing middleware with redirect option [(docs)](https://docs.rs/actix-web-lab/0.18.1/actix_web_lab/middleware/struct.NormalizePath.html)
 - `CatchPanic`: catch panics in wrapped handlers and middleware, returning empty 500 responses [(docs)](https://docs.rs/actix-web-lab/0.18.1/actix_web_lab/middleware/struct.CatchPanic.html)
 - `PanicReporter`: catch panics in wrapped handlers and middleware, returning empty 500 responses [(docs)](https://docs.rs/actix-web-lab/0.18.1/actix_web_lab/middleware/struct.PanicReporter.html)
+- `LoadShed`: sheds load when the inner service isn't ready [(docs)](https://docs.rs/actix-web-lab/0.18.1/actix_web_lab/middleware/struct.LoadShed.html)
 
 
 ### Extractors
