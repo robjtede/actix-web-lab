@@ -9,7 +9,7 @@ use crate::{middleware_from_fn::Next, web::Redirect};
 /// A function middleware to redirect traffic to `www.` if not already there.
 ///
 /// # Examples
-/// ```rust
+/// ```
 /// # use actix_web::App;
 /// use actix_web_lab::middleware::{from_fn, redirect_to_www};
 ///

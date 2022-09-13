@@ -25,15 +25,16 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod acceptable;
+mod body_async_write;
+mod body_channel;
 mod body_extractor_fold;
-mod body_hash;
-mod body_hmac;
+mod body_limit;
 mod cache_control;
-mod channel_body;
+mod catch_panic;
+mod content_length;
 mod csv;
 mod display_stream;
 mod err_handler;
-mod hsts;
 mod html;
 mod infallible_body_stream;
 mod json;
@@ -42,6 +43,8 @@ mod load_shed;
 mod local_data;
 mod middleware_from_fn;
 mod ndjson;
+mod normalize_path;
+mod panic_reporter;
 mod path;
 mod query;
 mod redirect;
@@ -49,6 +52,7 @@ mod redirect_to_https;
 mod redirect_to_www;
 mod request_signature;
 mod spa;
+mod strict_transport_security;
 mod swap_data;
 #[cfg(test)]
 mod test_header_macros;
@@ -63,6 +67,7 @@ pub mod guard;
 pub mod header;
 pub mod middleware;
 pub mod respond;
+pub mod sse;
 pub mod test;
 pub mod util;
 pub mod web;
@@ -77,3 +82,5 @@ pub mod __reexports {
     pub use ::serde_json;
     pub use ::tokio;
 }
+
+pub(crate) type BoxError = Box<dyn std::error::Error>;

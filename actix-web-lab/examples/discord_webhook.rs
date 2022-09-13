@@ -23,12 +23,10 @@ use tracing::info;
 const APP_PUBLIC_KEY_BYTES: &[u8] =
     &hex!("d7d9a14753b591be99a0c5721be8083b1e486c3fcdc6ac08bfb63a6e5c204569");
 
+static SIG_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-ed25519");
+static TS_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-timestamp");
 static APP_PUBLIC_KEY: Lazy<PublicKey> =
-    Lazy::new(|| PublicKey::from_bytes(&*APP_PUBLIC_KEY_BYTES).unwrap());
-static SIG_HDR_NAME: Lazy<HeaderName> =
-    Lazy::new(|| HeaderName::from_static("x-signature-ed25519"));
-static TS_HDR_NAME: Lazy<HeaderName> =
-    Lazy::new(|| HeaderName::from_static("x-signature-timestamp"));
+    Lazy::new(|| PublicKey::from_bytes(APP_PUBLIC_KEY_BYTES).unwrap());
 
 #[derive(Debug)]
 struct DiscordWebhook {
@@ -42,7 +40,7 @@ struct DiscordWebhook {
 impl DiscordWebhook {
     fn get_timestamp(req: &HttpRequest) -> Result<&[u8], Error> {
         req.headers()
-            .get(&*TS_HDR_NAME)
+            .get(&TS_HDR_NAME)
             .map(HeaderValue::as_bytes)
             .ok_or_else(|| error::ErrorUnauthorized("timestamp not provided"))
     }
@@ -50,7 +48,7 @@ impl DiscordWebhook {
     fn get_signature(req: &HttpRequest) -> Result<Signature, Error> {
         let sig: [u8; 64] = req
             .headers()
-            .get(&*SIG_HDR_NAME)
+            .get(&SIG_HDR_NAME)
             .map(HeaderValue::as_bytes)
             .map(hex::decode)
             .transpose()

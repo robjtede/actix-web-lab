@@ -92,4 +92,5 @@ macro_rules! header_round_trip_test {
     };
 }
 
-pub(crate) use {header_round_trip_test, header_test_module};
+pub(crate) use header_round_trip_test;
+pub(crate) use header_test_module;

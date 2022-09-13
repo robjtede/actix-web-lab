@@ -41,9 +41,8 @@ pub struct BodyHashParts<T> {
 ///
 /// # Example
 /// ```
-/// # extern crate alg_sha2 as sha2;
 /// use actix_web::{Responder, web};
-/// use actix_web_lab::extract::BodyHash;
+/// use actix_hash::BodyHash;
 /// use sha2::Sha256;
 ///
 /// # type T = u64;

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Server-sent events</title>
+    <style>
+      p {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script>
+      let root = document.getElementById('root')
+
+      function addLine(ev) {
+        let data = document.createElement('p')
+        let time = new Date().toLocaleTimeString()
+        data.innerText = time + ': ' + ev
+        root.appendChild(data)
+      }
+
+      // Note that when the countdown stream finishes, the browser will restart it N seconds later
+      // according to the `with_retry_duration` setting on `Sse`. Calling `EventSource.close()`
+      // will stop the stream and retries.
+      let countdown_events = new EventSource('/countdown/16')
+      countdown_events.addEventListener('countdown', (event) => {
+        addLine(event.data)
+      })
+
+      let timestamp_events = new EventSource('/time')
+      timestamp_events.addEventListener('timestamp', (event) => {
+        addLine(event.data)
+      })
+    </script>
+  </body>
+</html>

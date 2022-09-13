@@ -54,22 +54,22 @@ macro_rules! body_hash_alias {
 }
 
 // Obsolete
-body_hash_alias!(BodyMd4, alg_md4::Md4, "md4", "MD4", 16);
-body_hash_alias!(BodyMd5, alg_md5::Md5, "md5", "MD5", 16);
-body_hash_alias!(BodySha1, alg_sha1::Sha1, "sha1", "SHA-1", 20);
+body_hash_alias!(BodyMd4, md4::Md4, "md4", "MD4", 16);
+body_hash_alias!(BodyMd5, md5::Md5, "md5", "MD5", 16);
+body_hash_alias!(BodySha1, sha1::Sha1, "sha1", "SHA-1", 20);
 
 // SHA-2
-body_hash_alias!(BodySha224, alg_sha2::Sha224, "sha2", "SHA-224", 28);
-body_hash_alias!(BodySha256, alg_sha2::Sha256, "sha2", "SHA-256", 32);
-body_hash_alias!(BodySha384, alg_sha2::Sha384, "sha2", "SHA-384", 48);
-body_hash_alias!(BodySha512, alg_sha2::Sha512, "sha2", "SHA-512", 64);
+body_hash_alias!(BodySha224, sha2::Sha224, "sha2", "SHA-224", 28);
+body_hash_alias!(BodySha256, sha2::Sha256, "sha2", "SHA-256", 32);
+body_hash_alias!(BodySha384, sha2::Sha384, "sha2", "SHA-384", 48);
+body_hash_alias!(BodySha512, sha2::Sha512, "sha2", "SHA-512", 64);
 
 // SHA-3
-body_hash_alias!(BodySha3_224, alg_sha3::Sha3_224, "sha3", "SHA-3-224", 28);
-body_hash_alias!(BodySha3_256, alg_sha3::Sha3_256, "sha3", "SHA-3-256", 32);
-body_hash_alias!(BodySha3_384, alg_sha3::Sha3_384, "sha3", "SHA-3-384", 48);
-body_hash_alias!(BodySha3_512, alg_sha3::Sha3_512, "sha3", "SHA-3-512", 64);
+body_hash_alias!(BodySha3_224, sha3::Sha3_224, "sha3", "SHA-3-224", 28);
+body_hash_alias!(BodySha3_256, sha3::Sha3_256, "sha3", "SHA-3-256", 32);
+body_hash_alias!(BodySha3_384, sha3::Sha3_384, "sha3", "SHA-3-384", 48);
+body_hash_alias!(BodySha3_512, sha3::Sha3_512, "sha3", "SHA-3-512", 64);
 
 // Blake2
-body_hash_alias!(BodyBlake2b, alg_blake2::Blake2b512, "blake2", "Blake2b", 64);
-body_hash_alias!(BodyBlake2s, alg_blake2::Blake2s256, "blake2", "Blake2s", 32);
+body_hash_alias!(BodyBlake2b, blake2::Blake2b512, "blake2", "Blake2b", 64);
+body_hash_alias!(BodyBlake2s, blake2::Blake2s256, "blake2", "Blake2s", 32);

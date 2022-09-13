@@ -4,15 +4,14 @@
 
 use std::borrow::Cow;
 
-pub use crate::redirect::Redirect;
-pub use crate::spa::Spa;
+pub use crate::{redirect::Redirect, spa::Spa};
 
 /// Create a relative or absolute redirect.
 ///
 /// See [`Redirect`] docs for usage details.
 ///
 /// # Examples
-/// ```rust
+/// ```
 /// use actix_web::App;
 /// use actix_web_lab::web as web_lab;
 ///

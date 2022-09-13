@@ -187,14 +187,14 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Extractor(arg0) => f
+            Self::Extractor(err) => f
                 .debug_tuple("RequestSignatureError::Extractor")
-                .field(arg0)
+                .field(err)
                 .finish(),
 
-            Self::Signature(arg0) => f
+            Self::Signature(err) => f
                 .debug_tuple("RequestSignatureError::Signature")
-                .field(arg0)
+                .field(err)
                 .finish(),
         }
     }

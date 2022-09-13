@@ -1,6 +1,6 @@
 [package]
 name = "actix-hash"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Hashing utilities for Actix Web"
 keywords = ["actix", "http", "web", "framework", "async"]
@@ -11,7 +11,7 @@ categories = [
 repository = "https://github.com/robjtede/actix-web-lab.git"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.60"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -26,12 +26,12 @@ default = [
     "sha2",
     "sha3",
 ]
-blake2 = ["alg-blake2"]
-md5 = ["alg-md5"]
-md4 = ["alg-md4"]
-sha1 = ["alg-sha1"]
-sha2 = ["alg-sha2"]
-sha3 = ["alg-sha3"]
+blake2 = ["dep:blake2"]
+md5 = ["dep:md5"]
+md4 = ["dep:md4"]
+sha1 = ["dep:sha1"]
+sha2 = ["dep:sha2"]
+sha3 = ["dep:sha3"]
 
 [dependencies]
 actix-http = "3"
@@ -45,16 +45,16 @@ tracing = { version = "0.1.30", features = ["log"] }
 
 digest = "0.10"
 subtle = "2"
-alg-blake2 = { package = "blake2", version = "0.10", optional = true }
-alg-md5 = { package = "md-5", version = "0.10", optional = true }
-alg-md4 = { package = "md4", version = "0.10", optional = true }
-alg-sha1 = { package = "sha1", version = "0.10", optional = true }
-alg-sha2 = { package = "sha2", version = "0.10", optional = true }
-alg-sha3 = { package = "sha3", version = "0.10", optional = true }
+blake2 = { package = "blake2", version = "0.10", optional = true }
+md5 = { package = "md-5", version = "0.10", optional = true }
+md4 = { package = "md4", version = "0.10", optional = true }
+sha1 = { package = "sha1", version = "0.10", optional = true }
+sha2 = { package = "sha2", version = "0.10", optional = true }
+sha3 = { package = "sha3", version = "0.10", optional = true }
 
 [dev-dependencies]
 actix-web = "4"
-actix-web-lab = "0.15"
+actix-web-lab = "0.17"
 base64 = "0.13"
 env_logger = "0.9"
 hex-literal = "0.3"
