@@ -14,7 +14,7 @@ use std::{
 
 use actix_service::{Service, Transform};
 use actix_utils::future::{ok, Ready};
-use actix_web::{Error, ResponseError};
+use actix_web::ResponseError;
 use futures_core::ready;
 use pin_project_lite::pin_project;
 
