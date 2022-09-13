@@ -61,6 +61,7 @@ tracing = { version = "0.1.30", features = ["log"] }
 actix-web-lab-derive = "=0.16.0"
 
 actix-web = { version = "4", features = ["rustls"] }
+async_zip = "0.0.8"
 base64 = "0.13"
 ed25519-dalek = "1.0.1"
 env_logger = "0.9"
@@ -75,3 +76,4 @@ serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
 static_assertions = "1.1"
 time = { version = "0.3", features = ["formatting"] }
+tokio = { version = "1.13.1", features = ["full"] }
