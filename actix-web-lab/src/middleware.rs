@@ -5,6 +5,7 @@
 pub use crate::{
     catch_panic::CatchPanic,
     err_handler::ErrorHandlers,
+    load_shed::LoadShed,
     middleware_from_fn::{from_fn, MiddlewareFn, Next},
     normalize_path::NormalizePath,
     panic_reporter::PanicReporter,
