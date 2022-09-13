@@ -25,11 +25,11 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod acceptable;
+mod body_channel;
 mod body_extractor_fold;
 mod body_limit;
 mod cache_control;
 mod catch_panic;
-mod channel_body;
 mod content_length;
 mod csv;
 mod display_stream;

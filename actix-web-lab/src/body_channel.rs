@@ -20,11 +20,9 @@ use crate::BoxError;
 /// # async fn index() {
 /// let (mut body_tx, body) = body::channel::<Infallible>();
 ///
-/// web::block(move || {
+/// let _ = web::block(move || {
 ///     body_tx.send(web::Bytes::from_static(b"body from another thread")).unwrap();
-/// })
-/// .await
-/// .unwrap();
+/// });
 ///
 /// HttpResponse::Ok().body(body)
 /// # ;}
