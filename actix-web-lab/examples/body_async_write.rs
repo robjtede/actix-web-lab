@@ -1,15 +1,22 @@
-use actix_web::{get, http, App, HttpResponse, HttpServer, Responder};
+use actix_web::{
+    get,
+    http::header::ContentEncoding,
+    http::{self, header::ContentType},
+    App, HttpResponse, HttpServer, Responder,
+};
+use actix_web_lab::body;
 use async_zip::write::{EntryOptions, ZipFileWriter};
-use futures_util::stream::TryStreamExt;
-use std::io;
-use tokio::{fs, io::AsyncWrite};
-use tokio_util::codec;
+use std::{io, time::Duration};
+use tokio::{
+    fs,
+    io::{AsyncWrite, AsyncWriteExt as _},
+};
 
 fn zip_to_io_err(err: async_zip::error::ZipError) -> io::Error {
     io::Error::new(io::ErrorKind::Other, err)
 }
 
-async fn read_dir<W>(zipper: &mut ZipFileWriter<W>) -> Result<(), io::Error>
+async fn read_dir<W>(zipper: &mut ZipFileWriter<W>) -> io::Result<()>
 where
     W: AsyncWrite + Unpin,
 {
@@ -54,10 +61,11 @@ where
 
 #[get("/")]
 async fn index() -> impl Responder {
-    let (to_write, to_read) = tokio::io::duplex(2048);
+    let (wrt, body) = body::writer();
 
-    tokio::spawn(async move {
-        let mut zipper = async_zip::write::ZipFileWriter::new(to_write);
+    // allow response to be started while this is processing
+    let _ = tokio::spawn(async move {
+        let mut zipper = async_zip::write::ZipFileWriter::new(wrt);
 
         if let Err(err) = read_dir(&mut zipper).await {
             tracing::warn!("Failed to write files from directory to zip: {err}")
@@ -68,16 +76,39 @@ async fn index() -> impl Responder {
         }
     });
 
-    let stream = codec::FramedRead::new(to_read, codec::BytesCodec::new()).map_ok(|b| b.freeze());
-
     HttpResponse::Ok()
         .append_header((
             http::header::CONTENT_DISPOSITION,
             r#"attachment; filename="folder.zip""#,
         ))
-        .append_header((http::header::CONTENT_ENCODING, "identity"))
+        .append_header(ContentEncoding::Identity)
         .append_header((http::header::CONTENT_TYPE, "application/zip"))
-        .streaming(stream)
+        .body(body)
+}
+
+#[get("/plain")]
+async fn plaintext() -> impl Responder {
+    let (mut wrt, body) = body::writer();
+
+    // allow response to be started while this is processing
+    let _ = tokio::spawn(async move {
+        wrt.write_all(b"saying hello in\n").await?;
+
+        wrt.write_all(b"3\n").await?;
+        tokio::time::sleep(Duration::from_secs(1)).await;
+
+        wrt.write_all(b"2\n").await?;
+        tokio::time::sleep(Duration::from_secs(1)).await;
+
+        wrt.write_all(b"1\n").await?;
+        tokio::time::sleep(Duration::from_secs(1)).await;
+
+        wrt.write_all(b"hello world\n").await
+    });
+
+    HttpResponse::Ok()
+        .append_header(ContentType::plaintext())
+        .body(body)
 }
 
 #[actix_web::main]
@@ -86,7 +117,7 @@ async fn main() -> io::Result<()> {
 
     tracing::info!("staring server at http://localhost:8080");
 
-    HttpServer::new(|| App::new().service(index))
+    HttpServer::new(|| App::new().service(index).service(plaintext))
         .workers(2)
         .bind(("127.0.0.1", 8080))?
         .run()

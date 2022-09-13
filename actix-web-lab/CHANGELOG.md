@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Add `body::{writer, Writer}` rudimentary async-write body adapter.
 - Add error type parameter to `body::channel` and `body::Sender`.
 - Add `body::Sender::close()` with optional error argument.
 - Unwrap `body::Sender::send()` return error type.
