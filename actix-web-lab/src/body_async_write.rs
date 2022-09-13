@@ -12,7 +12,7 @@ use tokio::{
     sync::mpsc::{UnboundedReceiver, UnboundedSender},
 };
 
-/// Returns an async writer and a body type.
+/// Returns an `AsyncWrite` response body writer and its associated body type.
 ///
 /// # Examples
 /// ```
@@ -35,7 +35,7 @@ pub fn writer() -> (Writer, impl MessageBody) {
     (Writer { tx }, BodyStream { rx })
 }
 
-/// A channel-like sender for body chunks.
+/// An `AsyncWrite` response body writer.
 #[derive(Debug, Clone)]
 pub struct Writer {
     tx: UnboundedSender<Bytes>,
