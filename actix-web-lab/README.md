@@ -57,6 +57,7 @@
 ### Body Types
 
 - `channel`: a simple channel-like body type with a sender side that can be used from another thread [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/body/fn.channel.html)
+- `writer`: a simple `AsyncWrite` body type [(docs)](https://docs.rs/actix-web-lab/0.17.0/actix_web_lab/body/fn.writer.html)
 
 ### Services
 
