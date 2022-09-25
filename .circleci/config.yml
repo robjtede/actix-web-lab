@@ -2,7 +2,7 @@ version: 2.1
 
 jobs:
   clippy:
-    docker: [image: cimg/rust:1.62.0]
+    docker: [image: cimg/rust:1.64.0]
     steps:
       - checkout
       - run: cargo --version
@@ -15,7 +15,7 @@ jobs:
             - './target'
 
   test:
-    docker: [image: cimg/rust:1.62.0]
+    docker: [image: cimg/rust:1.64.0]
     steps:
       - checkout
       - run: cargo --version
@@ -32,7 +32,7 @@ jobs:
             - './target'
 
   doc-test:
-    docker: [image: cimg/rust:1.62.0]
+    docker: [image: cimg/rust:1.64.0]
     steps:
       - checkout
       - run: cargo --version
