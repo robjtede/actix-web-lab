@@ -20,7 +20,7 @@ impl<T: ?Sized> Deref for LocalData<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        &*self.0
+        &self.0
     }
 }
 
