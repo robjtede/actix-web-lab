@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Fix `NormalizePath` when used in redirecting mode.
 
 ## 0.18.2 - 2022-09-13
 

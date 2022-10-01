@@ -174,6 +174,7 @@ where
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let head = req.head_mut();
 
+        let mut path_altered = false;
         let original_path = head.uri.path();
 
         // An empty path here means that the URI has no valid path. We skip normalization in this
@@ -219,11 +220,13 @@ where
                 let uri = Uri::from_parts(parts).unwrap();
                 req.match_info_mut().get_mut().update(&uri);
                 req.head_mut().uri = uri;
+
+                path_altered = true;
             }
         }
 
         match self.use_redirects {
-            Some(code) => {
+            Some(code) if path_altered => {
                 let mut res = HttpResponse::with_body(code, ());
                 res.headers_mut().insert(
                     header::LOCATION,
@@ -232,7 +235,7 @@ where
                 NormalizePathFuture::redirect(req.into_response(res))
             }
 
-            None => NormalizePathFuture::service(self.service.call(req)),
+            _ => NormalizePathFuture::service(self.service.call(req)),
         }
     }
 }
@@ -319,10 +322,10 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_wrap() {
+    async fn trim_trailing_slashes() {
         let app = init_service(
             App::new()
-                .wrap(NormalizePath::default())
+                .wrap(NormalizePath::trim())
                 .service(web::resource("/").to(HttpResponse::Ok))
                 .service(web::resource("/v1/something").to(HttpResponse::Ok))
                 .service(
@@ -612,5 +615,48 @@ mod tests {
         let req = TestRequest::with_uri("/v1/something/").to_srv_request();
         let res = normalize.call(req).await.unwrap();
         assert_eq!(res.status(), StatusCode::PERMANENT_REDIRECT);
+    }
+
+    #[actix_web::test]
+    async fn trim_with_redirect() {
+        let app = init_service(
+            App::new()
+                .wrap(NormalizePath::trim().use_redirects())
+                .service(web::resource("/").to(HttpResponse::Ok))
+                .service(web::resource("/v1/something").to(HttpResponse::Ok))
+                .service(
+                    web::resource("/v2/something")
+                        .guard(fn_guard(|ctx| ctx.head().uri.query() == Some("query=test")))
+                        .to(HttpResponse::Ok),
+                ),
+        )
+        .await;
+
+        // list of uri and if it should result in a redirect
+        let test_uris = vec![
+            ("/", false),
+            ("///", true),
+            ("/v1/something", false),
+            ("/v1/something/", true),
+            ("/v1/something////", true),
+            ("//v1//something", true),
+            ("//v1//something//", true),
+            ("/v2/something?query=test", false),
+            ("/v2/something/?query=test", true),
+            ("/v2/something////?query=test", true),
+            ("//v2//something?query=test", true),
+            ("//v2//something//?query=test", true),
+        ];
+
+        for (uri, should_redirect) in test_uris {
+            let req = TestRequest::with_uri(uri).to_request();
+            let res = call_service(&app, req).await;
+
+            if should_redirect {
+                assert!(res.status().is_redirection(), "URI did not redirect: {uri}");
+            } else {
+                assert!(res.status().is_success(), "Failed URI: {uri}");
+            }
+        }
     }
 }
