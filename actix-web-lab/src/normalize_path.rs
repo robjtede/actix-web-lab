@@ -300,10 +300,23 @@ mod tests {
         dev::ServiceRequest,
         guard::fn_guard,
         test::{self, call_service, init_service, TestRequest},
-        web, App, HttpResponse,
+        web, App, HttpRequest, HttpResponse,
     };
 
     use super::*;
+
+    #[actix_web::test]
+    async fn default_is_trim_no_redirect() {
+        let app = init_service(App::new().wrap(NormalizePath::default()).service(
+            web::resource("/test").to(|req: HttpRequest| async move { req.path().to_owned() }),
+        ))
+        .await;
+
+        let req = TestRequest::with_uri("/test/").to_request();
+        let res = call_service(&app, req).await;
+        assert!(res.status().is_success());
+        assert_eq!(test::read_body(res).await, "/test");
+    }
 
     #[actix_web::test]
     async fn test_wrap() {
@@ -342,14 +355,14 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn trim_trailing_slashes() {
+    async fn always_trailing_slashes() {
         let app = init_service(
             App::new()
-                .wrap(NormalizePath::new(TrailingSlash::Trim))
+                .wrap(NormalizePath::new(TrailingSlash::Always))
                 .service(web::resource("/").to(HttpResponse::Ok))
-                .service(web::resource("/v1/something").to(HttpResponse::Ok))
+                .service(web::resource("/v1/something/").to(HttpResponse::Ok))
                 .service(
-                    web::resource("/v2/something")
+                    web::resource("/v2/something/")
                         .guard(fn_guard(|ctx| ctx.head().uri.query() == Some("query=test")))
                         .to(HttpResponse::Ok),
                 ),
