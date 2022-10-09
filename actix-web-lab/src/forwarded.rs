@@ -16,7 +16,10 @@ use itertools::Itertools as _;
 
 /// `Forwarded` header, defined in [RFC 7239].
 ///
+/// Also see the [Forwarded header's MDN docs][mdn] for field semantics.
+///
 /// [RFC 7239]: https://datatracker.ietf.org/doc/html/rfc7239
+/// [mdn]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(test, derive(Default))]
 pub struct Forwarded {
@@ -42,6 +45,31 @@ pub struct Forwarded {
 }
 
 impl Forwarded {
+    /// Constructs new `Forwarded` header from parts.
+    pub fn new(
+        by: impl Into<Option<String>>,
+        r#for: impl Into<Vec<String>>,
+        host: impl Into<Option<String>>,
+        proto: impl Into<Option<String>>,
+    ) -> Self {
+        Self {
+            by: by.into(),
+            r#for: r#for.into(),
+            host: host.into(),
+            proto: proto.into(),
+        }
+    }
+
+    /// Constructs new `Forwarded` header from a single "for" identifier.
+    pub fn new_for(r#for: impl Into<String>) -> Self {
+        Self {
+            by: None,
+            r#for: vec![r#for.into()],
+            host: None,
+            proto: None,
+        }
+    }
+
     /// Returns first "for" parameter which is typically the client's identifier.
     pub fn for_client(&self) -> Option<&str> {
         // Taking the first value for each property is correct because spec states that first "for"
@@ -57,7 +85,7 @@ impl Forwarded {
         self.r#for.first().map(String::as_str)
     }
 
-    /// Returns iterator over the 'for" chain.
+    /// Returns iterator over the "for" chain.
     ///
     /// The first item yielded will match [`for_client`](Self::for_client) and the rest will be
     /// proxy identifiers, in the order the request passed through them.
@@ -65,7 +93,28 @@ impl Forwarded {
         self.r#for.iter().map(|r#for| r#for.as_str())
     }
 
-    /// Adds an identifier to the "for" list.
+    /// Returns the "by" identifier, if set.
+    ///
+    /// The interface where the request came in to the proxy server.
+    pub fn by(&self) -> Option<&str> {
+        self.by.as_deref()
+    }
+
+    /// Returns the "host" identifier, if set.
+    ///
+    /// Should equal the `Host` request header field as received by the proxy.
+    pub fn host(&self) -> Option<&str> {
+        self.host.as_deref()
+    }
+
+    /// Returns the "proto" identifier, if set.
+    ///
+    /// Indicates which protocol was used to make the request (typically "http" or "https").
+    pub fn proto(&self) -> Option<&str> {
+        self.proto.as_deref()
+    }
+
+    /// Adds an identifier to the "for" chain.
     ///
     /// Useful when re-forwarding a request and needing to update the request headers with previous
     /// proxy's address.
