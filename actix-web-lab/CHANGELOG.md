@@ -2,6 +2,9 @@
 
 ## Unreleased - 2022-xx-xx
 
+
+## 0.18.4 - 2022-10-09
+
 - Add `Forwarded` typed header.
 
 ## 0.18.3 - 2022-10-01
