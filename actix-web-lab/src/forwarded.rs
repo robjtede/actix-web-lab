@@ -20,14 +20,29 @@ use itertools::Itertools as _;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(test, derive(Default))]
 pub struct Forwarded {
+    /// The interface where the request came in to the proxy server. The identifier can be:
+    ///
+    /// - an obfuscated identifier (such as "hidden" or "secret"). This should be treated as the
+    ///   default.
+    /// - an IP address (v4 or v6, optionally with a port. IPv6 address are quoted and enclosed in
+    ///   square brackets)
+    /// - "unknown" when the preceding entity is not known (and you still want to indicate that
+    ///   forwarding of the request was made)
     by: Option<String>,
+
+    /// The client that initiated the request and subsequent proxies in a chain of proxies. The
+    /// identifier has the same possible values as the by directive.
     r#for: Vec<String>,
+
+    /// The `Host` request header field as received by the proxy.
     host: Option<String>,
+
+    /// Indicates which protocol was used to make the request (typically "http" or "https").
     proto: Option<String>,
 }
 
 impl Forwarded {
-    /// Returns first `for` parameter which is typically the client's identifier.
+    /// Returns first "for" parameter which is typically the client's identifier.
     pub fn for_client(&self) -> Option<&str> {
         // Taking the first value for each property is correct because spec states that first "for"
         // value is client and rest are proxies. We collect them in the order they are read.
@@ -40,6 +55,22 @@ impl Forwarded {
         // ```
 
         self.r#for.first().map(String::as_str)
+    }
+
+    /// Returns iterator over the 'for" chain.
+    ///
+    /// The first item yielded will match [`for_client`](Self::for_client) and the rest will be
+    /// proxy identifiers, in the order the request passed through them.
+    pub fn for_chain(&self) -> impl Iterator<Item = &'_ str> {
+        self.r#for.iter().map(|r#for| r#for.as_str())
+    }
+
+    /// Adds an identifier to the "for" list.
+    ///
+    /// Useful when re-forwarding a request and needing to update the request headers with previous
+    /// proxy's address.
+    pub fn push_for(&mut self, identifier: impl Into<String>) {
+        self.r#for.push(identifier.into())
     }
 
     /// Returns true if all of the fields are empty.
@@ -55,6 +86,7 @@ impl str::FromStr for Forwarded {
 
     #[inline]
     fn from_str(val: &str) -> Result<Self, Self::Err> {
+        let mut by = None;
         let mut host = None;
         let mut proto = None;
         let mut r#for = vec![];
@@ -75,8 +107,8 @@ impl str::FromStr for Forwarded {
 
             match name.trim().to_lowercase().as_str() {
                 "by" => {
-                    // TODO: implement https://datatracker.ietf.org/doc/html/rfc7239#section-5.1
-                    continue;
+                    // multiple values on other properties have no defined semantics
+                    by.get_or_insert_with(|| unquote(val));
                 }
                 "for" => {
                     // parameter order is defined to be client first and last proxy last
@@ -95,7 +127,7 @@ impl str::FromStr for Forwarded {
         }
 
         Ok(Self {
-            by: None,
+            by: by.map(str::to_owned),
             r#for: r#for.into_iter().map(str::to_owned).collect(),
             host: host.map(str::to_owned),
             proto: proto.map(str::to_owned),
@@ -189,8 +221,7 @@ mod tests {
                 host: Some("rust-lang.org".to_owned()),
                 proto: Some("https".to_owned()),
                 r#for: vec!["192.0.2.60".to_owned()],
-                // by: Some("203.0.113.43".to_owned()),
-                by: None,
+                by: Some("203.0.113.43".to_owned()),
             },
         );
 
