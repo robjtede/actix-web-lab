@@ -16,6 +16,8 @@
         "refcell",
         "rustversion",
         "serde",
-        "trybuild"
+        "splitn",
+        "trybuild",
+        "vals"
     ]
 }

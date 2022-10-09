@@ -33,7 +33,6 @@
 - `PanicReporter`: catch panics in wrapped handlers and middleware, returning empty 500 responses [(docs)](https://docs.rs/actix-web-lab/0.18.3/actix_web_lab/middleware/struct.PanicReporter.html)
 - `LoadShed`: sheds load when the inner service isn't ready [(docs)](https://docs.rs/actix-web-lab/0.18.3/actix_web_lab/middleware/struct.LoadShed.html)
 
-
 ### Extractors
 
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/0.18.3/actix_web_lab/extract/struct.LazyData.html)
@@ -54,6 +53,7 @@
 - `StrictTransportSecurity`: Strict-Transport-Security (HSTS) configuration [(docs)](https://docs.rs/actix-web-lab/0.18.3/actix_web_lab/header/struct.StrictTransportSecurity.html)
 - `CacheControl`: Cache-Control typed header with support for modern directives [(docs)](https://docs.rs/actix-web-lab/0.18.3/actix_web_lab/header/struct.CacheControl.html)
 - `ContentLength`: Content-Length typed header [(docs)](https://docs.rs/actix-web-lab/0.18.3/actix_web_lab/header/struct.ContentLength.html)
+- `Forwarded`: Proxy and original client info [(docs)](https://docs.rs/actix-web-lab/0.18.3/actix_web_lab/header/struct.Forwarded.html)
 
 ### Body Types
 

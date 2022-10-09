@@ -3,6 +3,7 @@
 pub use crate::{
     cache_control::{CacheControl, CacheDirective},
     content_length::ContentLength,
+    forwarded::Forwarded,
     strict_transport_security::StrictTransportSecurity,
 };
 

@@ -35,6 +35,7 @@ mod content_length;
 mod csv;
 mod display_stream;
 mod err_handler;
+mod forwarded;
 mod html;
 mod infallible_body_stream;
 mod json;
