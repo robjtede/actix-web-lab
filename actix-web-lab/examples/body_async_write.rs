@@ -5,7 +5,7 @@ use actix_web::{
     App, HttpResponse, HttpServer, Responder,
 };
 use actix_web_lab::body;
-use async_zip::write::{EntryOptions, ZipFileWriter};
+use async_zip::{write::ZipFileWriter, ZipEntryBuilder};
 use std::{io, time::Duration};
 use tokio::{
     fs,
@@ -48,7 +48,10 @@ where
         };
 
         let mut entry = zipper
-            .write_entry_stream(EntryOptions::new(filename, async_zip::Compression::Deflate))
+            .write_entry_stream(ZipEntryBuilder::new(
+                filename,
+                async_zip::Compression::Deflate,
+            ))
             .await
             .map_err(zip_to_io_err)?;
 

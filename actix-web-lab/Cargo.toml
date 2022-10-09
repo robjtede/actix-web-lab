@@ -62,7 +62,7 @@ tracing = { version = "0.1.30", features = ["log"] }
 actix-web-lab-derive = "=0.16.0"
 
 actix-web = { version = "4", features = ["rustls"] }
-async_zip = "0.0.8"
+async_zip = "0.0.9"
 base64 = "0.13"
 ed25519-dalek = "1.0.1"
 env_logger = "0.9"
