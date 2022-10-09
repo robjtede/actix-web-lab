@@ -2,13 +2,14 @@
 //!
 //! See [`Forwarded`] docs.
 
-use std::str;
+use std::{convert::Infallible, str};
 
 use actix_web::{
     error::ParseError,
     http::header::{self, Header, HeaderName, HeaderValue, TryIntoHeaderValue},
     HttpMessage,
 };
+use itertools::Itertools as _;
 
 /// `Forwarded` header, defined in [RFC 7239].
 ///
@@ -38,6 +39,7 @@ impl Forwarded {
         self.r#for.first().map(String::as_str)
     }
 
+    /// Returns true if all of the fields are empty.
     fn has_no_info(&self) -> bool {
         self.by.is_none() && self.r#for.is_empty() && self.host.is_none() && self.proto.is_none()
     }
@@ -46,7 +48,7 @@ impl Forwarded {
 }
 
 impl str::FromStr for Forwarded {
-    type Err = <usize as str::FromStr>::Err;
+    type Err = Infallible;
 
     #[inline]
     fn from_str(val: &str) -> Result<Self, Self::Err> {
@@ -113,7 +115,6 @@ impl TryIntoHeaderValue for Forwarded {
                 .r#for
                 .into_iter()
                 .map(|ident| format!("for=\"{ident}\""))
-                .collect::<Vec<_>>()
                 .join(", ");
 
             Some(value)
@@ -128,7 +129,6 @@ impl TryIntoHeaderValue for Forwarded {
             .chain(r#for)
             .chain(self.host.map(|host| format!("host=\"{host}\"")))
             .chain(self.proto.map(|proto| format!("proto=\"{proto}\"")))
-            .collect::<Vec<_>>()
             .join("; ")
             .try_into_value()
     }
