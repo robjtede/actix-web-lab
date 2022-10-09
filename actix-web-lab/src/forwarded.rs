@@ -2,7 +2,7 @@
 //!
 //! See [`Forwarded`] docs.
 
-use std::{convert::Infallible, str};
+use std::str;
 
 use actix_web::{
     error::ParseError,
@@ -10,7 +10,9 @@ use actix_web::{
     HttpMessage,
 };
 
-/// `Content-Length` header, defined in [RFC 9110 §8.6].
+/// `Forwarded` header, defined in [RFC 7239].
+///
+/// [RFC 7239]: https://datatracker.ietf.org/doc/html/rfc7239
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(test, derive(Default))]
 pub struct Forwarded {
@@ -35,6 +37,12 @@ impl Forwarded {
 
         self.r#for.first().map(String::as_str)
     }
+
+    fn has_no_info(&self) -> bool {
+        self.by.is_none() && self.r#for.is_empty() && self.host.is_none() && self.proto.is_none()
+    }
+
+    // TODO: parse with trusted IP ranges fn
 }
 
 impl str::FromStr for Forwarded {
@@ -91,10 +99,38 @@ impl str::FromStr for Forwarded {
 }
 
 impl TryIntoHeaderValue for Forwarded {
-    type Error = Infallible;
+    type Error = header::InvalidHeaderValue;
 
     fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
-        todo!()
+        if self.has_no_info() {
+            return Ok(HeaderValue::from_static(""));
+        }
+
+        let r#for = if self.r#for.is_empty() {
+            None
+        } else {
+            let value = self
+                .r#for
+                .into_iter()
+                .map(|ident| format!("for=\"{ident}\""))
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            Some(value)
+        };
+
+        // it has been chosen to quote all values to avoid overhead of detecting whether quotes are
+        // needed or not in the case values containing IPv6 addresses, for example
+
+        self.by
+            .map(|by| format!("by=\"{by}\""))
+            .into_iter()
+            .chain(r#for)
+            .chain(self.host.map(|host| format!("host=\"{host}\"")))
+            .chain(self.proto.map(|proto| format!("proto=\"{proto}\"")))
+            .collect::<Vec<_>>()
+            .join("; ")
+            .try_into_value()
     }
 }
 
@@ -119,6 +155,7 @@ impl Header for Forwarded {
         }
 
         // pass to FromStr impl as if it were one concatenated header with semicolon joiners
+        // https://datatracker.ietf.org/doc/html/rfc7239#section-7.1
         combined.join(";").parse().map_err(|_| ParseError::Header)
     }
 }
@@ -140,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn forwarded_header() {
+    fn parsing_header_parts() {
         assert_parse_eq::<Forwarded, _, _>([";"], Forwarded::default());
 
         assert_parse_eq::<Forwarded, _, _>(
@@ -155,22 +192,33 @@ mod tests {
         );
 
         assert_parse_eq::<Forwarded, _, _>(
-            [
-                "for=192.0.2.60; proto=https",
-                "by=203.0.113.43; host=rust-lang.org",
-            ],
+            ["for=192.0.2.60; proto=https", "host=rust-lang.org"],
             Forwarded {
-                host: Some("rust-lang.org".to_owned()),
-                proto: Some("https".to_owned()),
-                r#for: vec!["192.0.2.60".to_owned()],
-                // by: Some("203.0.113.43".to_owned()),
                 by: None,
+                host: Some("rust-lang.org".to_owned()),
+                r#for: vec!["192.0.2.60".to_owned()],
+                proto: Some("https".to_owned()),
             },
         );
     }
 
     #[test]
-    fn forwarded_case_sensitivity() {
+    fn serializing() {
+        let fwd = Forwarded {
+            by: Some("203.0.113.43".to_owned()),
+            r#for: vec!["192.0.2.60".to_owned()],
+            host: Some("rust-lang.org".to_owned()),
+            proto: Some("https".to_owned()),
+        };
+
+        assert_eq!(
+            fwd.try_into_value().unwrap(),
+            r#"by="203.0.113.43"; for="192.0.2.60"; host="rust-lang.org"; proto="https""#
+        );
+    }
+
+    #[test]
+    fn case_sensitivity() {
         assert_parse_eq::<Forwarded, _, _>(
             ["For=192.0.2.60"],
             Forwarded {
@@ -181,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn forwarded_weird_whitespace() {
+    fn weird_whitespace() {
         assert_parse_eq::<Forwarded, _, _>(
             ["for= 1.2.3.4; proto= https"],
             Forwarded {
@@ -201,7 +249,7 @@ mod tests {
     }
 
     #[test]
-    fn forwarded_for_quoted() {
+    fn for_quoted() {
         assert_parse_eq::<Forwarded, _, _>(
             [r#"for="192.0.2.60:8080""#],
             Forwarded {
@@ -212,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn forwarded_for_ipv6() {
+    fn for_ipv6() {
         assert_parse_eq::<Forwarded, _, _>(
             [r#"for="[2001:db8:cafe::17]:4711""#],
             Forwarded {
@@ -223,7 +271,7 @@ mod tests {
     }
 
     #[test]
-    fn forwarded_for_multiple() {
+    fn for_multiple() {
         let fwd = Forwarded {
             r#for: vec!["192.0.2.60".to_owned(), "198.51.100.17".to_owned()],
             ..Forwarded::default()
