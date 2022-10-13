@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Expose `util::fork_request_payload()` helper.
 
 ## 0.18.4 - 2022-10-09
 

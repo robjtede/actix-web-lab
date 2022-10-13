@@ -15,16 +15,15 @@ use actix_web::{dev, web::BufMut};
 use futures_core::{ready, Stream};
 use futures_util::StreamExt as _;
 use local_channel::mpsc;
-use tracing::trace;
 
-/// Effectively clones payload.
+/// Returns an effectively cloned payload that supports streaming efficiently.
 ///
 /// The cloned payload:
 /// - yields identical chunks;
-/// - does not poll ahead of original;
-/// - does not poll significantly slower than original;
-/// - errors signals are propagated, but details are opaque to the copy.
-pub(crate) fn fork_request_payload(orig_payload: &mut dev::Payload) -> dev::Payload {
+/// - does not poll ahead of the original;
+/// - does not poll significantly slower than the original;
+/// - receives an error signals if the original errors, but details are opaque to the copy.
+pub fn fork_request_payload(orig_payload: &mut dev::Payload) -> dev::Payload {
     const TARGET: &str = concat!(module_path!(), "::fork_request_payload");
 
     let payload = orig_payload.take();
@@ -34,7 +33,7 @@ pub(crate) fn fork_request_payload(orig_payload: &mut dev::Payload) -> dev::Payl
     let proxy_stream: BoxedPayloadStream = Box::pin(payload.inspect(move |res| {
         match res {
             Ok(chunk) => {
-                trace!(target: TARGET, "yielding {} byte chunk", chunk.len());
+                tracing::trace!(target: TARGET, "yielding {} byte chunk", chunk.len());
                 tx.send(Ok(chunk.clone())).unwrap();
             }
 
@@ -47,7 +46,7 @@ pub(crate) fn fork_request_payload(orig_payload: &mut dev::Payload) -> dev::Payl
         }
     }));
 
-    trace!(target: TARGET, "creating proxy payload");
+    tracing::trace!(target: TARGET, "creating proxy payload");
     *orig_payload = dev::Payload::from(proxy_stream);
 
     dev::Payload::Stream {
