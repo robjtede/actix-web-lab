@@ -2,6 +2,9 @@
 
 ## Unreleased - 2022-xx-xx
 
+
+## 0.18.5 - 2022-10-13
+
 - Expose `util::fork_request_payload()` helper.
 - Add reduced `Bytes` extractor with const generic size limit.
 
