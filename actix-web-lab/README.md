@@ -38,11 +38,12 @@
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.LazyData.html)
 - `SwapData`: app data/state that can be replaced at runtime (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.SwapData.html)
 - `LocalData`: app data/state that uses an `Rc` internally, avoiding atomic overhead (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.LocalData.html)
-- `Json`: simplified JSON extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.Json.html)
+- `Json`: simplified JSON extractor with const-generic payload limits [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.Json.html)
 - `Path`: simplified path parameter extractor that supports destructuring [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.Path.html)
 - `Query`: simplified query-string extractor that can also collect multi-value items [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.Query.html)
 - `RequestSignature`: wraps an extractor and calculates a request signature alongside [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.RequestSignature.html)
 - `BodyLimit`: wraps a body extractor and prevents DoS attacks by limiting payload size [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.BodyLimit.html)
+- `Bytes`: simplified Bytes extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/extract/struct.Bytes.html)
 
 ### Macros
 
@@ -71,8 +72,12 @@
 
 ### Test Utilities
 
-- `test_request`: Construct `TestRequest` using an HTTP-like DSL [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/test/macro.test_request.html)
+- `test_request`: construct `TestRequest` using an HTTP-like DSL [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/test/macro.test_request.html)
 - `assert_response_matches`: quickly write tests that check various parts of a `ServiceResponse` [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/test/macro.assert_response_matches.html)
+
+### Other Utilities
+
+- `fork_request_payload`: effectively clone a request payload [(docs)](https://docs.rs/actix-web-lab/0.18.5/actix_web_lab/util/fn.fork_request_payload.html)
 
 ## Things To Know About This Crate
 
