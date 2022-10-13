@@ -1,12 +1,15 @@
+use std::{io, time::Duration};
+
 use actix_web::{
     get,
-    http::header::ContentEncoding,
-    http::{self, header::ContentType},
+    http::{
+        self,
+        header::{ContentEncoding, ContentType},
+    },
     App, HttpResponse, HttpServer, Responder,
 };
 use actix_web_lab::body;
 use async_zip::{write::ZipFileWriter, ZipEntryBuilder};
-use std::{io, time::Duration};
 use tokio::{
     fs,
     io::{AsyncWrite, AsyncWriteExt as _},

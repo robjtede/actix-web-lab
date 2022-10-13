@@ -32,9 +32,6 @@ pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
 /// Use the `LIMIT` const generic parameter to control the payload size limit. The default limit
 /// that is exported (`DEFAULT_LIMIT`) is 2MiB.
 ///
-/// When const generics defaults are supported (due for Rust 1.59) it will be possible to omit the
-/// default limit.
-///
 /// ```
 /// use actix_web::{post, App};
 /// use actix_web_lab::extract::{DEFAULT_JSON_LIMIT, Json};
@@ -63,7 +60,7 @@ pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
 pub struct Json<T, const LIMIT: usize = DEFAULT_JSON_LIMIT>(pub T);
 
 impl<T, const LIMIT: usize> Json<T, LIMIT> {
-    /// Unwrap into inner `T` value.
+    /// Unwraps into inner `T` value.
     pub fn into_inner(self) -> T {
         self.0
     }

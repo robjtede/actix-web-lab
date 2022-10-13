@@ -3,6 +3,7 @@
 ## Unreleased - 2022-xx-xx
 
 - Expose `util::fork_request_payload()` helper.
+- Add reduced `Bytes` extractor with const generic size limit.
 
 ## 0.18.4 - 2022-10-09
 
@@ -36,9 +37,9 @@
 - Rename `sse::{SseMessage => Event}()`.
 - Rename `sse::{SseSendError => SendError}`.
 - Rename `sse::{SseTrySendError => TrySendError}`.
-- Removed `extract::BodyHash` and associated types; promoted to `actix-hash` crate.
-- Removed `extract::BodyHmac` and associated types; prefer `RequestSignatureScheme` + `RequestSignature`. See `body_hmac` in examples folder.
-- Removed `header::Hsts` alias; use `header::StrictTransportSecurity`.
+- Remove `extract::BodyHash` and associated types; promoted to `actix-hash` crate.
+- Remove `extract::BodyHmac` and associated types; prefer `RequestSignatureScheme` + `RequestSignature`. See `body_hmac` in examples folder.
+- Remove `header::Hsts` alias; use `header::StrictTransportSecurity`.
 
 ## 0.16.9 - 2022-08-07
 
@@ -148,7 +149,7 @@
 ## 0.8.0 - 2022-01-20
 
 - `Csv`, `NdJson`, and `DisplayStream` now take fallible streams.
-- Added `{Csv, NdJson, DisplayStream}::new_infallible`.
+- Add `{Csv, NdJson, DisplayStream}::new_infallible`.
 
 ## 0.7.1 - 2022-01-19
 
@@ -193,13 +194,13 @@
 
 ## 0.2.1 - 2022-01-05
 
-- Added `LazyData` extractor.
+- Add `LazyData` extractor.
 
 ## 0.2.0 - 2022-01-04
 
-- Added reduced `Json` extractor with const generic size limit.
-- Added `Redirect` service.
-- Added `Acceptable` guard.
+- Add reduced `Json` extractor with const generic size limit.
+- Add `Redirect` service.
+- Add `Acceptable` guard.
 
 # 0.1.0
 

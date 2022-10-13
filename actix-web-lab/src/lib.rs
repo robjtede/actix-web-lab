@@ -29,6 +29,7 @@ mod body_async_write;
 mod body_channel;
 mod body_extractor_fold;
 mod body_limit;
+mod bytes;
 mod cache_control;
 mod catch_panic;
 mod content_length;
