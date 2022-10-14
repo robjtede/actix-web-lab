@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Feature gate `spa` features. Enabled by default.
 
 ## 0.18.5 - 2022-10-13
 

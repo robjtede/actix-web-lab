@@ -27,7 +27,6 @@
 mod acceptable;
 mod body_async_write;
 mod body_channel;
-mod body_extractor_fold;
 mod body_limit;
 mod bytes;
 mod cache_control;
@@ -53,6 +52,7 @@ mod redirect;
 mod redirect_to_https;
 mod redirect_to_www;
 mod request_signature;
+#[cfg(feature = "spa")]
 mod spa;
 mod strict_transport_security;
 mod swap_data;
@@ -74,6 +74,7 @@ pub mod test;
 pub mod util;
 pub mod web;
 
+#[cfg(feature = "derive")]
 pub use actix_web_lab_derive::FromRequest;
 
 // private re-exports for macros

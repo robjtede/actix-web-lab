@@ -4,7 +4,9 @@
 
 use std::borrow::Cow;
 
-pub use crate::{redirect::Redirect, spa::Spa};
+pub use crate::redirect::Redirect;
+#[cfg(feature = "spa")]
+pub use crate::spa::Spa;
 
 /// Create a relative or absolute redirect.
 ///
@@ -40,6 +42,8 @@ pub fn redirect(from: impl Into<Cow<'static, str>>, to: impl Into<Cow<'static, s
 ///             .finish()
 ///     );
 /// ```
+#[cfg_attr(docsrs, doc(cfg(feature = "spa")))]
+#[cfg(feature = "spa")]
 pub fn spa() -> Spa {
     Spa::default()
 }

@@ -22,6 +22,7 @@ use tracing::trace;
 ///             .finish()
 ///     );
 /// ```
+#[cfg_attr(docsrs, doc(cfg(feature = "spa")))]
 #[derive(Debug, Clone)]
 pub struct Spa {
     index_file: Cow<'static, str>,
