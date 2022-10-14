@@ -51,12 +51,12 @@ jobs:
       - checkout
       - run: cargo --version
       - restore_cache: { key: feature-checks-cache }
-      - run: >
+      - run: |
           # Get host target
           host=$(rustc -Vv | grep host | sed 's/host: //')
           # Download binary and install to $HOME/.cargo/bin
-          curl -LsSf https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-$host.tar.gz | tar xzf - -C $HOME/.cargo/bin
-      - run: cargo hack --each-feature clippy -p=actix-web-lab --all-targets
+          curl -LsSf "https://github.com/taiki-e/cargo-hack/releases/latest/download/cargo-hack-$host.tar.gz" | tar xzf - -C $HOME/.cargo/bin
+      - run: cargo hack --each-feature check -p=actix-web-lab --all-targets
       - save_cache:
           key: doc-test-cache
           paths:
