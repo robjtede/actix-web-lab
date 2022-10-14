@@ -11,9 +11,9 @@ use actix_service::{
 use actix_web::{
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
-    Error,
+    Error, FromRequest,
 };
-use futures_core::Future;
+use futures_core::{future::LocalBoxFuture, Future};
 
 /// Wraps an async function to be used as a middleware.
 ///
@@ -47,18 +47,20 @@ use futures_core::Future;
 ///     .wrap(from_fn(my_mw))
 /// # ;
 /// ```
-pub fn from_fn<F>(mw_fn: F) -> MiddlewareFn<F> {
+pub fn from_fn<F, Es>(mw_fn: F) -> MiddlewareFn<F, Es> {
     MiddlewareFn {
         mw_fn: Rc::new(mw_fn),
+        _phantom: PhantomData,
     }
 }
 
 /// Middleware transform for [`from_fn`].
-pub struct MiddlewareFn<F> {
+pub struct MiddlewareFn<F, Es> {
     mw_fn: Rc<F>,
+    _phantom: PhantomData<Es>,
 }
 
-impl<S, F, Fut, B, B2> Transform<S, ServiceRequest> for MiddlewareFn<F>
+impl<S, F, Fut, B, B2> Transform<S, ServiceRequest> for MiddlewareFn<F, ()>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     F: Fn(ServiceRequest, Next<B>) -> Fut + 'static,
@@ -67,7 +69,30 @@ where
 {
     type Response = ServiceResponse<B2>;
     type Error = Error;
-    type Transform = MiddlewareFnService<F, B>;
+    type Transform = MiddlewareFnService<F, B, ()>;
+    type InitError = ();
+    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+
+    fn new_transform(&self, service: S) -> Self::Future {
+        ready(Ok(MiddlewareFnService {
+            service: boxed::rc_service(service),
+            mw_fn: Rc::clone(&self.mw_fn),
+            _phantom: PhantomData,
+        }))
+    }
+}
+
+impl<S, F, E1, Fut, B: 'static, B2> Transform<S, ServiceRequest> for MiddlewareFn<F, (E1,)>
+where
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    F: Fn(E1, ServiceRequest, Next<B>) -> Fut + 'static,
+    E1: FromRequest + 'static,
+    Fut: Future<Output = Result<ServiceResponse<B2>, Error>> + 'static,
+    B2: MessageBody + 'static,
+{
+    type Response = ServiceResponse<B2>;
+    type Error = Error;
+    type Transform = MiddlewareFnService<F, B, (E1,)>;
     type InitError = ();
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
@@ -81,13 +106,13 @@ where
 }
 
 /// Middleware service for [`from_fn`].
-pub struct MiddlewareFnService<F, B> {
+pub struct MiddlewareFnService<F, B, Es> {
     service: RcService<ServiceRequest, ServiceResponse<B>, Error>,
     mw_fn: Rc<F>,
-    _phantom: PhantomData<B>,
+    _phantom: PhantomData<(B, Es)>,
 }
 
-impl<F, Fut, B, B2> Service<ServiceRequest> for MiddlewareFnService<F, B>
+impl<F, Fut, B, B2> Service<ServiceRequest> for MiddlewareFnService<F, B, ()>
 where
     F: Fn(ServiceRequest, Next<B>) -> Fut,
     Fut: Future<Output = Result<ServiceResponse<B2>, Error>>,
@@ -106,6 +131,31 @@ where
                 service: Rc::clone(&self.service),
             },
         )
+    }
+}
+
+impl<F, E1, Fut, B: 'static, B2> Service<ServiceRequest> for MiddlewareFnService<F, B, (E1,)>
+where
+    F: Fn(E1, ServiceRequest, Next<B>) -> Fut + 'static,
+    E1: FromRequest + 'static,
+    Fut: Future<Output = Result<ServiceResponse<B2>, Error>> + 'static,
+    B2: MessageBody + 'static,
+{
+    type Response = ServiceResponse<B2>;
+    type Error = Error;
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+
+    forward_ready!(service);
+
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
+        let mw_fn = Rc::clone(&self.mw_fn);
+        let service = Rc::clone(&self.service);
+
+        Box::pin(async move {
+            let (e1,) = req.extract::<(E1,)>().await?;
+
+            (mw_fn)(e1, req, Next::<B> { service }).await
+        })
     }
 }
 

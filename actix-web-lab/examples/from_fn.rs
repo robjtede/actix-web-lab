@@ -5,14 +5,29 @@ use std::{io, rc::Rc};
 use actix_web::{
     body::MessageBody,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{self, HeaderValue},
+    http::header::{self, HeaderValue, Range},
     middleware::Logger,
-    web, App, Error, HttpResponse, HttpServer,
+    web::{self, Header},
+    App, Error, HttpResponse, HttpServer,
 };
 use actix_web_lab::middleware::{from_fn, Next};
 use tracing::info;
 
 async fn noop<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {
+    next.call(req).await
+}
+
+async fn print_range_header<B>(
+    range_header: Option<Header<Range>>,
+    req: ServiceRequest,
+    next: Next<B>,
+) -> Result<ServiceResponse<B>, Error> {
+    if let Some(Header(range)) = range_header {
+        println!("Range: {range}");
+    } else {
+        println!("No Range header");
+    }
+
     next.call(req).await
 }
 
@@ -22,6 +37,16 @@ async fn mutate_body_type(
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
     let res = next.call(req).await?;
     Ok(res.map_into_left_body::<()>())
+}
+
+async fn mutate_body_type_with_extractor(
+    body: String,
+    req: ServiceRequest,
+    next: Next<impl MessageBody + 'static>,
+) -> Result<ServiceResponse<impl MessageBody>, Error> {
+    println!("body is: {body}");
+    let res = next.call(req).await?;
+    Ok(res.map_body(move |_, _| body))
 }
 
 struct MyMw(bool);
@@ -74,7 +99,9 @@ async fn main() -> io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(from_fn(noop))
+            .wrap(from_fn(print_range_header))
             .wrap(from_fn(mutate_body_type))
+            .wrap(from_fn(mutate_body_type_with_extractor))
             // switch bool to true to observe early response
             .wrap(MyMw(false).into_middleware())
             .wrap(Logger::default())
