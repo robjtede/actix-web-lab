@@ -6,12 +6,11 @@ use std::{
 };
 
 use actix_web::{dev, FromRequest, HttpRequest};
+use actix_web_lab::util::fork_request_payload;
 use digest::{generic_array::GenericArray, Digest};
 use futures_core::{ready, Stream as _};
 use pin_project_lite::pin_project;
 use tracing::trace;
-
-use crate::util::fork_request_payload;
 
 /// Parts of the resulting body hash extractor.
 pub struct BodyHashParts<T> {

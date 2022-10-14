@@ -4,6 +4,7 @@ members = [
     "./actix-web-lab",
     "./actix-web-lab-derive",
 ]
+resolver = "2"
 
 [patch.crates-io]
 actix-hash = { path = "./actix-hash" }

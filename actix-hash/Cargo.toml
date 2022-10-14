@@ -36,6 +36,7 @@ sha3 = ["dep:sha3"]
 [dependencies]
 actix-http = "3"
 actix-web = { version = "4", default-features = false }
+actix-web-lab = "0.18.5"
 futures-core = "0.3.7"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 local-channel = "0.1"
@@ -54,7 +55,6 @@ sha3 = { package = "sha3", version = "0.10", optional = true }
 
 [dev-dependencies]
 actix-web = "4"
-actix-web-lab = "0.17"
 base64 = "0.13"
 env_logger = "0.9"
 hex-literal = "0.3"

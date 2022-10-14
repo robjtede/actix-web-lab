@@ -20,7 +20,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod body_hash;
-mod util;
 
 pub use self::body_hash::{BodyHash, BodyHashParts};
 
