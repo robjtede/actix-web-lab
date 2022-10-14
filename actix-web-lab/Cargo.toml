@@ -79,3 +79,7 @@ sha2 = "0.10"
 static_assertions = "1.1"
 time = { version = "0.3", features = ["formatting"] }
 tokio = { version = "1.13.1", features = ["full"] }
+
+[[example]]
+name = "spa"
+required-features = ["spa"]
