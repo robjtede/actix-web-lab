@@ -39,12 +39,9 @@ async-trait = "0.1"
 csv = "1.1"
 bytes = "1"
 derive_more = "0.99.5"
-digest = "0.10"
 futures-core = "0.3.7"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
-generic-array = "0.14"
 http = "0.2.7"
-hmac = { version = "0.12", features = ["reset"] }
 itertools = "0.10"
 local-channel = "0.1"
 mime = "0.3"
@@ -54,7 +51,6 @@ regex = "1.5.5"
 serde = "1"
 serde_json = "1"
 serde_html_form = "0.1"
-subtle = "2.4"
 tokio = { version = "1.13.1", features = ["sync", "macros"] }
 tracing = { version = "0.1.30", features = ["log"] }
 
@@ -64,15 +60,17 @@ actix-web-lab-derive = "=0.16.0"
 actix-web = { version = "4", features = ["rustls"] }
 async_zip = "0.0.9"
 base64 = "0.13"
+digest = "0.10"
 ed25519-dalek = "1.0.1"
 env_logger = "0.9"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
+generic-array = "0.14"
 hex = "0.4"
 hex-literal = "0.3"
-http = "0.2.7"
+hmac = { version = "0.12", features = ["reset"] }
 rand = "0.8"
 rustls = "0.20"
-rustls-pemfile = "1.0.0"
+rustls-pemfile = "1"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
 static_assertions = "1.1"
