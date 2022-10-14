@@ -1,13 +1,13 @@
 //! Shows a couple of ways to use the `from_fn` middleware.
 
-use std::{io, rc::Rc};
+use std::{collections::HashMap, io, rc::Rc};
 
 use actix_web::{
     body::MessageBody,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     http::header::{self, HeaderValue, Range},
     middleware::Logger,
-    web::{self, Header},
+    web::{self, Header, Query},
     App, Error, HttpResponse, HttpServer,
 };
 use actix_web_lab::middleware::{from_fn, Next};
@@ -39,8 +39,9 @@ async fn mutate_body_type(
     Ok(res.map_into_left_body::<()>())
 }
 
-async fn mutate_body_type_with_extractor(
+async fn mutate_body_type_with_extractors(
     body: String,
+    _query: Query<HashMap<String, String>>,
     req: ServiceRequest,
     next: Next<impl MessageBody + 'static>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
@@ -101,7 +102,7 @@ async fn main() -> io::Result<()> {
             .wrap(from_fn(noop))
             .wrap(from_fn(print_range_header))
             .wrap(from_fn(mutate_body_type))
-            .wrap(from_fn(mutate_body_type_with_extractor))
+            .wrap(from_fn(mutate_body_type_with_extractors))
             // switch bool to true to observe early response
             .wrap(MyMw(false).into_middleware())
             .wrap(Logger::default())

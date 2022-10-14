@@ -82,29 +82,6 @@ where
     }
 }
 
-impl<S, F, E1, Fut, B: 'static, B2> Transform<S, ServiceRequest> for MiddlewareFn<F, (E1,)>
-where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-    F: Fn(E1, ServiceRequest, Next<B>) -> Fut + 'static,
-    E1: FromRequest + 'static,
-    Fut: Future<Output = Result<ServiceResponse<B2>, Error>> + 'static,
-    B2: MessageBody + 'static,
-{
-    type Response = ServiceResponse<B2>;
-    type Error = Error;
-    type Transform = MiddlewareFnService<F, B, (E1,)>;
-    type InitError = ();
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
-
-    fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(MiddlewareFnService {
-            service: boxed::rc_service(service),
-            mw_fn: Rc::clone(&self.mw_fn),
-            _phantom: PhantomData,
-        }))
-    }
-}
-
 /// Middleware service for [`from_fn`].
 pub struct MiddlewareFnService<F, B, Es> {
     service: RcService<ServiceRequest, ServiceResponse<B>, Error>,
@@ -134,30 +111,74 @@ where
     }
 }
 
-impl<F, E1, Fut, B: 'static, B2> Service<ServiceRequest> for MiddlewareFnService<F, B, (E1,)>
-where
-    F: Fn(E1, ServiceRequest, Next<B>) -> Fut + 'static,
-    E1: FromRequest + 'static,
-    Fut: Future<Output = Result<ServiceResponse<B2>, Error>> + 'static,
-    B2: MessageBody + 'static,
-{
-    type Response = ServiceResponse<B2>;
-    type Error = Error;
-    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+macro_rules! impl_middleware_fn_service {
+    ($($ext_type:ident),*) => {
+        impl<S, F, Fut, B, B2, $($ext_type),*> Transform<S, ServiceRequest> for MiddlewareFn<F, ($($ext_type),*,)>
+        where
+            S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+            F: Fn($($ext_type),*, ServiceRequest, Next<B>) -> Fut + 'static,
+            $($ext_type: FromRequest + 'static,)*
+            Fut: Future<Output = Result<ServiceResponse<B2>, Error>> + 'static,
+            B: MessageBody + 'static,
+            B2: MessageBody + 'static,
+        {
+            type Response = ServiceResponse<B2>;
+            type Error = Error;
+            type Transform = MiddlewareFnService<F, B, ($($ext_type,)*)>;
+            type InitError = ();
+            type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
-    forward_ready!(service);
+            fn new_transform(&self, service: S) -> Self::Future {
+                ready(Ok(MiddlewareFnService {
+                    service: boxed::rc_service(service),
+                    mw_fn: Rc::clone(&self.mw_fn),
+                    _phantom: PhantomData,
+                }))
+            }
+        }
 
-    fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        let mw_fn = Rc::clone(&self.mw_fn);
-        let service = Rc::clone(&self.service);
+        impl<F, $($ext_type),*, Fut, B: 'static, B2> Service<ServiceRequest>
+            for MiddlewareFnService<F, B, ($($ext_type),*,)>
+        where
+            F: Fn(
+                $($ext_type),*,
+                ServiceRequest,
+                Next<B>
+            ) -> Fut + 'static,
+            $($ext_type: FromRequest + 'static,)*
+            Fut: Future<Output = Result<ServiceResponse<B2>, Error>> + 'static,
+            B2: MessageBody + 'static,
+        {
+            type Response = ServiceResponse<B2>;
+            type Error = Error;
+            type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-        Box::pin(async move {
-            let (e1,) = req.extract::<(E1,)>().await?;
+            forward_ready!(service);
 
-            (mw_fn)(e1, req, Next::<B> { service }).await
-        })
-    }
+            #[allow(nonstandard_style)]
+            fn call(&self, mut req: ServiceRequest) -> Self::Future {
+                let mw_fn = Rc::clone(&self.mw_fn);
+                let service = Rc::clone(&self.service);
+
+                Box::pin(async move {
+                    let ($($ext_type,)*) = req.extract::<($($ext_type,)*)>().await?;
+
+                    (mw_fn)($($ext_type),*, req, Next::<B> { service }).await
+                })
+            }
+        }
+    };
 }
+
+impl_middleware_fn_service!(E1);
+impl_middleware_fn_service!(E1, E2);
+impl_middleware_fn_service!(E1, E2, E3);
+impl_middleware_fn_service!(E1, E2, E3, E4);
+impl_middleware_fn_service!(E1, E2, E3, E4, E5);
+impl_middleware_fn_service!(E1, E2, E3, E4, E5, E6);
+impl_middleware_fn_service!(E1, E2, E3, E4, E5, E6, E7);
+impl_middleware_fn_service!(E1, E2, E3, E4, E5, E6, E7, E8);
+impl_middleware_fn_service!(E1, E2, E3, E4, E5, E6, E7, E8, E9);
 
 /// Wraps the "next" service in the middleware chain.
 pub struct Next<B> {
