@@ -1,11 +1,12 @@
 //! Experimental macros for Actix Web.
 
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput};
+use syn::{parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, Ident};
 
 /// Derive a `FromRequest` implementation for an aggregate struct extractor.
 ///
-/// All fields of the struct need to implement `FromRequest`.
+/// All fields of the struct need to implement `FromRequest` unless they are marked with annotations
+/// that declare different handling is required.
 ///
 /// # Examples
 /// ```
@@ -14,8 +15,14 @@ use syn::{parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput};
 ///
 /// #[derive(Debug, FromRequest)]
 /// struct RequestParts {
+///     // the FromRequest impl is used for these fields
 ///     method: http::Method,
 ///     pool: web::Data<u32>,
+///     req_body: String,
+///
+///     // equivalent to `req.app_data::<u64>().copied()`
+///     #[from_request(copy_from_app_data)]
+///     int: u64,
 /// }
 ///
 /// #[get("/")]
@@ -55,12 +62,26 @@ pub fn derive_from_request(input: proc_macro::TokenStream) -> proc_macro::TokenS
         .map(|f| f.ident.clone().unwrap())
         .collect::<Punctuated<_, Comma>>();
 
-    let field_fut_names_joined = fields
-        .iter()
+    // i.e., field has no special handling, it's just extracted using its FromRequest impl
+    let fut_fields = fields.iter().filter(|field| {
+        field.attrs.is_empty()
+            || field
+                .attrs
+                .iter()
+                .any(|attr| attr.parse_args::<Ident>().is_err())
+    });
+
+    let field_fut_names_joined = fut_fields
+        .clone()
         .map(|f| format_ident!("{}_fut", f.ident.clone().unwrap()))
         .collect::<Punctuated<_, Comma>>();
 
-    let field_futs = fields.iter().map(|field| {
+    let field_post_fut_names_joined = fut_fields
+        .clone()
+        .map(|f| f.ident.clone().unwrap())
+        .collect::<Punctuated<_, Comma>>();
+
+    let field_futs = fut_fields.clone().map(|field| {
         let syn::Field { ident, ty, .. } = field;
 
         let varname = format_ident!("{}_fut", ident.clone().unwrap());
@@ -70,10 +91,46 @@ pub fn derive_from_request(input: proc_macro::TokenStream) -> proc_macro::TokenS
         }
     });
 
+    let fields_copied_from_app_data = fields
+        .iter()
+        .filter(|field| {
+            field.attrs.iter().any(|attr| {
+                attr.parse_args::<Ident>()
+                    .map_or(false, |ident| ident == "copy_from_app_data")
+            })
+        })
+        .map(|field| {
+            let syn::Field { ident, ty, .. } = field;
+
+            let varname = ident.clone().unwrap();
+
+            quote! {
+                let #varname = if let Some(st) = req.app_data::<#ty>().copied() {
+                    st
+                } else {
+                    ::actix_web_lab::__reexports::tracing::debug!(
+                        "Failed to extract `{}` for `{}` handler. For this extractor to work \
+                        correctly, pass the data to `App::app_data()`. Ensure that types align in \
+                        both the set and retrieve calls.",
+                        ::std::any::type_name::<#ty>(),
+                        req.match_name().unwrap_or_else(|| req.path())
+                    );
+
+                    return ::std::boxed::Box::pin(async move {
+                        ::std::result::Result::Err(
+                            ::actix_web_lab::__reexports::actix_web::error::ErrorInternalServerError(
+                            "Requested application data is not configured correctly. \
+                            View/enable debug logs for more details.",
+                        ))
+                    })
+                };
+            }
+        });
+
     let output = quote! {
         impl ::actix_web::FromRequest for #name {
             type Error = ::actix_web::Error;
-            type Future = ::std::pin::Pin<Box<
+            type Future = ::std::pin::Pin<::std::boxed::Box<
                 dyn ::std::future::Future<Output = ::std::result::Result<Self, Self::Error>>
             >>;
 
@@ -82,11 +139,13 @@ pub fn derive_from_request(input: proc_macro::TokenStream) -> proc_macro::TokenS
                 use ::actix_web_lab::__reexports::futures_util::{FutureExt as _, TryFutureExt as _};
                 use ::actix_web_lab::__reexports::tokio::try_join;
 
+                #(#fields_copied_from_app_data)*
+
                 #(#field_futs)*
 
-                Box::pin(
+                ::std::boxed::Box::pin(
                     async move { try_join!( #field_fut_names_joined ) }
-                    .map_ok(|( #field_names_joined )| Self { #field_names_joined })
+                        .map_ok(move |( #field_post_fut_names_joined )| Self { #field_names_joined })
                 )
            }
         }

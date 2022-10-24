@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Add `#[from_request(copy_from_app_data)]` field attribute to the `FromRequest` derive macro.
 - Add extractor support to `from_fn` when used as initial arguments.
 - Feature gate `spa` features. Enabled by default.
 

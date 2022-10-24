@@ -1,6 +1,6 @@
 use actix_web::{
     http::{Method, StatusCode},
-    post, web, App, HttpResponse, Responder,
+    web, App, HttpResponse, Responder,
 };
 use actix_web_lab_derive::FromRequest;
 
@@ -10,19 +10,24 @@ struct RequestParts {
     pool: web::Data<u32>,
     body: String,
     body2: String,
+
+    #[from_request(copy_from_app_data)]
+    copied_data: u64,
 }
 
-#[post("/")]
 async fn handler(parts: RequestParts) -> impl Responder {
     let RequestParts {
         method,
         pool,
         body,
         body2,
+        copied_data,
         ..
     } = parts;
 
     let pool = **pool;
+
+    assert_eq!(copied_data, 43);
 
     assert_eq!(body, "foo");
 
@@ -38,8 +43,13 @@ async fn handler(parts: RequestParts) -> impl Responder {
 }
 
 #[actix_web::test]
-async fn basic() {
-    let srv = actix_test::start(|| App::new().app_data(web::Data::new(42u32)).service(handler));
+async fn tdd() {
+    let srv = actix_test::start(|| {
+        App::new()
+            .app_data(43u64)
+            .app_data(web::Data::new(42u32))
+            .default_service(web::to(handler))
+    });
 
     let res = srv.post("/").send_body("foo").await.unwrap();
     assert_eq!(res.status(), StatusCode::OK);

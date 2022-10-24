@@ -84,6 +84,7 @@ pub mod __reexports {
     pub use ::futures_util;
     pub use ::serde_json;
     pub use ::tokio;
+    pub use ::tracing;
 }
 
 pub(crate) type BoxError = Box<dyn std::error::Error>;
