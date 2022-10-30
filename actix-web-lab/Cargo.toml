@@ -13,11 +13,11 @@ categories = [
 repository = "https://github.com/robjtede/actix-web-lab.git"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.64"
 
 [package.metadata.docs.rs]
-all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
 
 [features]
 default = ["derive", "spa"]
@@ -44,6 +44,7 @@ futures-util = { version = "0.3.17", default-features = false, features = ["std"
 http = "0.2.7"
 itertools = "0.10"
 local-channel = "0.1"
+mediatype = "0.19"
 mime = "0.3"
 once_cell = "1.8"
 pin-project-lite = "0.2.7"

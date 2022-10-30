@@ -37,7 +37,7 @@ impl str::FromStr for ContentLength {
     type Err = <usize as str::FromStr>::Err;
 
     #[inline]
-    fn from_str(val: &str) -> ::std::result::Result<Self, Self::Err> {
+    fn from_str(val: &str) -> Result<Self, Self::Err> {
         let val = val.trim();
 
         // decoder prevents this case
