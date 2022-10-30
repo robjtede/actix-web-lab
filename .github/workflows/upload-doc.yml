@@ -10,9 +10,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@nightly
       - name: Build Docs
-        run: cargo doc --no-deps --workspace --all-features
+        run: cargo +nightly doc --no-deps --workspace --all-features
+        env:
+          RUSTDOCFLAGS: --cfg=docsrs
 
       - name: Tweak HTML
         run: echo '<meta http-equiv="refresh" content="0;url=actix_web_lab/index.html">' > target/doc/index.html
