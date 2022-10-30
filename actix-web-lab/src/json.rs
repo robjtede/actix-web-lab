@@ -4,7 +4,7 @@ use std::{
     future::Future,
     marker::PhantomData,
     pin::Pin,
-    task::{Context, Poll},
+    task::{ready, Context, Poll},
 };
 
 // #[cfg(feature = "__compress")]
@@ -14,7 +14,7 @@ use actix_web::{
     HttpRequest,
 };
 use derive_more::{Deref, DerefMut, Display};
-use futures_core::{ready, Stream as _};
+use futures_core::Stream as _;
 use serde::de::DeserializeOwned;
 use tracing::debug;
 

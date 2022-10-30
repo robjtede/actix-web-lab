@@ -4,7 +4,7 @@ use std::{
     future::Future,
     pin::Pin,
     rc::Rc,
-    task::{Context, Poll},
+    task::{ready, Context, Poll},
 };
 
 use actix_service::{Service, Transform};
@@ -15,7 +15,7 @@ use actix_web::{
     Error, Result,
 };
 use ahash::AHashMap;
-use futures_core::{future::LocalBoxFuture, ready};
+use futures_core::future::LocalBoxFuture;
 use pin_project_lite::pin_project;
 
 type ErrorHandlerRes<B> = Result<ServiceResponse<EitherBody<B>>>;

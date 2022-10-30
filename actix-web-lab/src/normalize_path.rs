@@ -4,7 +4,7 @@ use std::{
     future::Future,
     marker::PhantomData,
     pin::Pin,
-    task::{Context, Poll},
+    task::{ready, Context, Poll},
 };
 
 use actix_service::{Service, Transform};
@@ -21,7 +21,6 @@ use actix_web::{
     Error, HttpResponse,
 };
 use bytes::Bytes;
-use futures_core::ready;
 use pin_project_lite::pin_project;
 use regex::Regex;
 

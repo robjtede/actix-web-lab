@@ -1,12 +1,11 @@
 use std::{
     io,
     pin::Pin,
-    task::{Context, Poll},
+    task::{ready, Context, Poll},
 };
 
 use actix_web::body::{BodySize, MessageBody};
 use bytes::Bytes;
-use futures_core::ready;
 use tokio::{
     io::AsyncWrite,
     sync::mpsc::{UnboundedReceiver, UnboundedSender},

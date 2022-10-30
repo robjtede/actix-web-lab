@@ -5,14 +5,14 @@
 use std::{
     future::Future,
     pin::Pin,
-    task::{Context, Poll},
+    task::{ready, Context, Poll},
 };
 
 use actix_web::{
     dev, http::StatusCode, web, Error, FromRequest, HttpMessage, HttpRequest, ResponseError,
 };
 use derive_more::{AsMut, AsRef, Deref, DerefMut, Display, Error};
-use futures_core::{ready, Stream as _};
+use futures_core::Stream as _;
 use tracing::debug;
 
 /// Default bytes payload size limit of 4MiB.

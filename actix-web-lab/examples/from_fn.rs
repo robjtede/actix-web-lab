@@ -40,14 +40,17 @@ async fn mutate_body_type(
 }
 
 async fn mutate_body_type_with_extractors(
-    body: String,
-    _query: Query<HashMap<String, String>>,
+    string_body: String,
+    query: Query<HashMap<String, String>>,
     req: ServiceRequest,
     next: Next<impl MessageBody + 'static>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
     println!("body is: {body}");
+    println!("query string: {query:?}");
+
     let res = next.call(req).await?;
-    Ok(res.map_body(move |_, _| body))
+
+    Ok(res.map_body(move |_, _| string_body))
 }
 
 struct MyMw(bool);

@@ -6,7 +6,7 @@ use std::{
     fmt,
     future::Future,
     pin::Pin,
-    task::{Context, Poll},
+    task::{ready, Context, Poll},
 };
 
 use actix_web::{
@@ -14,7 +14,7 @@ use actix_web::{
     FromRequest, HttpMessage as _, HttpRequest, ResponseError,
 };
 use derive_more::{AsRef, Display, From};
-use futures_core::{ready, Stream};
+use futures_core::Stream as _;
 
 use crate::header::ContentLength;
 

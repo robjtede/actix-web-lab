@@ -2,13 +2,13 @@ use std::{
     future::Future,
     mem,
     pin::Pin,
-    task::{Context, Poll},
+    task::{ready, Context, Poll},
 };
 
 use actix_web::{dev, FromRequest, HttpRequest};
 use actix_web_lab::util::fork_request_payload;
 use digest::{generic_array::GenericArray, Digest};
-use futures_core::{ready, Stream as _};
+use futures_core::Stream as _;
 use pin_project_lite::pin_project;
 use tracing::trace;
 
