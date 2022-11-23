@@ -1,6 +1,6 @@
 //! Shows a couple of ways to use the `from_fn` middleware.
 
-use std::{collections::HashMap, io, rc::Rc};
+use std::{collections::HashMap, io, rc::Rc, time::Duration};
 
 use actix_web::{
     body::MessageBody,
@@ -45,12 +45,22 @@ async fn mutate_body_type_with_extractors(
     req: ServiceRequest,
     next: Next<impl MessageBody + 'static>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-    println!("body is: {body}");
+    println!("body is: {string_body}");
     println!("query string: {query:?}");
 
     let res = next.call(req).await?;
 
     Ok(res.map_body(move |_, _| string_body))
+}
+
+async fn timeout_10secs(
+    req: ServiceRequest,
+    next: Next<impl MessageBody + 'static>,
+) -> Result<ServiceResponse<impl MessageBody>, Error> {
+    match tokio::time::timeout(Duration::from_secs(10), next.call(req)).await {
+        Ok(res) => res,
+        Err(_err) => Err(actix_web::error::ErrorRequestTimeout("")),
+    }
 }
 
 struct MyMw(bool);
@@ -106,6 +116,7 @@ async fn main() -> io::Result<()> {
             .wrap(from_fn(print_range_header))
             .wrap(from_fn(mutate_body_type))
             .wrap(from_fn(mutate_body_type_with_extractors))
+            .wrap(from_fn(timeout_10secs))
             // switch bool to true to observe early response
             .wrap(MyMw(false).into_middleware())
             .wrap(Logger::default())
