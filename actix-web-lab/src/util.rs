@@ -22,7 +22,10 @@ use local_channel::mpsc;
 /// - yields identical chunks;
 /// - does not poll ahead of the original;
 /// - does not poll significantly slower than the original;
-/// - receives an error signals if the original errors, but details are opaque to the copy.
+/// - receives an error signal if the original errors, but details are opaque to the copy.
+///
+/// If the payload is forked in one of the extractors used in a handler, then the original _must_ be
+/// read in another extractor or else the request will hang.
 pub fn fork_request_payload(orig_payload: &mut dev::Payload) -> dev::Payload {
     const TARGET: &str = concat!(module_path!(), "::fork_request_payload");
 
