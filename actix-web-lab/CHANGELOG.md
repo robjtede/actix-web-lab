@@ -2,6 +2,9 @@
 
 ## Unreleased - 2022-xx-xx
 
+
+## 0.18.8 - 2022-12-10
+
 - Always add `Content-Encoding` header when using `Sse` as a responder.
 
 ## 0.18.7 - 2022-12-10
