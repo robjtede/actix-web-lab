@@ -44,6 +44,7 @@
 - `RequestSignature`: wraps an extractor and calculates a request signature alongside [(docs)](https://docs.rs/actix-web-lab/0.18.8/actix_web_lab/extract/struct.RequestSignature.html)
 - `BodyLimit`: wraps a body extractor and prevents DoS attacks by limiting payload size [(docs)](https://docs.rs/actix-web-lab/0.18.8/actix_web_lab/extract/struct.BodyLimit.html)
 - `Bytes`: simplified Bytes extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.18.8/actix_web_lab/extract/struct.Bytes.html)
+- `UrlEncodedForm`: URL-encoded form extractor with const-generic payload size limit [(docs)](https://docs.rs/actix-web-lab/0.18.8/actix_web_lab/extract/struct.UrlEncodedForm.html)
 
 ### Macros
 
