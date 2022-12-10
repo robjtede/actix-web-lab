@@ -2,6 +2,9 @@
 
 ## Unreleased - 2022-xx-xx
 
+
+## 0.18.7 - 2022-12-10
+
 - Add `UrlEncodedForm` extractor with const generic size limit that supports collecting multi-value items into a `Vec`.
 
 ## 0.18.6 - 2022-12-08
