@@ -3,7 +3,6 @@
 use std::{
     fmt,
     future::{ready, Ready},
-    ops,
 };
 
 use actix_web::{dev::Payload, error::QueryPayloadError, Error, FromRequest, HttpRequest};
@@ -67,6 +66,8 @@ use tracing::debug;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Query<T>(pub T);
 
+impl_more::impl_deref_and_mut!(<T> in Query<T> => T);
+
 impl<T> Query<T> {
     /// Unwrap into inner `T` value.
     pub fn into_inner(self) -> T {
@@ -89,20 +90,6 @@ impl<T: DeserializeOwned> Query<T> {
         serde_html_form::from_str::<T>(query_str)
             .map(Self)
             .map_err(QueryPayloadError::Deserialize)
-    }
-}
-
-impl<T> ops::Deref for Query<T> {
-    type Target = T;
-
-    fn deref(&self) -> &T {
-        &self.0
-    }
-}
-
-impl<T> ops::DerefMut for Query<T> {
-    fn deref_mut(&mut self) -> &mut T {
-        &mut self.0
     }
 }
 

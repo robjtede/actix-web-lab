@@ -139,11 +139,12 @@ impl TryIntoHeaderValue for StrictTransportSecurity {
 
     fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
         let secs = self.duration.as_secs();
-        let subdomains = self
-            .include_subdomains
-            .then(|| "; includeSubDomains")
-            .unwrap_or("");
-        let preload = self.preload.then(|| "; preload").unwrap_or("");
+        let subdomains = if self.include_subdomains {
+            "; includeSubDomains"
+        } else {
+            ""
+        };
+        let preload = if self.preload { "; preload" } else { "" };
 
         // eg: max-age=31536000; includeSubDomains; preload
         let sts = format!("max-age={secs}{subdomains}{preload}")
