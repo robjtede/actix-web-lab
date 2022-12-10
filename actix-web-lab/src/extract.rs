@@ -13,4 +13,5 @@ pub use crate::{
     query::Query,
     request_signature::{RequestSignature, RequestSignatureError, RequestSignatureScheme},
     swap_data::SwapData,
+    url_encoded_form::{UrlEncodedForm, DEFAULT_URL_ENCODED_FORM_LIMIT},
 };

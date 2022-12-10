@@ -61,6 +61,7 @@ mod test_header_macros;
 mod test_request_macros;
 mod test_response_macros;
 mod test_services;
+mod url_encoded_form;
 
 // public API
 pub mod body;

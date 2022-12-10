@@ -43,6 +43,7 @@ futures-core = "0.3.7"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 http = "0.2.7"
 itertools = "0.10"
+impl-more = "0.1"
 local-channel = "0.1"
 mediatype = "0.19"
 mime = "0.3"
