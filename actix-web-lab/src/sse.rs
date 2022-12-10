@@ -512,9 +512,11 @@ impl Stream for ChannelStream {
 mod tests {
     use std::convert::Infallible;
 
-    use actix_web::body;
+    use actix_web::{body, test::TestRequest};
     use futures_util::{future::poll_fn, stream, task::noop_waker, FutureExt as _, StreamExt as _};
     use tokio::time::sleep;
+
+    use crate::assert_response_matches;
 
     use super::*;
 
@@ -639,6 +641,20 @@ mod tests {
         assert_eq!(
             body::to_bytes(sse).await.unwrap(),
             "data: foo\n\ndata: foo\n\n",
+        );
+    }
+
+    #[actix_web::test]
+    async fn appropriate_headers_are_set_on_responder() {
+        let st = stream::empty::<Result<_, Infallible>>();
+        let sse = Sse::from_stream(st);
+
+        let res = sse.respond_to(&TestRequest::default().to_http_request());
+
+        assert_response_matches!(res, OK;
+            "content-type" => "text/event-stream"
+            "content-encoding" => "identity"
+            "cache-control" => "no-cache"
         );
     }
 
