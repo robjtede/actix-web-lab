@@ -47,6 +47,7 @@ use std::{
 
 use actix_web::{
     body::{BodySize, BoxBody, MessageBody},
+    http::header::ContentEncoding,
     HttpRequest, HttpResponse, Responder,
 };
 use bytes::{BufMut as _, Bytes, BytesMut};
@@ -420,6 +421,7 @@ where
     fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
         HttpResponse::Ok()
             .content_type(mime::TEXT_EVENT_STREAM)
+            .insert_header(ContentEncoding::Identity)
             .insert_header(CacheControl(vec![CacheDirective::NoCache]))
             .body(self)
     }
