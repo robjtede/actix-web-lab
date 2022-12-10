@@ -17,8 +17,14 @@ use futures_core::{future::LocalBoxFuture, Future};
 
 /// Wraps an async function to be used as a middleware.
 ///
+/// # Examples
 /// The wrapped function should have the following form:
-/// ```ignore
+/// ```
+/// # use actix_web::{
+/// #     App, Error,
+/// #     body::MessageBody,
+/// #     dev::{ServiceRequest, ServiceResponse, Service as _},
+/// # };
 /// use actix_web_lab::middleware::Next;
 ///
 /// async fn my_mw(
@@ -29,6 +35,7 @@ use futures_core::{future::LocalBoxFuture, Future};
 ///     next.call(req).await
 ///     // post-processing
 /// }
+/// # actix_web::App::new().wrap(actix_web_lab::middleware::from_fn(my_mw));
 /// ```
 ///
 /// Then use in an app builder like this:
@@ -47,6 +54,30 @@ use futures_core::{future::LocalBoxFuture, Future};
 ///     .wrap(from_fn(my_mw))
 /// # ;
 /// ```
+///
+/// It is also possible to write a middleware that automatically uses extractors, similar to request
+/// handlers, by declaring them as the first parameters:
+/// ```
+/// # use std::collections::HashMap;
+/// # use actix_web::{
+/// #     App, Error,
+/// #     body::MessageBody,
+/// #     dev::{ServiceRequest, ServiceResponse, Service as _},
+/// #     web,
+/// # };
+/// use actix_web_lab::middleware::Next;
+///
+/// async fn my_extracting_mw(
+///     string_body: String,
+///     query: web::Query<HashMap<String, String>>,
+///     req: ServiceRequest,
+///     next: Next<impl MessageBody>,
+/// ) -> Result<ServiceResponse<impl MessageBody>, Error> {
+///     // pre-processing
+///     next.call(req).await
+///     // post-processing
+/// }
+/// # actix_web::App::new().wrap(actix_web_lab::middleware::from_fn(my_extracting_mw));
 pub fn from_fn<F, Es>(mw_fn: F) -> MiddlewareFn<F, Es> {
     MiddlewareFn {
         mw_fn: Rc::new(mw_fn),
