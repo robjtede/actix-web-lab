@@ -11,7 +11,7 @@ use actix_web::{
     dev::Payload, error::UrlencodedError, http::header, web, Error, FromRequest, HttpMessage,
     HttpRequest,
 };
-use derive_more::Display;
+use derive_more::{Deref, DerefMut, Display};
 use futures_core::Stream as _;
 use serde::de::DeserializeOwned;
 use tracing::debug;
@@ -55,10 +55,8 @@ pub const DEFAULT_URL_ENCODED_FORM_LIMIT: usize = 2_097_152;
 /// }
 /// ```
 #[doc(alias = "html_form", alias = "html form", alias = "form")]
-#[derive(Debug, Display)]
+#[derive(Debug, Deref, DerefMut, Display)]
 pub struct UrlEncodedForm<T, const LIMIT: usize = DEFAULT_URL_ENCODED_FORM_LIMIT>(pub T);
-
-impl_more::impl_deref_and_mut!(<T> in UrlEncodedForm<T> => T);
 
 impl<T, const LIMIT: usize> UrlEncodedForm<T, LIMIT> {
     /// Unwraps into inner `T` value.
