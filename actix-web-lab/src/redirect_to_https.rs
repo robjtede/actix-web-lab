@@ -43,7 +43,7 @@ pub struct RedirectHttps {
 }
 
 impl RedirectHttps {
-    /// Construct new HTTP redirect middleware with
+    /// Construct new HTTP redirect middleware with strict transport security configuration.
     pub fn with_hsts(hsts: StrictTransportSecurity) -> Self {
         Self {
             hsts: Some(hsts),
