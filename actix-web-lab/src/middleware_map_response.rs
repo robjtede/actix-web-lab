@@ -12,16 +12,48 @@ use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
     Error,
 };
-use futures_core::{future::LocalBoxFuture, ready};
-use futures_util::TryFutureExt as _;
+use futures_core::ready;
 use pin_project_lite::pin_project;
 
+/// Creates a middleware from an async function that is used as a mapping function for a
+/// [`ServiceResponse`].
+///
+/// # Examples
+/// Adds header:
+/// ```
+/// # use actix_web_lab::middleware::map_response;
+/// use actix_web::{body::MessageBody, dev::ServiceResponse, http::header};
+///
+/// async fn add_header(
+///     mut res: ServiceResponse<impl MessageBody>,
+/// ) -> actix_web::Result<ServiceResponse<impl MessageBody>> {
+///     res.headers_mut()
+///         .insert(header::WARNING, header::HeaderValue::from_static("42"));
+///
+///     Ok(res)
+/// }
+/// # actix_web::App::new().wrap(map_response(add_header));
+/// ```
+///
+/// Maps body:
+/// ```
+/// # use actix_web_lab::middleware::map_response;
+/// use actix_web::{body::MessageBody, dev::ServiceResponse};
+///
+/// async fn mutate_body_type(
+///     res: ServiceResponse<impl MessageBody + 'static>,
+/// ) -> actix_web::Result<ServiceResponse<impl MessageBody>> {
+///     Ok(res.map_into_left_body::<()>())
+/// }
+/// # actix_web::App::new().wrap(map_response(mutate_body_type));
+/// ```
 pub fn map_response<F>(mapper_fn: F) -> MapResMiddleware<F> {
     MapResMiddleware {
         mw_fn: Rc::new(mapper_fn),
     }
 }
 
+/// Middleware transform for [`map_response`].
 pub struct MapResMiddleware<F> {
     mw_fn: Rc<F>,
 }
@@ -136,7 +168,7 @@ mod tests {
         Ok(res)
     }
 
-    async fn add_res_header(
+    async fn add_header(
         mut res: ServiceResponse<impl MessageBody>,
     ) -> Result<ServiceResponse<impl MessageBody>, Error> {
         res.headers_mut()
@@ -164,7 +196,7 @@ mod tests {
                 .default_service(web::to(HttpResponse::Ok))
                 .wrap(map_response(|res| async move { Ok(res) }))
                 .wrap(map_response(noop))
-                .wrap(map_response(add_res_header))
+                .wrap(map_response(add_header))
                 .wrap(Logger::default())
                 .wrap(map_response(mutate_body_type)),
         )

@@ -44,6 +44,7 @@ mod load_shed;
 mod local_data;
 mod middleware_from_fn;
 mod middleware_map_response;
+mod middleware_map_response_body;
 mod ndjson;
 mod normalize_path;
 mod panic_reporter;
