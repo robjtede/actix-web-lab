@@ -7,6 +7,7 @@ pub use crate::{
     err_handler::ErrorHandlers,
     load_shed::LoadShed,
     middleware_from_fn::{from_fn, MiddlewareFn, Next},
+    middleware_map_response::{map_response, MapResMiddleware},
     normalize_path::NormalizePath,
     panic_reporter::PanicReporter,
     redirect_to_https::RedirectHttps,

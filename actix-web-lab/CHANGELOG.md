@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Add `middleware::map_response()` for mapping responses with an async function.
 
 ## 0.18.8 - 2022-12-10
 
