@@ -182,7 +182,7 @@ where
             // Either adds a string to the end (duplicates will be removed anyways) or trims all
             // slashes from the end
             let path = match self.trailing_slash_behavior {
-                TrailingSlash::Always => format!("{}/", original_path),
+                TrailingSlash::Always => format!("{original_path}/"),
                 TrailingSlash::MergeOnly => original_path.to_string(),
                 TrailingSlash::Trim => original_path.trim_end_matches('/').to_string(),
                 ts_behavior => panic!("unknown trailing slash behavior: {ts_behavior:?}"),
@@ -211,7 +211,7 @@ where
                 let query = parts.path_and_query.as_ref().and_then(|pq| pq.query());
 
                 let path = match query {
-                    Some(query) => Bytes::from(format!("{}?{}", path, query)),
+                    Some(query) => Bytes::from(format!("{path}?{query}")),
                     None => Bytes::copy_from_slice(path.as_bytes()),
                 };
                 parts.path_and_query = Some(PathAndQuery::from_maybe_shared(path).unwrap());
@@ -352,7 +352,7 @@ mod tests {
         for uri in test_uris {
             let req = TestRequest::with_uri(uri).to_request();
             let res = call_service(&app, req).await;
-            assert!(res.status().is_success(), "Failed uri: {}", uri);
+            assert!(res.status().is_success(), "Failed uri: {uri}");
         }
     }
 
@@ -389,7 +389,7 @@ mod tests {
         for uri in test_uris {
             let req = TestRequest::with_uri(uri).to_request();
             let res = call_service(&app, req).await;
-            assert!(res.status().is_success(), "Failed uri: {}", uri);
+            assert!(res.status().is_success(), "Failed uri: {uri}");
         }
     }
 
@@ -411,7 +411,7 @@ mod tests {
         for uri in test_uris {
             let req = TestRequest::with_uri(uri).to_request();
             let res = call_service(&app, req).await;
-            assert!(res.status().is_success(), "Failed uri: {}", uri);
+            assert!(res.status().is_success(), "Failed uri: {uri}");
         }
     }
 
@@ -448,7 +448,7 @@ mod tests {
         for uri in test_uris {
             let req = TestRequest::with_uri(uri).to_request();
             let res = call_service(&app, req).await;
-            assert!(res.status().is_success(), "Failed uri: {}", uri);
+            assert!(res.status().is_success(), "Failed uri: {uri}");
         }
     }
 
@@ -470,7 +470,7 @@ mod tests {
         for uri in test_uris {
             let req = TestRequest::with_uri(uri).to_request();
             let res = call_service(&app, req).await;
-            assert!(res.status().is_success(), "Failed uri: {}", uri);
+            assert!(res.status().is_success(), "Failed uri: {uri}");
         }
     }
 
@@ -511,7 +511,7 @@ mod tests {
         for (uri, success) in tests {
             let req = TestRequest::with_uri(uri).to_request();
             let res = call_service(&app, req).await;
-            assert_eq!(res.status().is_success(), success, "Failed uri: {}", uri);
+            assert_eq!(res.status().is_success(), success, "Failed uri: {uri}");
         }
     }
 
@@ -553,7 +553,7 @@ mod tests {
         for uri in test_uris {
             let req = TestRequest::with_uri(uri).to_srv_request();
             let res = normalize.call(req).await.unwrap();
-            assert!(res.status().is_success(), "Failed uri: {}", uri);
+            assert!(res.status().is_success(), "Failed uri: {uri}");
         }
     }
 

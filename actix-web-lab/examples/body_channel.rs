@@ -16,6 +16,7 @@ async fn index() -> impl Responder {
     let (mut body_tx, body) = body::channel::<io::Error>();
 
     // do not wait for this task to finish before sending response
+    #[allow(clippy::let_underscore_future)]
     let _ = web::block(move || {
         body_tx.send(web::Bytes::from_static(b"body "))?;
         body_tx.send(web::Bytes::from_static(b"from "))?;

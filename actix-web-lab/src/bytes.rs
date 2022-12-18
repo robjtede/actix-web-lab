@@ -187,18 +187,16 @@ impl<const LIMIT: usize> Future for BytesBody<LIMIT> {
 pub enum BytesPayloadError {
     /// Payload size is bigger than allowed & content length header set. (default: 4MiB)
     #[display(
-        fmt = "Payload ({} bytes) is larger than allowed (limit: {} bytes).",
-        length,
-        limit
+        fmt = "Payload ({length} bytes) is larger than allowed (limit: {limit} bytes)."
     )]
     OverflowKnownLength { length: usize, limit: usize },
 
     /// Payload size is bigger than allowed but no content length header set. (default: 4MiB)
-    #[display(fmt = "Payload has exceeded limit ({} bytes).", limit)]
+    #[display(fmt = "Payload has exceeded limit ({limit} bytes).")]
     Overflow { limit: usize },
 
     /// Payload error.
-    #[display(fmt = "Error that occur during reading payload: {}", _0)]
+    #[display(fmt = "Error that occur during reading payload: {_0}")]
     Payload(actix_web::error::PayloadError),
 }
 

@@ -93,7 +93,7 @@ fn write_display(item: impl fmt::Display) -> Bytes {
     let mut buf = BytesMut::new();
     let mut wrt = MutWriter(&mut buf);
 
-    writeln!(wrt, "{}", item).unwrap();
+    writeln!(wrt, "{item}").unwrap();
 
     buf.freeze()
 }

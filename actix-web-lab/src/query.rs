@@ -145,7 +145,7 @@ mod tests {
 
         assert_eq!(s.id, "test");
         assert_eq!(
-            format!("{}, {:?}", s, s),
+            format!("{s}, {s:?}"),
             "test, Query(Id { id: \"test\" })"
         );
 
@@ -181,7 +181,7 @@ mod tests {
         let mut s = Query::<Id>::from_request(&req, &mut pl).await.unwrap();
         assert_eq!(s.id, "test");
         assert_eq!(
-            format!("{}, {:?}", s, s),
+            format!("{s}, {s:?}"),
             "test, Query(Id { id: \"test\" })"
         );
 

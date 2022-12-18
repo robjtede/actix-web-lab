@@ -70,6 +70,7 @@ async fn index() -> impl Responder {
     let (wrt, body) = body::writer();
 
     // allow response to be started while this is processing
+    #[allow(clippy::let_underscore_future)]
     let _ = tokio::spawn(async move {
         let mut zipper = async_zip::write::ZipFileWriter::new(wrt);
 
@@ -97,6 +98,7 @@ async fn plaintext() -> impl Responder {
     let (mut wrt, body) = body::writer();
 
     // allow response to be started while this is processing
+    #[allow(clippy::let_underscore_future)]
     let _ = tokio::spawn(async move {
         wrt.write_all(b"saying hello in\n").await?;
 

@@ -163,7 +163,7 @@ pub enum Overloaded<E> {
 impl<E: fmt::Display> fmt::Display for Overloaded<E> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Overloaded::Service(err) => write!(f, "{}", err),
+            Overloaded::Service(err) => write!(f, "{err}"),
             Overloaded::Overloaded => f.write_str("service overloaded"),
         }
     }

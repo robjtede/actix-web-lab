@@ -106,11 +106,11 @@ fn random_email() -> String {
         .map(char::from)
         .collect();
 
-    format!("user_{}@example.com", id)
+    format!("user_{id}@example.com")
 }
 
 fn random_address() -> String {
     let mut rng = rand::thread_rng();
     let street_no: u16 = rng.gen_range(10..99);
-    format!("{} Random Street", street_no)
+    format!("{street_no} Random Street")
 }

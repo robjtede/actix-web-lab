@@ -282,8 +282,7 @@ mod tests {
         let err = format!("{}", s.unwrap_err());
         assert!(
             err.contains("JSON payload (16 bytes) is larger than allowed (limit: 10 bytes)."),
-            "unexpected error string: {:?}",
-            err
+            "unexpected error string: {err:?}"
         );
 
         let (req, mut pl) = TestRequest::default()
@@ -298,8 +297,7 @@ mod tests {
         let err = format!("{}", s.unwrap_err());
         assert!(
             err.contains("larger than allowed"),
-            "unexpected error string: {:?}",
-            err
+            "unexpected error string: {err:?}"
         );
     }
 

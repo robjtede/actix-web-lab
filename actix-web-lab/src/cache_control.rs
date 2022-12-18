@@ -259,10 +259,10 @@ impl fmt::Display for CacheDirective {
         use self::CacheDirective::*;
 
         let dir_str = match self {
-            MaxAge(secs) => return write!(f, "max-age={}", secs),
-            MaxStale(secs) => return write!(f, "max-stale={}", secs),
-            MinFresh(secs) => return write!(f, "min-fresh={}", secs),
-            SMaxAge(secs) => return write!(f, "s-maxage={}", secs),
+            MaxAge(secs) => return write!(f, "max-age={secs}"),
+            MaxStale(secs) => return write!(f, "max-stale={secs}"),
+            MinFresh(secs) => return write!(f, "min-fresh={secs}"),
+            SMaxAge(secs) => return write!(f, "s-maxage={secs}"),
 
             NoCache => "no-cache",
             NoStore => "no-store",
@@ -280,7 +280,7 @@ impl fmt::Display for CacheDirective {
             StaleIfError => "stale-if-error",
 
             Extension(name, None) => name.as_str(),
-            Extension(name, Some(arg)) => return write!(f, "{}={}", name, arg),
+            Extension(name, Some(arg)) => return write!(f, "{name}={arg}"),
         };
 
         f.write_str(dir_str)

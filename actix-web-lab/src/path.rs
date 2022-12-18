@@ -98,7 +98,7 @@ mod tests {
     use super::*;
 
     #[derive(Deserialize, Debug, Display)]
-    #[display(fmt = "MyStruct({}, {})", key, value)]
+    #[display(fmt = "MyStruct({key}, {value})")]
     struct MyStruct {
         key: String,
         value: String,

@@ -287,8 +287,7 @@ mod tests {
         let err = format!("{}", s.unwrap_err());
         assert!(
             err.contains("payload is larger") && err.contains("than allowed"),
-            "unexpected error string: {:?}",
-            err
+            "unexpected error string: {err:?}"
         );
     }
 
