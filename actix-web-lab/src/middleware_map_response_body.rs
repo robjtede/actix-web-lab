@@ -38,7 +38,10 @@ use pin_project_lite::pin_project;
 ///     web::{BufMut as _, BytesMut},
 /// };
 ///
-/// async fn append_bytes(body: impl MessageBody) -> actix_web::Result<impl MessageBody> {
+/// async fn append_bytes(
+///     _req: HttpRequest,
+///     body: impl MessageBody
+/// ) -> actix_web::Result<impl MessageBody> {
 ///     let buf = body::to_bytes(body).await.ok().unwrap();
 ///
 ///     let mut body = BytesMut::from(&buf[..]);
@@ -62,7 +65,7 @@ pub struct MapResBodyMiddleware<F> {
 impl<S, F, Fut, B, B2> Transform<S, ServiceRequest> for MapResBodyMiddleware<F>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    F: Fn(B) -> Fut,
+    F: Fn(HttpRequest, B) -> Fut,
     Fut: Future<Output = Result<B2, Error>>,
     B2: MessageBody,
 {
@@ -91,7 +94,7 @@ pub struct MapResBodyService<S, F, B> {
 impl<S, F, Fut, B, B2> Service<ServiceRequest> for MapResBodyService<S, F, B>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    F: Fn(B) -> Fut,
+    F: Fn(HttpRequest, B) -> Fut,
     Fut: Future<Output = Result<B2, Error>>,
     B2: MessageBody,
 {
@@ -138,7 +141,7 @@ pin_project! {
 impl<SvcFut, B, F, FnFut, B2> Future for MapResBodyFut<SvcFut, F, FnFut>
 where
     SvcFut: Future<Output = Result<ServiceResponse<B>, Error>>,
-    F: Fn(B) -> FnFut,
+    F: Fn(HttpRequest, B) -> FnFut,
     FnFut: Future<Output = Result<B2, Error>>,
 {
     type Output = Result<ServiceResponse<B2>, Error>;
@@ -153,7 +156,7 @@ where
                 let (req, res) = res.into_parts();
                 let (res, body) = res.into_parts();
 
-                let fut = (this.mw_fn)(body);
+                let fut = (this.mw_fn)(req.clone(), body);
                 this.state.set(MapResBodyFutState::Fn {
                     fut,
                     req: Some(req),
@@ -187,11 +190,12 @@ mod tests {
 
     use super::*;
 
-    async fn noop(body: impl MessageBody) -> Result<impl MessageBody, Error> {
+    async fn noop(_req: HttpRequest, body: impl MessageBody) -> Result<impl MessageBody, Error> {
         Ok(body)
     }
 
     async fn mutate_body_type(
+        _req: HttpRequest,
         _body: impl MessageBody + 'static,
     ) -> Result<impl MessageBody, Error> {
         Ok("foo".to_owned())
@@ -208,7 +212,7 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .default_service(web::to(HttpResponse::Ok))
-                .wrap(map_response_body(|body| async move { Ok(body) }))
+                .wrap(map_response_body(|_req, body| async move { Ok(body) }))
                 .wrap(map_response_body(noop))
                 .wrap(Logger::default())
                 .wrap(map_response_body(mutate_body_type)),

@@ -4,7 +4,7 @@ use std::io;
 
 use actix_web::{
     body::MessageBody, dev::ServiceResponse, http::header, middleware::Logger, web, App, Error,
-    HttpResponse, HttpServer,
+    HttpRequest, HttpResponse, HttpServer,
 };
 use actix_web_lab::middleware::{map_response, map_response_body};
 use tracing::info;
@@ -18,7 +18,10 @@ async fn add_res_header(
     Ok(res)
 }
 
-async fn mutate_body_type(_body: impl MessageBody + 'static) -> Result<impl MessageBody, Error> {
+async fn mutate_body_type(
+    _req: HttpRequest,
+    _body: impl MessageBody + 'static,
+) -> Result<impl MessageBody, Error> {
     Ok("foo".to_owned())
 }
 
