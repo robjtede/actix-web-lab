@@ -20,11 +20,15 @@
 - `NdJson`: efficient NDJSON streaming [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/respond/struct.NdJson.html)
 - `DisplayStream`: efficient line-by-line `Display` streaming [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/respond/struct.DisplayStream.html)
 - `Html`: basic string wrapper that responds with HTML Content-Type [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/respond/struct.Html.html)
+- `Cbor`: basic CBOR format wrapper with appropriate Content-Type [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/respond/struct.Cbor.html)
+- `MessagePack`: basic MessagePack format wrapper with appropriate Content-Type [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/respond/struct.MessagePack.html)
 - `Sse`: semantic server-sent events (SSE) responder with a channel-like interface [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/sse/index.html)
 
 ### Middleware
 
 - `from_fn`: use an async function as a middleware [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/middleware/fn.from_fn.html)
+- `map_response`: use an async function to modify the response [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/middleware/fn.map_response.html)
+- `map_response_body`: use an async function to modify the response body [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/middleware/fn.map_response_body.html)
 - `RedirectHttps`: middleware to redirect traffic to HTTPS if connection is insecure with optional HSTS [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/middleware/struct.RedirectHttps.html)
 - `redirect_to_www`: function middleware to redirect traffic to `www.` if not already there [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/middleware/fn.redirect_to_www.html)
 - `ErrorHandlers`: alternative error handler middleware with simpler interface [(docs)](https://docs.rs/actix-web-lab/0.18.9/actix_web_lab/middleware/struct.ErrorHandlers.html)
