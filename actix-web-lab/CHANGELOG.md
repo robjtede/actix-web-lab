@@ -4,6 +4,7 @@
 
 - Add `middleware::map_response()` for mapping responses with an async function.
 - Add `middleware::map_response_body()` for mapping response bodies with an async function.
+- Add `respond::{MessagePack,MessagePackNamed}` responders.
 
 ## 0.18.8 - 2022-12-10
 

@@ -45,6 +45,8 @@ mod local_data;
 mod middleware_from_fn;
 mod middleware_map_response;
 mod middleware_map_response_body;
+#[cfg(feature = "msgpack")]
+mod msgpack;
 mod ndjson;
 mod normalize_path;
 mod panic_reporter;

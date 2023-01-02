@@ -23,6 +23,7 @@ all-features = true
 default = ["derive", "spa"]
 derive = ["actix-web-lab-derive"]
 spa = ["actix-files"]
+msgpack = ["rmp-serde"]
 
 [dependencies]
 actix-web-lab-derive = { version = "=0.18.0", optional = true }
@@ -58,6 +59,9 @@ tracing = { version = "0.1.30", features = ["log"] }
 
 # spa
 actix-files = { version = "0.6", optional = true }
+
+# msgpack
+rmp-serde = { version = "1", optional = true }
 
 [dev-dependencies]
 actix-web-lab-derive = "=0.18.0"
