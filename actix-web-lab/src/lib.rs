@@ -31,6 +31,8 @@ mod body_limit;
 mod bytes;
 mod cache_control;
 mod catch_panic;
+#[cfg(feature = "cbor")]
+mod cbor;
 mod content_length;
 mod csv;
 mod display_stream;
