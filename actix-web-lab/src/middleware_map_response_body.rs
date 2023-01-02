@@ -22,9 +22,12 @@ use pin_project_lite::pin_project;
 /// Completely replaces the body:
 /// ```
 /// # use actix_web_lab::middleware::map_response_body;
-/// use actix_web::body::MessageBody;
+/// use actix_web::{body::MessageBody, HttpRequest};
 ///
-/// async fn replace_body(_: impl MessageBody) -> actix_web::Result<impl MessageBody> {
+/// async fn replace_body(
+///     _req: HttpRequest,
+///     _: impl MessageBody
+/// ) -> actix_web::Result<impl MessageBody> {
 ///     Ok("foo".to_owned())
 /// }
 /// # actix_web::App::new().wrap(map_response_body(replace_body));
@@ -36,6 +39,7 @@ use pin_project_lite::pin_project;
 /// use actix_web::{
 ///     body::{self, MessageBody},
 ///     web::{BufMut as _, BytesMut},
+///     HttpRequest,
 /// };
 ///
 /// async fn append_bytes(
