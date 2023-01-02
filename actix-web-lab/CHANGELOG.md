@@ -2,6 +2,8 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Update `serde_html_form` dependency (which powers the `Query` and `Form` extractors) to `0.2`.
+
 ## 0.18.9 - 2023-01-02
 
 - Add `middleware::map_response()` for mapping responses with an async function.

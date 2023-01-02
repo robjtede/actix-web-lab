@@ -55,7 +55,7 @@ pin-project-lite = "0.2.7"
 regex = "1.5.5"
 serde = "1"
 serde_json = "1"
-serde_html_form = "0.1"
+serde_html_form = "0.2"
 tokio = { version = "1.13.1", features = ["sync", "macros"] }
 tracing = { version = "0.1.30", features = ["log"] }
 
