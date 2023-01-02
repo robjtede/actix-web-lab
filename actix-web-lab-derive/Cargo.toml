@@ -24,7 +24,7 @@ quote = "1"
 syn = { version = "1", features = ["full", "parsing"] }
 
 [dev-dependencies]
-actix-web-lab = "=0.18.8"
+actix-web-lab = "=0.18.9"
 
 actix-test = "0.1"
 actix-web = "4"

@@ -2,6 +2,8 @@
 
 ## Unreleased - 2022-xx-xx
 
+## 0.18.9 - 2023-01-02
+
 - Add `middleware::map_response()` for mapping responses with an async function.
 - Add `middleware::map_response_body()` for mapping response bodies with an async function.
 - Add `respond::{MessagePack,MessagePackNamed}` responders.

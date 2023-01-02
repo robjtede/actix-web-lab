@@ -1,6 +1,6 @@
 use std::io;
 
-use actix_web::{get, http::StatusCode, App, HttpServer, Responder};
+use actix_web::{get, App, HttpServer, Responder};
 use actix_web_lab::respond::Cbor;
 use serde::Serialize;
 use tracing::info;
