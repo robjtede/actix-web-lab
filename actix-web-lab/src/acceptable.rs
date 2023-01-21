@@ -19,6 +19,7 @@ use actix_web::{
 ///         HttpResponse::Ok().body("only called when images responses are acceptable")
 ///     }));
 /// ```
+#[deprecated(since = "0.19.0", note = "Type has graduated to Actix Web.")]
 #[derive(Debug, Clone)]
 pub struct Acceptable {
     mime: mime::Mime,

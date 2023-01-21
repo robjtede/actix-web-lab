@@ -31,6 +31,7 @@ use tracing::debug;
 /// ```
 ///
 /// [mdn-redirects]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#permanent_redirections
+#[deprecated(since = "0.19.0", note = "Type has graduated to Actix Web.")]
 #[derive(Debug, Clone)]
 pub struct Redirect {
     from: Cow<'static, str>,
