@@ -30,5 +30,5 @@ actix-test = "0.1"
 actix-web = "4"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 rustversion = "1"
-tokio = { version = "1.13.1", features = ["macros"] }
+tokio = { version = "1.18.5", features = ["macros"] }
 trybuild = "1"
