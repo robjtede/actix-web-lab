@@ -7,11 +7,12 @@ use actix_web::{
     body::EitherBody,
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     http::header::TryIntoHeaderPair,
+    web::Redirect,
     HttpResponse, Responder as _,
 };
 use futures_core::future::LocalBoxFuture;
 
-use crate::{header::StrictTransportSecurity, web::Redirect};
+use crate::header::StrictTransportSecurity;
 
 /// A middleware to redirect traffic to HTTPS if connection is insecure.
 ///

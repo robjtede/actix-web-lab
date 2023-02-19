@@ -1,10 +1,11 @@
 use actix_web::{
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
+    web::Redirect,
     Error, Responder,
 };
 
-use crate::{middleware_from_fn::Next, web::Redirect};
+use crate::middleware_from_fn::Next;
 
 /// A function middleware to redirect traffic to `www.` if not already there.
 ///

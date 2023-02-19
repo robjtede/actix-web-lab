@@ -4,6 +4,7 @@
 
 use std::borrow::Cow;
 
+#[allow(deprecated)]
 pub use crate::redirect::Redirect;
 #[cfg(feature = "spa")]
 pub use crate::spa::Spa;
@@ -24,6 +25,8 @@ pub use crate::spa::Spa;
 /// ```
 ///
 /// [graduated]: https://docs.rs/actix-web/4/actix_web/web/struct.Redirect.html
+#[allow(deprecated)]
+#[deprecated(since = "0.19.0", note = "Type has graduated to Actix Web.")]
 pub fn redirect(from: impl Into<Cow<'static, str>>, to: impl Into<Cow<'static, str>>) -> Redirect {
     Redirect::new(from, to)
 }

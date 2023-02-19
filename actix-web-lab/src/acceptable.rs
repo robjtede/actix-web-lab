@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use actix_web::{
     guard::{Guard, GuardContext},
     http::header::Accept,
