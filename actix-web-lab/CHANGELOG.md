@@ -2,9 +2,13 @@
 
 ## Unreleased - 2022-xx-xx
 
+
+## 0.19.0 - 2023-02-19
+
 - Deprecate `web::Redirect` now it has graduated to Actix Web.
 - Deprecate `guard::Acceptable` now it has graduated to Actix Web.
 - Update `serde_html_form` dependency (which powers the `Query` and `Form` extractors) to `0.2`.
+- Remove `spa` and `cbor` default crate features.
 
 ## 0.18.9 - 2023-01-02
 
