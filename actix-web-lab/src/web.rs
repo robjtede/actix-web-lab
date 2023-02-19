@@ -10,6 +10,8 @@ pub use crate::spa::Spa;
 
 /// Create a relative or absolute redirect.
 ///
+/// _This feature has [graduated to Actix Web][graduated]. Further development will occur there._
+///
 /// See [`Redirect`] docs for usage details.
 ///
 /// # Examples
@@ -20,6 +22,8 @@ pub use crate::spa::Spa;
 /// let app = App::new()
 ///     .service(web_lab::redirect("/one", "/two"));
 /// ```
+///
+/// [graduated]: https://docs.rs/actix-web/4/actix_web/web/struct.Redirect.html
 pub fn redirect(from: impl Into<Cow<'static, str>>, to: impl Into<Cow<'static, str>>) -> Redirect {
     Redirect::new(from, to)
 }

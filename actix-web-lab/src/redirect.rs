@@ -1,5 +1,7 @@
 //! See [`Redirect`] for service/responder documentation.
 
+#![allow(deprecated)]
+
 use std::{borrow::Cow, future::ready};
 
 use actix_web::{
@@ -10,6 +12,8 @@ use actix_web::{
 use tracing::debug;
 
 /// An HTTP service for redirecting one path to another path or URL.
+///
+/// _This feature has [graduated to Actix Web][graduated]. Further development will occur there._
 ///
 /// Redirects are either [relative](Redirect::to) or [absolute](Redirect::to).
 ///
@@ -31,6 +35,7 @@ use tracing::debug;
 /// ```
 ///
 /// [mdn-redirects]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#permanent_redirections
+/// [graduated]: https://docs.rs/actix-web/4/actix_web/web/struct.Redirect.html
 #[deprecated(since = "0.19.0", note = "Type has graduated to Actix Web.")]
 #[derive(Debug, Clone)]
 pub struct Redirect {
