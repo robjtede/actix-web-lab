@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Add `Host` extractor.
 
 ## 0.19.0 - 2023-02-19
 

@@ -67,6 +67,7 @@ use tracing::debug;
 pub struct Query<T>(pub T);
 
 impl_more::impl_deref_and_mut!(<T> in Query<T> => T);
+impl_more::forward_display!(<T> in Query<T>);
 
 impl<T> Query<T> {
     /// Unwrap into inner `T` value.
@@ -90,12 +91,6 @@ impl<T: DeserializeOwned> Query<T> {
         serde_html_form::from_str::<T>(query_str)
             .map(Self)
             .map_err(QueryPayloadError::Deserialize)
-    }
-}
-
-impl<T: fmt::Display> fmt::Display for Query<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
     }
 }
 
@@ -144,10 +139,7 @@ mod tests {
         let mut s = Query::<Id>::from_query(req.query_string()).unwrap();
 
         assert_eq!(s.id, "test");
-        assert_eq!(
-            format!("{s}, {s:?}"),
-            "test, Query(Id { id: \"test\" })"
-        );
+        assert_eq!(format!("{s}, {s:?}"), "test, Query(Id { id: \"test\" })");
 
         s.id = "test1".to_string();
         let s = s.into_inner();
@@ -180,10 +172,7 @@ mod tests {
 
         let mut s = Query::<Id>::from_request(&req, &mut pl).await.unwrap();
         assert_eq!(s.id, "test");
-        assert_eq!(
-            format!("{s}, {s:?}"),
-            "test, Query(Id { id: \"test\" })"
-        );
+        assert_eq!(format!("{s}, {s:?}"), "test, Query(Id { id: \"test\" })");
 
         s.id = "test1".to_string();
         let s = s.into_inner();

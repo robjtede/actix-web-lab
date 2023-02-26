@@ -49,6 +49,7 @@
 - `BodyLimit`: wraps a body extractor and prevents DoS attacks by limiting payload size [(docs)](https://docs.rs/actix-web-lab/0.19.0/actix_web_lab/extract/struct.BodyLimit.html)
 - `Bytes`: simplified Bytes extractor with const-generic limits [(docs)](https://docs.rs/actix-web-lab/0.19.0/actix_web_lab/extract/struct.Bytes.html)
 - `UrlEncodedForm`: URL-encoded form extractor with const-generic payload size limit [(docs)](https://docs.rs/actix-web-lab/0.19.0/actix_web_lab/extract/struct.UrlEncodedForm.html)
+- `Host`: Host information taken from either URL or Host header [(docs)](https://docs.rs/actix-web-lab/0.19.0/actix_web_lab/extract/struct.Host.html)
 
 ### Macros
 
