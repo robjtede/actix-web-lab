@@ -1,9 +1,6 @@
 //! For query parameter extractor documentation, see [`Query`].
 
-use std::{
-    fmt,
-    future::{ready, Ready},
-};
+use std::future::{ready, Ready};
 
 use actix_web::{dev::Payload, error::QueryPayloadError, Error, FromRequest, HttpRequest};
 use serde::de::DeserializeOwned;
