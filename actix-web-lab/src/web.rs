@@ -49,7 +49,6 @@ pub fn redirect(from: impl Into<Cow<'static, str>>, to: impl Into<Cow<'static, s
 ///             .finish()
 ///     );
 /// ```
-#[cfg_attr(docsrs, doc(cfg(feature = "spa")))]
 #[cfg(feature = "spa")]
 pub fn spa() -> Spa {
     Spa::default()

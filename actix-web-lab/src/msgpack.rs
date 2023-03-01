@@ -12,7 +12,6 @@ static MSGPACK_MIME: Lazy<Mime> = Lazy::new(|| "application/msgpack".parse().unw
 /// MessagePack responder.
 ///
 /// If you require the fields to be named, use [`MessagePackNamed`].
-#[cfg_attr(docsrs, doc(cfg(feature = "msgpack")))]
 #[derive(Debug, Deref, DerefMut, Display)]
 pub struct MessagePack<T>(pub T);
 
@@ -30,7 +29,6 @@ impl<T: Serialize> Responder for MessagePack<T> {
 }
 
 /// MessagePack responder with named fields.
-#[cfg_attr(docsrs, doc(cfg(feature = "msgpack")))]
 #[derive(Debug, Deref, DerefMut, Display)]
 pub struct MessagePackNamed<T>(pub T);
 

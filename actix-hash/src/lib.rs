@@ -17,7 +17,7 @@
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs)]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 mod body_hash;
 
@@ -47,7 +47,6 @@ macro_rules! body_hash_alias {
         /// # );
         /// ```
         #[cfg(feature = $feature)]
-        #[cfg_attr(docsrs, doc(cfg(feature = $feature)))]
         pub type $name<T> = BodyHash<T, $digest>;
     };
 }

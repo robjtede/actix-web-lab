@@ -10,7 +10,6 @@ use serde::Serialize;
 static CBOR_MIME: Lazy<Mime> = Lazy::new(|| "application/cbor".parse().unwrap());
 
 /// CBOR responder.
-#[cfg_attr(docsrs, doc(cfg(feature = "cbor")))]
 #[derive(Debug, Deref, DerefMut, Display)]
 pub struct Cbor<T>(pub T);
 
