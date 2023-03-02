@@ -1,12 +1,14 @@
 [workspace]
 members = [
+    "./actix-client-ip-cloudflare",
     "./actix-hash",
-    "./actix-web-lab",
     "./actix-web-lab-derive",
+    "./actix-web-lab",
 ]
 resolver = "2"
 
 [patch.crates-io]
+actix-client-ip-cloudflare = { path = "./actix-client-ip-cloudflare" }
 actix-hash = { path = "./actix-hash" }
 actix-web-lab = { path = "./actix-web-lab" }
 actix-web-lab-derive = { path = "./actix-web-lab-derive" }
