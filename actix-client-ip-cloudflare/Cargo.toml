@@ -35,3 +35,7 @@ tracing = { version = "0.1.30", features = ["log"] }
 [dev-dependencies]
 actix-web = "4"
 env_logger = "0.10"
+
+[[example]]
+name = "fetch_ips"
+required-features = ["fetch-ips"]

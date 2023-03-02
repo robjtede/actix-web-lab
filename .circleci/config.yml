@@ -65,6 +65,9 @@ jobs:
             - './target'
 
 workflows:
-  version: 2
   all_checks:
-    jobs: [clippy, test, doc-test, feature-checks]
+    jobs:
+      - clippy
+      - test
+      - doc-test
+      - feature-checks
