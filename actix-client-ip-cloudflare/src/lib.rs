@@ -12,5 +12,7 @@ mod header_v4;
 // mod header_v6;
 
 pub use self::extract::TrustedClientIp;
+#[cfg(feature = "fetch-ips")]
 pub use self::fetch_cf_ips::fetch_trusted_cf_ips;
+pub use self::fetch_cf_ips::{TrustedIps, CF_URL_IPS};
 pub use self::header_v4::CfConnectingIp;
