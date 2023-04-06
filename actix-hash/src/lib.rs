@@ -3,8 +3,9 @@
 //! # Crate Features
 //! All features are enabled by default.
 //! - `blake2`: Blake2 types
-//! - `md4`: MD4 types 🚩
+//! - `blake3`: Blake3 types
 //! - `md5`: MD5 types 🚩
+//! - `md4`: MD4 types 🚩
 //! - `sha1`: SHA-1 types 🚩
 //! - `sha2`: SHA-2 types
 //! - `sha3`: SHA-3 types
@@ -71,3 +72,6 @@ body_hash_alias!(BodySha3_512, sha3::Sha3_512, "sha3", "SHA-3-512", 64);
 // Blake2
 body_hash_alias!(BodyBlake2b, blake2::Blake2b512, "blake2", "Blake2b", 64);
 body_hash_alias!(BodyBlake2s, blake2::Blake2s256, "blake2", "Blake2s", 32);
+
+// Blake3
+body_hash_alias!(BodyBlake3, blake3::Hasher, "blake3", "Blake3", 32);
