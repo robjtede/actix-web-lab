@@ -2,6 +2,8 @@
 
 ## Unreleased - 2022-xx-xx
 
+## 0.5.0 - 2023-04-06
+
 - Add `BodyBlake3` extractor.
 - Minimum supported Rust version (MSRV) is now 1.64.
 
