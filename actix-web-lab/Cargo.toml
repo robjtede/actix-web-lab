@@ -78,7 +78,6 @@ hex = "0.4"
 hex-literal = "0.4"
 hmac = { version = "0.12", features = ["reset"] }
 rand = "0.8"
-rustls = "0.20" # 0.21 blocked on actix-web
 rustls-pemfile = "1"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
@@ -86,6 +85,8 @@ static_assertions = "1.1"
 time = { version = "0.3", features = ["formatting"] }
 tokio = { version = "1.18.5", features = ["full"] }
 tokio-util = { version = "0.7", features = ["compat"] }
+
+rustls = "0.20" # 0.21 blocked on actix-web
 
 [[example]]
 name = "cbor"
