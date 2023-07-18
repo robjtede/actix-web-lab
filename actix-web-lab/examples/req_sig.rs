@@ -9,6 +9,7 @@ use actix_web::{
 };
 use actix_web_lab::extract::{RequestSignature, RequestSignatureScheme};
 use async_trait::async_trait;
+use base64::prelude::*;
 use digest::{CtOutput, Digest, Mac};
 use generic_array::GenericArray;
 use hmac::SimpleHmac;
@@ -29,7 +30,7 @@ async fn get_base64_api_key(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
         .headers()
         .get("Api-Key")
         .map(HeaderValue::as_bytes)
-        .map(base64::decode)
+        .map(|bytes| BASE64_STANDARD.decode(bytes))
         .transpose()
         .map_err(|_| error::ErrorInternalServerError("invalid api key"))?
         .ok_or_else(|| error::ErrorUnauthorized("api key not provided"))?;
@@ -45,7 +46,7 @@ fn get_user_signature(req: &HttpRequest) -> actix_web::Result<Vec<u8>> {
     req.headers()
         .get("Signature")
         .map(HeaderValue::as_bytes)
-        .map(base64::decode)
+        .map(|bytes| BASE64_STANDARD.decode(bytes))
         .transpose()
         .map_err(|_| error::ErrorInternalServerError("invalid signature"))?
         .ok_or_else(|| error::ErrorUnauthorized("signature not provided"))

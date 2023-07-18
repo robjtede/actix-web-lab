@@ -9,11 +9,12 @@ use actix_web::{
     App, HttpResponse, HttpServer, Responder,
 };
 use actix_web_lab::body;
-use async_zip::{write::ZipFileWriter, ZipEntryBuilder};
+use async_zip::{tokio::write::ZipFileWriter, ZipEntryBuilder};
 use tokio::{
     fs,
     io::{AsyncWrite, AsyncWriteExt as _},
 };
+use tokio_util::compat::TokioAsyncWriteCompatExt as _;
 
 fn zip_to_io_err(err: async_zip::error::ZipError) -> io::Error {
     io::Error::new(io::ErrorKind::Other, err)
@@ -41,7 +42,7 @@ where
             .open(entry.path())
             .await
         {
-            Ok(file) => file,
+            Ok(file) => file.compat_write(),
             Err(_) => continue, // we can't read the file
         };
 
@@ -52,13 +53,13 @@ where
 
         let mut entry = zipper
             .write_entry_stream(ZipEntryBuilder::new(
-                filename,
+                filename.into(),
                 async_zip::Compression::Deflate,
             ))
             .await
             .map_err(zip_to_io_err)?;
 
-        tokio::io::copy(&mut file, &mut entry).await?;
+        futures_util::io::copy(&mut file, &mut entry).await?;
         entry.close().await.map_err(zip_to_io_err)?;
     }
 
@@ -71,8 +72,8 @@ async fn index() -> impl Responder {
 
     // allow response to be started while this is processing
     #[allow(clippy::let_underscore_future)]
-    let _ = tokio::spawn(async move {
-        let mut zipper = async_zip::write::ZipFileWriter::new(wrt);
+    let _ = actix_web::rt::spawn(async move {
+        let mut zipper = ZipFileWriter::new(wrt.compat_write());
 
         if let Err(err) = read_dir(&mut zipper).await {
             tracing::warn!("Failed to write files from directory to zip: {err}")
