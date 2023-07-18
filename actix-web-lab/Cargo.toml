@@ -10,7 +10,7 @@ categories = [
     "web-programming::http-server",
     "web-programming::websocket",
 ]
-repository = "https://github.com/robjtede/actix-web-lab.git"
+repository = "https://github.com/robjtede/actix-web-lab"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 rust-version = "1.64"
