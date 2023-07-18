@@ -21,7 +21,7 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1"
 quote = "1"
-syn = { version = "1", features = ["full", "parsing"] }
+syn = { version = "2", features = ["full", "parsing"] }
 
 [dev-dependencies]
 actix-web-lab = "=0.19.1"

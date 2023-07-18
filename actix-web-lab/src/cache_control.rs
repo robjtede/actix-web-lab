@@ -348,13 +348,13 @@ mod tests {
 crate::test::header_test_module! {
     CacheControl,
     test_parse_and_format {
-        header_round_trip_test!(no_headers, vec![b""; 0], None);
-        header_round_trip_test!(empty_header, vec![b""; 1], None);
-        header_round_trip_test!(bad_syntax, vec![b"foo="], None);
+        header_round_trip_test!(no_headers, [b""; 0], None);
+        header_round_trip_test!(empty_header, [b""; 1], None);
+        header_round_trip_test!(bad_syntax, [b"foo="], None);
 
         header_round_trip_test!(
             multiple_headers,
-            vec![&b"no-cache"[..], &b"private"[..]],
+            [&b"no-cache"[..], &b"private"[..]],
             Some(CacheControl(vec![
                 CacheDirective::NoCache,
                 CacheDirective::Private,
@@ -363,7 +363,7 @@ crate::test::header_test_module! {
 
         header_round_trip_test!(
             argument,
-            vec![b"max-age=100, private"],
+            [b"max-age=100, private"],
             Some(CacheControl(vec![
                 CacheDirective::MaxAge(100),
                 CacheDirective::Private,
@@ -372,7 +372,7 @@ crate::test::header_test_module! {
 
         header_round_trip_test!(
             immutable,
-            vec![b"public, max-age=604800, immutable"],
+            [b"public, max-age=604800, immutable"],
             Some(CacheControl(vec![
                 CacheDirective::Public,
                 CacheDirective::MaxAge(604800),
@@ -382,7 +382,7 @@ crate::test::header_test_module! {
 
         header_round_trip_test!(
             stale_if_while,
-            vec![b"must-understand, stale-while-revalidate, stale-if-error"],
+            [b"must-understand, stale-while-revalidate, stale-if-error"],
             Some(CacheControl(vec![
                 CacheDirective::MustUnderstand,
                 CacheDirective::StaleWhileRevalidate,
@@ -392,7 +392,7 @@ crate::test::header_test_module! {
 
         header_round_trip_test!(
             extension,
-            vec![b"foo, bar=baz"],
+            [b"foo, bar=baz"],
             Some(CacheControl(vec![
                 CacheDirective::Extension("foo".to_owned(), None),
                 CacheDirective::Extension("bar".to_owned(), Some("baz".to_owned())),

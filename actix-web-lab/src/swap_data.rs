@@ -15,7 +15,7 @@ pub struct SwapData<T> {
     swap: Arc<ArcSwap<T>>,
 }
 
-impl<T> SwapData<T> {
+impl<T: Send + Sync> SwapData<T> {
     /// Constructs new swappable data item.
     pub fn new(item: T) -> Self {
         Self {

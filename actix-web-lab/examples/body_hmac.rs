@@ -17,7 +17,7 @@ use tracing::info;
 struct AbcSigningKey([u8; 32]);
 
 /// Grabs variable signing key from app data.
-async fn get_signing_key<Key>(req: &HttpRequest) -> actix_web::Result<[u8; 32]> {
+async fn get_signing_key(req: &HttpRequest) -> actix_web::Result<[u8; 32]> {
     let key = Data::<AbcSigningKey>::extract(req).into_inner()?.0;
     Ok(key)
 }
@@ -34,7 +34,7 @@ impl RequestSignatureScheme for AbcApi {
     type Error = Error;
 
     async fn init(req: &HttpRequest) -> Result<Self, Self::Error> {
-        let key = get_signing_key::<AbcSigningKey>(req).await?;
+        let key = get_signing_key(req).await?;
 
         Ok(Self {
             hmac: SimpleHmac::new_from_slice(&key).unwrap(),
