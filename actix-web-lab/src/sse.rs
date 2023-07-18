@@ -516,9 +516,8 @@ mod tests {
     use futures_util::{future::poll_fn, stream, task::noop_waker, FutureExt as _, StreamExt as _};
     use tokio::time::sleep;
 
-    use crate::assert_response_matches;
-
     use super::*;
+    use crate::assert_response_matches;
 
     #[test]
     fn format_retry_message() {

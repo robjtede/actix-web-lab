@@ -61,7 +61,7 @@ pub struct UrlEncodedForm<T, const LIMIT: usize = DEFAULT_URL_ENCODED_FORM_LIMIT
 mod waiting_on_derive_more_to_start_using_syn_2_due_to_proc_macro_panic {
     use super::*;
 
-    impl<T: std::ops::Deref, const LIMIT: usize> std::ops::Deref for UrlEncodedForm<T, LIMIT> {
+    impl<T, const LIMIT: usize> std::ops::Deref for UrlEncodedForm<T, LIMIT> {
         type Target = T;
 
         fn deref(&self) -> &Self::Target {
@@ -69,7 +69,7 @@ mod waiting_on_derive_more_to_start_using_syn_2_due_to_proc_macro_panic {
         }
     }
 
-    impl<T: std::ops::DerefMut, const LIMIT: usize> std::ops::DerefMut for UrlEncodedForm<T, LIMIT> {
+    impl<T, const LIMIT: usize> std::ops::DerefMut for UrlEncodedForm<T, LIMIT> {
         fn deref_mut(&mut self) -> &mut Self::Target {
             &mut self.0
         }

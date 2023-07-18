@@ -1,0 +1,6 @@
+singleQuote: true
+overrides:
+  - files: '*.md'
+    options:
+      printWidth: 9999
+      proseWrap: never
