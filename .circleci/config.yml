@@ -2,7 +2,7 @@ version: 2.1
 
 jobs:
   clippy:
-    docker: [image: cimg/rust:1.64.0]
+    docker: [image: cimg/rust:1.70.0]
     steps:
       - checkout
       - run: cargo --version
@@ -15,7 +15,7 @@ jobs:
             - './target'
 
   test:
-    docker: [image: cimg/rust:1.64.0]
+    docker: [image: cimg/rust:1.70.0]
     steps:
       - checkout
       - run: cargo --version
@@ -32,7 +32,7 @@ jobs:
             - './target'
 
   doc-test:
-    docker: [image: cimg/rust:1.64.0]
+    docker: [image: cimg/rust:1.70.0]
     steps:
       - checkout
       - run: cargo --version
@@ -46,7 +46,7 @@ jobs:
             - './target'
 
   feature-checks:
-    docker: [image: cimg/rust:1.64.0]
+    docker: [image: cimg/rust:1.70.0]
     steps:
       - checkout
       - run: cargo --version
@@ -59,7 +59,7 @@ jobs:
       - run: cargo hack --each-feature check
       - run: cargo hack --each-feature check --all-targets
       - save_cache:
-          key: doc-test-cache
+          key: feature-checks-cache
           paths:
             - '~/.cargo'
             - './target'
