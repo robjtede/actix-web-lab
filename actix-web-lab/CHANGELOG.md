@@ -2,6 +2,8 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Expose `extract::DEFAULT_BODY_LIMIT`.
+
 ## 0.19.1 - 2023-02-26
 
 - Add `Host` extractor.

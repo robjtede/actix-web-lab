@@ -11,7 +11,7 @@ use std::{
 use actix_web::{
     dev, http::StatusCode, web, Error, FromRequest, HttpMessage, HttpRequest, ResponseError,
 };
-use derive_more::{AsMut, AsRef, Deref, DerefMut, Display, Error};
+use derive_more::{Display, Error};
 use futures_core::Stream as _;
 use tracing::debug;
 
@@ -50,8 +50,39 @@ pub const DEFAULT_BYTES_LIMIT: usize = 4_194_304;
 ///     format!("Payload up to 32MiB: {info:?}!")
 /// }
 /// ```
-#[derive(Debug, Deref, DerefMut, AsRef, AsMut)]
+#[derive(Debug)]
+// #[derive(Debug, Deref, DerefMut, AsRef, AsMut)]
 pub struct Bytes<const LIMIT: usize = DEFAULT_BYTES_LIMIT>(pub web::Bytes);
+
+mod waiting_on_derive_more_to_start_using_syn_2_due_to_proc_macro_panic {
+    use super::*;
+
+    impl<const LIMIT: usize> std::ops::Deref for Bytes<LIMIT> {
+        type Target = web::Bytes;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl<const LIMIT: usize> std::ops::DerefMut for Bytes<LIMIT> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl<const LIMIT: usize> AsRef<web::Bytes> for Bytes<LIMIT> {
+        fn as_ref(&self) -> &web::Bytes {
+            &self.0
+        }
+    }
+
+    impl<const LIMIT: usize> AsMut<web::Bytes> for Bytes<LIMIT> {
+        fn as_mut(&mut self) -> &mut web::Bytes {
+            &mut self.0
+        }
+    }
+}
 
 impl<const LIMIT: usize> Bytes<LIMIT> {
     /// Unwraps into inner `Bytes`.
@@ -186,9 +217,7 @@ impl<const LIMIT: usize> Future for BytesBody<LIMIT> {
 #[non_exhaustive]
 pub enum BytesPayloadError {
     /// Payload size is bigger than allowed & content length header set. (default: 4MiB)
-    #[display(
-        fmt = "Payload ({length} bytes) is larger than allowed (limit: {limit} bytes)."
-    )]
+    #[display(fmt = "Payload ({length} bytes) is larger than allowed (limit: {limit} bytes).")]
     OverflowKnownLength { length: usize, limit: usize },
 
     /// Payload size is bigger than allowed but no content length header set. (default: 4MiB)

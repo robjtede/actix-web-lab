@@ -13,7 +13,7 @@ use actix_web::{
     dev::{self, Payload},
     FromRequest, HttpMessage as _, HttpRequest, ResponseError,
 };
-use derive_more::{AsRef, Display, From};
+use derive_more::Display;
 use futures_core::Stream as _;
 
 use crate::header::ContentLength;
@@ -37,9 +37,31 @@ pub const DEFAULT_BODY_LIMIT: usize = 2_097_152;
 ///     body
 /// }
 /// ```
-#[derive(Debug, PartialEq, Eq, AsRef, Display, From)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct BodyLimit<T, const LIMIT: usize = DEFAULT_BODY_LIMIT> {
     inner: T,
+}
+
+mod waiting_on_derive_more_to_start_using_syn_2_due_to_proc_macro_panic {
+    use super::*;
+
+    impl<T: std::fmt::Display, const LIMIT: usize> std::fmt::Display for BodyLimit<T, LIMIT> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            std::fmt::Display::fmt(&self.inner, f)
+        }
+    }
+
+    impl<T, const LIMIT: usize> AsRef<T> for BodyLimit<T, LIMIT> {
+        fn as_ref(&self) -> &T {
+            &self.inner
+        }
+    }
+
+    impl<T, const LIMIT: usize> From<T> for BodyLimit<T, LIMIT> {
+        fn from(inner: T) -> Self {
+            Self { inner }
+        }
+    }
 }
 
 impl<T, const LIMIT: usize> BodyLimit<T, LIMIT> {

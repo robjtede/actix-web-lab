@@ -4,7 +4,7 @@
 pub type SharedData<T> = actix_web::web::Data<T>;
 
 pub use crate::{
-    body_limit::BodyLimit,
+    body_limit::{BodyLimit, DEFAULT_BODY_LIMIT},
     bytes::{Bytes, DEFAULT_BYTES_LIMIT},
     host::Host,
     json::{Json, DEFAULT_JSON_LIMIT},

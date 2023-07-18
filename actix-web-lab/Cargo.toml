@@ -16,8 +16,8 @@ edition = "2021"
 rust-version = "1.64"
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 default = ["derive"]
@@ -41,7 +41,7 @@ arc-swap = "1.1"
 async-trait = "0.1"
 csv = "1.1"
 bytes = "1"
-derive_more = "0.99.8"
+derive_more = { version = "0.99.8", features = ["nightly"] }
 futures-core = "0.3.17"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 http = "0.2.7"
