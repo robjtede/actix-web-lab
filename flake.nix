@@ -13,7 +13,7 @@
         devShells.default = pkgs.mkShell {
           packages = [
             config.formatter
-            pkgs.nodePackages.prettier
+            inputs'.nixpkgs-unstable.legacyPackages.nodePackages.prettier
             pkgs.taplo
             pkgs.just
           ] ++ lib.optional pkgs.stdenv.isDarwin [
