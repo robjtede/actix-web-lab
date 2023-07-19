@@ -4,7 +4,12 @@ version = "0.19.0"
 description = "Experimental macros for Actix Web"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 keywords = ["actix", "http", "web", "framework", "async"]
-categories = ["network-programming", "asynchronous", "web-programming::http-server", "web-programming::websocket"]
+categories = [
+  "network-programming",
+  "asynchronous",
+  "web-programming::http-server",
+  "web-programming::websocket",
+]
 repository = "https://github.com/robjtede/actix-web-lab"
 license = "MIT OR Apache-2.0"
 edition = "2021"

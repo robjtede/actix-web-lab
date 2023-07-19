@@ -2,7 +2,7 @@ exclude = ["target/*"]
 include = ["**/*.toml"]
 
 [formatting]
-column_width = 140
+column_width = 100
 
 [[rule]]
 include = ["**/Cargo.toml"]

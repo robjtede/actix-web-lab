@@ -1,5 +1,10 @@
 [workspace]
-members = ["./actix-client-ip-cloudflare", "./actix-hash", "./actix-web-lab-derive", "./actix-web-lab"]
+members = [
+  "./actix-client-ip-cloudflare",
+  "./actix-hash",
+  "./actix-web-lab-derive",
+  "./actix-web-lab",
+]
 resolver = "2"
 
 [patch.crates-io]
