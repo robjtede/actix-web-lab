@@ -12,8 +12,7 @@ use actix_web::{
 };
 use actix_web_lab::extract::{Json, RequestSignature, RequestSignatureScheme};
 use async_trait::async_trait;
-use bytes::{BufMut as _, BytesMut};
-use ed25519_dalek::{PublicKey, Signature, Verifier as _};
+use ed25519_dalek::{PublicKey, Signature, StreamVerifier};
 use hex_literal::hex;
 use once_cell::sync::Lazy;
 use rustls::{Certificate, PrivateKey, ServerConfig};
@@ -28,13 +27,16 @@ static TS_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-timestamp"
 static APP_PUBLIC_KEY: Lazy<PublicKey> =
     Lazy::new(|| PublicKey::from_bytes(APP_PUBLIC_KEY_BYTES).unwrap());
 
+/// Signature scheme for Discord interactions/webhooks.
+///
+/// Verification is done in `finalize` so this does not support optional verification.
 #[derive(Debug)]
 struct DiscordWebhook {
     /// Signature taken from webhook request header.
     candidate_signature: Signature,
 
-    /// Cloned payload state.
-    chunks: Vec<Bytes>,
+    /// Signature verifier.
+    verifier: StreamVerifier,
 }
 
 impl DiscordWebhook {
@@ -63,7 +65,7 @@ impl DiscordWebhook {
 
 #[async_trait(?Send)]
 impl RequestSignatureScheme for DiscordWebhook {
-    type Signature = (BytesMut, Signature);
+    type Signature = Signature;
 
     type Error = Error;
 
@@ -71,42 +73,36 @@ impl RequestSignatureScheme for DiscordWebhook {
         let ts = Self::get_timestamp(req)?.to_owned();
         let candidate_signature = Self::get_signature(req)?;
 
+        let mut verifier = APP_PUBLIC_KEY
+            .verify_stream(&candidate_signature)
+            .map_err(error::ErrorBadRequest)?;
+
+        verifier.update(ts);
+
         Ok(Self {
             candidate_signature,
-            chunks: vec![Bytes::from(ts)],
+            verifier,
         })
     }
 
     async fn consume_chunk(&mut self, _req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error> {
-        self.chunks.push(chunk);
+        self.verifier.update(chunk);
         Ok(())
     }
 
     async fn finalize(self, _req: &HttpRequest) -> Result<Self::Signature, Self::Error> {
-        let buf_len = self.chunks.iter().map(|chunk| chunk.len()).sum();
-        let mut buf = BytesMut::with_capacity(buf_len);
+        self.verifier.finalize_and_verify().map_err(|_| {
+            error::ErrorUnauthorized("given signature does not match calculated signature")
+        })?;
 
-        for chunk in self.chunks {
-            buf.put(chunk);
-        }
-
-        Ok((buf, self.candidate_signature))
+        Ok(self.candidate_signature)
     }
 
     fn verify(
-        (payload, candidate_signature): Self::Signature,
+        signature: Self::Signature,
         _req: &HttpRequest,
     ) -> Result<Self::Signature, Self::Error> {
-        if APP_PUBLIC_KEY
-            .verify(&payload, &candidate_signature)
-            .is_ok()
-        {
-            Ok((payload, candidate_signature))
-        } else {
-            Err(error::ErrorUnauthorized(
-                "given signature does not match calculated signature",
-            ))
-        }
+        Ok(signature)
     }
 }
 
@@ -124,6 +120,7 @@ async fn main() -> io::Result<()> {
                     let (Json(form), _) = body.into_parts();
                     println!("{}", serde_json::to_string_pretty(&form).unwrap());
 
+                    // reply with PONG code
                     web::Json(serde_json::json!({
                         "type": 1
                     }))
