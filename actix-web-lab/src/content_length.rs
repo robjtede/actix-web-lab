@@ -2,6 +2,8 @@
 //!
 //! See [`ContentLength`] docs.
 
+#![allow(deprecated)]
+
 use std::{convert::Infallible, str};
 
 use actix_web::{
@@ -14,6 +16,8 @@ use actix_web::{
 
 /// `Content-Length` header, defined in [RFC 9110 §8.6].
 ///
+/// _This feature has [graduated to Actix Web][graduated]. Further development will occur there._
+///
 /// The "Content-Length" header field indicates the associated representation's data length as a
 /// decimal non-negative integer number of octets.
 ///
@@ -23,6 +27,8 @@ use actix_web::{
 /// ```
 ///
 /// [RFC 9110 §8.6]: https://www.rfc-editor.org/rfc/rfc9110#name-content-length
+/// [graduated]: https://docs.rs/actix-web/4/actix_web/web/struct.Redirect.html
+#[deprecated(since = "0.19.2", note = "Type has graduated to Actix Web.")]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ContentLength(usize);
 
