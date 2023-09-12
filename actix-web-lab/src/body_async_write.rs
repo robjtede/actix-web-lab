@@ -16,15 +16,13 @@ use tokio::{
 /// # Examples
 /// ```
 /// # use actix_web::{HttpResponse, web};
-/// use tokio::io::AsyncWriteExt as _;
 /// use actix_web_lab::body;
+/// use tokio::io::AsyncWriteExt as _;
 ///
 /// # async fn index() {
 /// let (mut wrt, body) = body::writer();
 ///
-/// let _ = tokio::spawn(async move {
-///     wrt.write_all(b"body from another thread").await
-/// });
+/// let _ = tokio::spawn(async move { wrt.write_all(b"body from another thread").await });
 ///
 /// HttpResponse::Ok().body(body)
 /// # ;}

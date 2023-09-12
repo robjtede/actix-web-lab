@@ -14,8 +14,7 @@ use crate::middleware_from_fn::Next;
 /// # use actix_web::App;
 /// use actix_web_lab::middleware::{from_fn, redirect_to_www};
 ///
-/// App::new()
-///     .wrap(from_fn(redirect_to_www))
+/// App::new().wrap(from_fn(redirect_to_www))
 ///     # ;
 /// ```
 pub async fn redirect_to_www(

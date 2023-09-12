@@ -21,6 +21,7 @@ const SECS_IN_YEAR: u64 = 3600 * 24 * 365;
 /// parts of your site in an unusable state.
 ///
 /// # `Default`
+///
 /// The `Default` implementation uses a 5 minute `max-age` and does not include subdomains or
 /// preloading. This default is intentionally conservative to prevent accidental misconfiguration
 /// causing irrecoverable problems for users.
@@ -29,6 +30,7 @@ const SECS_IN_YEAR: u64 = 3600 * 24 * 365;
 /// can be used as a secure default for production.
 ///
 /// # References
+///
 /// See the [HSTS page on MDN] for more information.
 ///
 /// [HSTS page on MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security

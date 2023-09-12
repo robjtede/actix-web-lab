@@ -30,7 +30,7 @@ use tracing::debug;
 ///     .service(web_lab::Redirect::new("/duck", "https://duckduckgo.com/"))
 ///     .service(
 ///         // redirect "/api/old" to "/api/new" using `web::redirect` helper
-///         web::scope("/api").service(web_lab::redirect("/old", "/new"))
+///         web::scope("/api").service(web_lab::redirect("/old", "/new")),
 ///     );
 /// ```
 ///
@@ -110,12 +110,10 @@ impl Redirect {
     /// # use actix_web::http::StatusCode;
     /// # use actix_web_lab::web::Redirect;
     /// // redirects would use "301 Moved Permanently" status code
-    /// Redirect::new("/old", "/new")
-    ///     .using_status_code(StatusCode::MOVED_PERMANENTLY);
+    /// Redirect::new("/old", "/new").using_status_code(StatusCode::MOVED_PERMANENTLY);
     ///
     /// // redirects would use "302 Found" status code
-    /// Redirect::new("/old", "/new")
-    ///     .using_status_code(StatusCode::FOUND);
+    /// Redirect::new("/old", "/new").using_status_code(StatusCode::FOUND);
     /// ```
     pub fn using_status_code(mut self, status: StatusCode) -> Self {
         self.status_code = status;

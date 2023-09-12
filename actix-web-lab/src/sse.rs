@@ -3,7 +3,8 @@
 //! # Examples
 //! ```no_run
 //! use std::{convert::Infallible, time::Duration};
-//! use actix_web::{Responder, get};
+//!
+//! use actix_web::{get, Responder};
 //! use actix_web_lab::sse;
 //!
 //! #[get("/from-channel")]
@@ -12,19 +13,20 @@
 //!
 //!     // note: sender will typically be spawned or handed off somewhere else
 //!     let _ = sender.send(sse::Event::Comment("my comment".into())).await;
-//!     let _ = sender.send(sse::Data::new("my data").event("chat_msg")).await;
+//!     let _ = sender
+//!         .send(sse::Data::new("my data").event("chat_msg"))
+//!         .await;
 //!
 //!     sse_stream.with_retry_duration(Duration::from_secs(10))
 //! }
 //!
 //! #[get("/from-stream")]
 //! async fn from_stream() -> impl Responder {
-//!     let event_stream = futures_util::stream::iter([
-//!         Ok::<_, Infallible>(sse::Event::Data(sse::Data::new("foo"))),
-//!     ]);
+//!     let event_stream = futures_util::stream::iter([Ok::<_, Infallible>(sse::Event::Data(
+//!         sse::Data::new("foo"),
+//!     ))]);
 //!
-//!     sse::Sse::from_stream(event_stream)
-//!         .with_keep_alive(Duration::from_secs(5))
+//!     sse::Sse::from_stream(event_stream).with_keep_alive(Duration::from_secs(5))
 //! }
 //! ```
 //!
@@ -110,10 +112,11 @@ pub type SseTrySendError = TrySendError;
 /// ```
 /// # #[actix_web::main] async fn test() {
 /// use std::convert::Infallible;
+///
 /// use actix_web::body;
-/// use serde::Serialize;
-/// use futures_util::stream;
 /// use actix_web_lab::sse;
+/// use futures_util::stream;
+/// use serde::Serialize;
 ///
 /// #[derive(serde::Serialize)]
 /// struct Foo {
@@ -122,7 +125,9 @@ pub type SseTrySendError = TrySendError;
 ///
 /// let sse = sse::Sse::from_stream(stream::iter([
 ///     Ok::<_, Infallible>(sse::Event::Data(sse::Data::new("foo"))),
-///     Ok::<_, Infallible>(sse::Event::Data(sse::Data::new_json(Foo { bar: 42 }).unwrap())),
+///     Ok::<_, Infallible>(sse::Event::Data(
+///         sse::Data::new_json(Foo { bar: 42 }).unwrap(),
+///     )),
 /// ]));
 ///
 /// assert_eq!(

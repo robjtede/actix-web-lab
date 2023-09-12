@@ -10,7 +10,7 @@ use syn::{parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, 
 ///
 /// # Examples
 /// ```
-/// use actix_web::{Responder, http, get, web};
+/// use actix_web::{get, http, web, Responder};
 /// use actix_web_lab::FromRequest;
 ///
 /// #[derive(Debug, FromRequest)]

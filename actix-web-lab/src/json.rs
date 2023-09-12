@@ -33,7 +33,7 @@ pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
 ///
 /// ```
 /// use actix_web::{post, App};
-/// use actix_web_lab::extract::{DEFAULT_JSON_LIMIT, Json};
+/// use actix_web_lab::extract::{Json, DEFAULT_JSON_LIMIT};
 /// use serde::Deserialize;
 ///
 /// #[derive(Deserialize)]

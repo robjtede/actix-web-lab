@@ -8,19 +8,20 @@ use tracing::trace;
 /// Single Page App (SPA) service builder.
 ///
 /// # Examples
-// TODO: as of july 2022 this doc test is causing CI failures
-/// ```ignore
+///
+/// ```no_run
 /// # use actix_web::App;
 /// # use actix_web_lab::web::spa;
-/// let app = App::new()
+/// App::new()
 ///     // ...api routes...
 ///     .service(
 ///         spa()
 ///             .index_file("./examples/assets/spa.html")
 ///             .static_resources_mount("/static")
 ///             .static_resources_location("./examples/assets")
-///             .finish()
-///     );
+///             .finish(),
+///     )
+/// # ;
 /// ```
 #[derive(Debug, Clone)]
 pub struct Spa {

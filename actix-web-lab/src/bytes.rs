@@ -34,7 +34,7 @@ pub const DEFAULT_BYTES_LIMIT: usize = 4_194_304;
 /// # Examples
 /// ```
 /// use actix_web::{post, App};
-/// use actix_web_lab::extract::{DEFAULT_BYTES_LIMIT, Bytes};
+/// use actix_web_lab::extract::{Bytes, DEFAULT_BYTES_LIMIT};
 ///
 /// /// Deserialize `Info` from request's body.
 /// #[post("/")]

@@ -40,7 +40,7 @@ use regex::Regex;
 ///
 /// # Examples
 /// ```
-/// use actix_web::{web, middleware, App};
+/// use actix_web::{middleware, web, App};
 ///
 /// # actix_web::rt::System::new().block_on(async {
 /// let app = App::new()
@@ -48,8 +48,10 @@ use regex::Regex;
 ///     .route("/test", web::get().to(|| async { "test" }))
 ///     .route("/unmatchable/", web::get().to(|| async { "unmatchable" }));
 ///
-/// use actix_web::http::StatusCode;
-/// use actix_web::test::{call_service, init_service, TestRequest};
+/// use actix_web::{
+///     http::StatusCode,
+///     test::{call_service, init_service, TestRequest},
+/// };
 ///
 /// let app = init_service(app).await;
 ///

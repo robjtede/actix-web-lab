@@ -26,15 +26,14 @@ use futures_util::FutureExt as _;
 /// # use actix_web::App;
 /// use actix_web_lab::middleware::CatchPanic;
 ///
-/// App::new()
-///     .wrap(CatchPanic::default())
+/// App::new().wrap(CatchPanic::default())
 ///     # ;
 /// ```
 ///
 /// ```no_run
 /// # use actix_web::App;
 /// use actix_web::middleware::{Logger, NormalizePath};
-/// use actix_web_lab::middleware::{CatchPanic};
+/// use actix_web_lab::middleware::CatchPanic;
 ///
 /// // recommended wrap order
 /// App::new()

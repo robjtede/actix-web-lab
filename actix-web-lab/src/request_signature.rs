@@ -43,10 +43,10 @@ use tracing::trace;
 /// This example implementation does a simple HMAC calculation on the body using a static key.
 /// It does not implement verification.
 /// ```
-/// use actix_web::{Error, HttpRequest, web::Bytes};
+/// use actix_web::{web::Bytes, Error, HttpRequest};
 /// use actix_web_lab::extract::RequestSignatureScheme;
 /// use async_trait::async_trait;
-/// use hmac::{SimpleHmac, Mac, digest::CtOutput};
+/// use hmac::{digest::CtOutput, Mac, SimpleHmac};
 /// use sha2::Sha256;
 ///
 /// struct AbcApi {
@@ -69,7 +69,11 @@ use tracing::trace;
 ///         Ok(AbcApi { hmac })
 ///     }
 ///
-///     async fn consume_chunk(&mut self, _req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error> {
+///     async fn consume_chunk(
+///         &mut self,
+///         _req: &HttpRequest,
+///         chunk: Bytes,
+///     ) -> Result<(), Self::Error> {
 ///         // digest body chunk
 ///         self.hmac.update(&chunk);
 ///         Ok(())

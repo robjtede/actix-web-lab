@@ -37,11 +37,11 @@ use tracing::debug;
 ///
 /// #[derive(Debug, Deserialize)]
 /// pub struct LogsParams {
-///    #[serde(rename = "type")]
-///    log_type: u64,
+///     #[serde(rename = "type")]
+///     log_type: u64,
 ///
-///    #[serde(rename = "user")]
-///    users: Vec<String>,
+///     #[serde(rename = "user")]
+///     users: Vec<String>,
 /// }
 ///
 /// // Deserialize `LogsParams` struct from query string.
@@ -80,6 +80,7 @@ impl<T: DeserializeOwned> Query<T> {
     /// # use std::collections::HashMap;
     /// # use actix_web_lab::extract::Query;
     /// let numbers = Query::<HashMap<String, u32>>::from_query("one=1&two=2").unwrap();
+    ///
     /// assert_eq!(numbers.get("one"), Some(&1));
     /// assert_eq!(numbers.get("two"), Some(&2));
     /// assert!(numbers.get("three").is_none());

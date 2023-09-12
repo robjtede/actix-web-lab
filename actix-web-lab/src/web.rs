@@ -20,8 +20,7 @@ pub use crate::spa::Spa;
 /// use actix_web::App;
 /// use actix_web_lab::web as web_lab;
 ///
-/// let app = App::new()
-///     .service(web_lab::redirect("/one", "/two"));
+/// let app = App::new().service(web_lab::redirect("/one", "/two"));
 /// ```
 ///
 /// [graduated]: https://docs.rs/actix-web/4/actix_web/web/struct.Redirect.html
@@ -46,7 +45,7 @@ pub fn redirect(from: impl Into<Cow<'static, str>>, to: impl Into<Cow<'static, s
 ///             .index_file("./examples/assets/spa.html")
 ///             .static_resources_mount("/static")
 ///             .static_resources_location("./examples/assets")
-///             .finish()
+///             .finish(),
 ///     );
 /// ```
 #[cfg(feature = "spa")]

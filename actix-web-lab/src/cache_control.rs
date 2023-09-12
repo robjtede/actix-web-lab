@@ -39,14 +39,20 @@ use derive_more::{Deref, DerefMut};
 ///
 /// # Examples
 /// ```
-/// use actix_web::{http::header::{CacheControl, CacheDirective}, HttpResponse};
+/// use actix_web::{
+///     http::header::{CacheControl, CacheDirective},
+///     HttpResponse,
+/// };
 ///
 /// let mut builder = HttpResponse::Ok();
 /// builder.insert_header(CacheControl(vec![CacheDirective::MaxAge(86400u32)]));
 /// ```
 ///
 /// ```
-/// use actix_web::{http::header::{CacheControl, CacheDirective}, HttpResponse};
+/// use actix_web::{
+///     http::header::{CacheControl, CacheDirective},
+///     HttpResponse,
+/// };
 ///
 /// let mut builder = HttpResponse::Ok();
 /// builder.insert_header(CacheControl(vec![

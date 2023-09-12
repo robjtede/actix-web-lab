@@ -15,13 +15,16 @@ use crate::BoxError;
 /// ```
 /// # use actix_web::{HttpResponse, web};
 /// use std::convert::Infallible;
+///
 /// use actix_web_lab::body;
 ///
 /// # async fn index() {
 /// let (mut body_tx, body) = body::channel::<Infallible>();
 ///
 /// let _ = web::block(move || {
-///     body_tx.send(web::Bytes::from_static(b"body from another thread")).unwrap();
+///     body_tx
+///         .send(web::Bytes::from_static(b"body from another thread"))
+///         .unwrap();
 /// });
 ///
 /// HttpResponse::Ok().body(body)

@@ -31,7 +31,7 @@ pub const DEFAULT_URL_ENCODED_FORM_LIMIT: usize = 2_097_152;
 ///
 /// ```
 /// use actix_web::{post, App};
-/// use actix_web_lab::extract::{DEFAULT_URL_ENCODED_FORM_LIMIT, UrlEncodedForm};
+/// use actix_web_lab::extract::{UrlEncodedForm, DEFAULT_URL_ENCODED_FORM_LIMIT};
 /// use serde::Deserialize;
 ///
 /// #[derive(Deserialize)]

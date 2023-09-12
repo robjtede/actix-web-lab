@@ -31,13 +31,15 @@ type Handlers<B> = Rc<AHashMap<StatusCode, Box<ErrorHandler<B>>>>;
 /// ```
 /// use actix_web::{
 ///     body::EitherBody,
-///     http::{header, StatusCode},
 ///     dev::ServiceResponse,
-///     web, App, HttpResponse, Result
+///     http::{header, StatusCode},
+///     web, App, HttpResponse, Result,
 /// };
 /// use actix_web_lab::middleware::ErrorHandlers;
 ///
-/// async fn add_error_header<B>(mut res: ServiceResponse<B>) -> Result<ServiceResponse<EitherBody<B>>> {
+/// async fn add_error_header<B>(
+///     mut res: ServiceResponse<B>,
+/// ) -> Result<ServiceResponse<EitherBody<B>>> {
 ///     res.response_mut().headers_mut().insert(
 ///         header::CONTENT_TYPE,
 ///         header::HeaderValue::from_static("Error"),

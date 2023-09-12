@@ -32,8 +32,7 @@ type PanicCallback = Rc<dyn Fn(&(dyn Any + Send))>;
 /// #   pub(crate) use increment_counter;
 /// # }
 ///
-/// App::new()
-///     .wrap(PanicReporter::new(|_| metrics::increment_counter!("panic")))
+/// App::new().wrap(PanicReporter::new(|_| metrics::increment_counter!("panic")))
 ///     # ;
 /// ```
 #[derive(Clone)]

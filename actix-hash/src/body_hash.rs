@@ -40,8 +40,8 @@ pub struct BodyHashParts<T> {
 ///
 /// # Example
 /// ```
-/// use actix_web::{Responder, web};
 /// use actix_hash::BodyHash;
+/// use actix_web::{web, Responder};
 /// use sha2::Sha256;
 ///
 /// # type T = u64;

@@ -26,7 +26,7 @@ use pin_project_lite::pin_project;
 ///
 /// async fn replace_body(
 ///     _req: HttpRequest,
-///     _: impl MessageBody
+///     _: impl MessageBody,
 /// ) -> actix_web::Result<impl MessageBody> {
 ///     Ok("foo".to_owned())
 /// }
@@ -44,7 +44,7 @@ use pin_project_lite::pin_project;
 ///
 /// async fn append_bytes(
 ///     _req: HttpRequest,
-///     body: impl MessageBody
+///     body: impl MessageBody,
 /// ) -> actix_web::Result<impl MessageBody> {
 ///     let buf = body::to_bytes(body).await.ok().unwrap();
 ///

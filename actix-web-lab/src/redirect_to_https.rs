@@ -17,6 +17,7 @@ use crate::header::StrictTransportSecurity;
 /// A middleware to redirect traffic to HTTPS if connection is insecure.
 ///
 /// # HSTS
+///
 /// [HTTP Strict Transport Security (HSTS)] is configurable. Care should be taken when setting up
 /// HSTS for your site; misconfiguration can potentially leave parts of your site in an unusable
 /// state. By default it is disabled.
@@ -24,16 +25,20 @@ use crate::header::StrictTransportSecurity;
 /// See [`StrictTransportSecurity`] docs for more info.
 ///
 /// # Examples
+///
 /// ```
 /// # use std::time::Duration;
 /// # use actix_web::App;
 /// use actix_web_lab::{header::StrictTransportSecurity, middleware::RedirectHttps};
 ///
-/// App::new().wrap(RedirectHttps::default());
-/// App::new().wrap(RedirectHttps::default().to_port(8443));
-/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::default()));
-/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::new(Duration::from_secs(60 * 60))));
-/// App::new().wrap(RedirectHttps::with_hsts(StrictTransportSecurity::recommended()));
+/// let mw = RedirectHttps::default();
+/// let mw = RedirectHttps::default().to_port(8443);
+/// let mw = RedirectHttps::with_hsts(StrictTransportSecurity::default());
+/// let mw = RedirectHttps::with_hsts(StrictTransportSecurity::new(Duration::from_secs(60 * 60)));
+/// let mw = RedirectHttps::with_hsts(StrictTransportSecurity::recommended());
+///
+/// App::new().wrap(mw)
+/// # ;
 /// ```
 ///
 /// [HTTP Strict Transport Security (HSTS)]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
