@@ -1,10 +1,13 @@
 _list:
     @just --list
 
-test:
-    cargo hack --workspace test --no-fail-fast --no-default-features
-    cargo hack --workspace test --no-fail-fast
-    cargo hack --workspace test --no-fail-fast --all-features
+test-msrv:
+    @just test +1.70.0
+
+test toolchain="":
+    cargo {{toolchain}} hack --workspace test --no-fail-fast --no-default-features
+    cargo {{toolchain}} hack --workspace test --no-fail-fast
+    cargo {{toolchain}} hack --workspace test --no-fail-fast --all-features
 
 check:
     just --unstable --fmt --check

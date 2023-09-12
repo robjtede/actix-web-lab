@@ -21,13 +21,19 @@ type PanicCallback = Rc<dyn Fn(&(dyn Any + Send))>;
 /// panic was originally invoked to allow down-casting.
 ///
 /// # Examples
-/// ```ignore
+///
+/// ```no_run
 /// # use actix_web::App;
 /// use actix_web_lab::middleware::PanicReporter;
-/// use metrics::increment_counter;
+/// # mod metrics {
+/// #   macro_rules! increment_counter {
+/// #       ($tt:tt) => {{}};
+/// #   }
+/// #   pub(crate) use increment_counter;
+/// # }
 ///
 /// App::new()
-///     .wrap(PanicReporter::new(|_| increment_counter!("panic")))
+///     .wrap(PanicReporter::new(|_| metrics::increment_counter!("panic")))
 ///     # ;
 /// ```
 #[derive(Clone)]

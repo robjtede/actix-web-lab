@@ -21,6 +21,7 @@ use futures_util::FutureExt as _;
 /// else except `Logger`.
 ///
 /// # Examples
+///
 /// ```
 /// # use actix_web::App;
 /// use actix_web_lab::middleware::CatchPanic;
@@ -30,7 +31,11 @@ use futures_util::FutureExt as _;
 ///     # ;
 /// ```
 ///
-/// ```ignore
+/// ```no_run
+/// # use actix_web::App;
+/// use actix_web::middleware::{Logger, NormalizePath};
+/// use actix_web_lab::middleware::{CatchPanic};
+///
 /// // recommended wrap order
 /// App::new()
 ///     .wrap(NormalizePath::default())
