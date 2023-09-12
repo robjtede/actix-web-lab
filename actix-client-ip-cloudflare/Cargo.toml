@@ -25,11 +25,8 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 awc = { version = "3", optional = true }
 cidr-utils = { version = "0.5", features = ["serde"] }
-# futures-core = "0.3.17"
-# futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 impl-more = "0.1.5"
 serde = { version = "1", features = ["derive"] }
-# tokio = "1.24.2"
 tracing = { version = "0.1.30", features = ["log"] }
 
 [dev-dependencies]

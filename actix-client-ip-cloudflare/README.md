@@ -13,3 +13,5 @@
 [![CircleCI](https://circleci.com/gh/robjtede/actix-web-lab/tree/main.svg?style=shield)](https://circleci.com/gh/robjtede/actix-web-lab/tree/main)
 
 <!-- prettier-ignore-end -->
+
+See <https://developers.cloudflare.com/fundamentals/reference/http-request-headers> for more documentation.

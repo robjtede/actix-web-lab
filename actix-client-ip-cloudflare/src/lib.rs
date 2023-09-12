@@ -1,4 +1,10 @@
 //! Extractor for client IP addresses when proxied through Cloudflare.
+//!
+//! # Crate Features
+//!
+//! `fetch-ips` (default): Enables functionality to (asynchronously) fetch CloudFlare's trusted IP list from
+//! their API. This feature includes `rustls` but if you prefer OpenSSL you can use it by disabling
+//! default crate features and enabling `fetch-ips-openssl` instead.
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
