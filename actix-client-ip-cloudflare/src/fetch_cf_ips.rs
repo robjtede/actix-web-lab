@@ -31,7 +31,7 @@ pub enum CfIpsResponse {
 /// Trusted IP ranges.
 #[derive(Debug)]
 pub struct TrustedIps {
-    cidr_ranges: IpCidrCombiner,
+    pub(crate) cidr_ranges: IpCidrCombiner,
 }
 
 impl TrustedIps {
@@ -71,13 +71,22 @@ impl TrustedIps {
 
 impl Clone for TrustedIps {
     fn clone(&self) -> Self {
-        let ipv4_cidr_vec = self.cidr_ranges.get_ipv4_cidrs().to_vec();
-        let ipv6_cidr_vec = self.cidr_ranges.get_ipv6_cidrs().to_vec();
+        let ipv4_cidrs = self.cidr_ranges.get_ipv4_cidrs();
+        let ipv6_cidrs = self.cidr_ranges.get_ipv6_cidrs();
 
         Self {
-            cidr_ranges: unsafe {
-                IpCidrCombiner::from_cidr_vec_unchecked(ipv4_cidr_vec, ipv6_cidr_vec)
-            },
+            cidr_ranges: ipv4_cidrs
+                .iter()
+                .copied()
+                .map(IpCidr::V4)
+                .chain(ipv6_cidrs.iter().copied().map(IpCidr::V6))
+                .fold(
+                    IpCidrCombiner::with_capacity(ipv4_cidrs.len(), ipv6_cidrs.len()),
+                    |mut combiner, cidr| {
+                        combiner.push(cidr);
+                        combiner
+                    },
+                ),
         }
     }
 }

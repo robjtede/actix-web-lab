@@ -20,8 +20,8 @@ pub enum CfConnectingIp {
 impl CfConnectingIp {
     pub fn ip(&self) -> IpAddr {
         match self {
-            CfConnectingIp::Trusted(ip) => *ip,
-            CfConnectingIp::Untrusted(ip) => *ip,
+            Self::Trusted(ip) => *ip,
+            Self::Untrusted(ip) => *ip,
         }
     }
 

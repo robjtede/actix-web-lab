@@ -1,8 +1,9 @@
-use std::net::{IpAddr, Ipv6Addr};
+use std::{convert::Infallible, net::IpAddr};
 
 use actix_web::{
-    http::header::{self, HeaderName},
-    HttpMessage, HttpRequest,
+    error,
+    http::header::{self, Header, HeaderName, HeaderValue, TryIntoHeaderValue},
+    HttpMessage,
 };
 
 /// Cloudflare's `cf-connecting-ipv6` header name.
@@ -10,25 +11,49 @@ use actix_web::{
 pub const CF_CONNECTING_IPV6: HeaderName = HeaderName::from_static("cf-connecting-ipv6");
 
 /// A source for client's IP address when server is behind Cloudflare.
+#[derive(Debug, Clone)]
 pub enum CfConnectingIpv6 {
     Trusted(IpAddr),
     Untrusted(IpAddr),
 }
 
-// impl Header for CfConnectingIp {
-//     fn name() -> HeaderName {
-//         CF_CONNECTING_IPV6
-//     }
-
-//     fn parse<M: HttpMessage>(msg: &M) -> Result<Self, actix_web::error::ParseError> {
-//         header::from_one_raw_str(msg.headers().get(Self::name()))
-//     }
-// }
-
 impl CfConnectingIpv6 {
-    // fn from_req(req: &HttpRequest) -> Option<Ipv6Addr> {
-    //     let val = req.headers().get(CF_CONNECTING_IPV6)?;
-    //     let ip_str = val.to_str().ok()?;
-    //     ip_str.parse().ok()
+    pub fn ip(&self) -> IpAddr {
+        match self {
+            Self::Trusted(ip) => *ip,
+            Self::Untrusted(ip) => *ip,
+        }
+    }
+
+    // pub(crate) fn into_trusted(self) -> Self {
+    //     match self {
+    //         Self::Trusted(ip) => Self::Trusted(ip),
+    //         Self::Untrusted(ip) => Self::Trusted(ip),
+    //     }
     // }
+}
+
+impl_more::impl_display_enum!(
+    CfConnectingIpv6,
+    Trusted(ip) => "{ip}",
+    Untrusted(ip) => "{ip}",
+);
+
+impl TryIntoHeaderValue for CfConnectingIpv6 {
+    type Error = Infallible;
+
+    fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
+        Ok(self.ip().to_string().parse().unwrap())
+    }
+}
+
+impl Header for CfConnectingIpv6 {
+    fn name() -> HeaderName {
+        CF_CONNECTING_IPV6
+    }
+
+    fn parse<M: HttpMessage>(msg: &M) -> Result<Self, error::ParseError> {
+        let ip = header::from_one_raw_str(msg.headers().get(Self::name()))?;
+        Ok(Self::Untrusted(ip))
+    }
 }
