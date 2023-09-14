@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  codecov: codecov/codecov@3.2.5
+
 jobs:
   clippy:
     docker: [image: cimg/rust:1.70.0]
@@ -45,6 +48,25 @@ jobs:
             - '~/.cargo'
             - './target'
 
+  test-coverage:
+    docker: [image: cimg/rust:1.70.0]
+    steps:
+      - checkout
+      - run: cargo --version
+      - restore_cache: { key: coverage-cache }
+      - run: |
+          # Get host target
+          host=$(rustc -Vv | grep host | sed 's/host: //')
+          # Download binary and install to $HOME/.cargo/bin
+          curl --proto '=https' --tlsv1.2 -fsSL https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-$host.tar.gz | tar xzf - -C "$HOME/.cargo/bin"
+      - run: cargo llvm-cov --workspace --all-features --codecov --output-path codecov.json
+      - codecov/upload
+      - save_cache:
+          key: coverage-cache
+          paths:
+            - '~/.cargo'
+            - './target'
+
   feature-checks:
     docker: [image: cimg/rust:1.70.0]
     steps:
@@ -71,3 +93,8 @@ workflows:
       - test
       - doc-test
       - feature-checks
+  coverage:
+    when:
+      equal: [main, << pipeline.git.branch >>]
+    jobs:
+      - test-coverage
