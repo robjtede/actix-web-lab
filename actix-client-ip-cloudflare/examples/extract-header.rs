@@ -21,7 +21,7 @@ async fn main() -> std::io::Result<()> {
     let cloudflare_ips = fetch_trusted_cf_ips()
         .await
         .unwrap()
-        .with_ip_range("127.0.0.1/24".parse().unwrap());
+        .add_ip_range("127.0.0.1/24".parse().unwrap());
 
     HttpServer::new(move || {
         App::new()

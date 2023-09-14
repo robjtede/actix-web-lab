@@ -10,11 +10,10 @@ use actix_web::{
 use crate::{fetch_cf_ips::TrustedIps, CfConnectingIp, CfConnectingIpv6};
 
 fn bad_req(err: impl Into<String>) -> actix_web::error::Error {
-    let err = err.into();
-    actix_web::error::ErrorBadRequest(format!("TrustedClientIp error: {err}"))
+    actix_web::error::ErrorBadRequest(format!("TrustedClientIp error: {}", err.into()))
 }
 
-/// Extractor for a client IP that has passed through CloudFlare and is verified as not spoofed.
+/// Extractor for a client IP that has passed through Cloudflare and is verified as not spoofed.
 ///
 /// For this extractor to work, there must be an instance of [`TrustedIps`] in your app data.
 #[derive(Debug, Clone)]
@@ -110,7 +109,7 @@ mod tests {
 
     #[test]
     fn from_additional_trusted_peer() {
-        let trusted_ips = sample_trusted_ips().with_ip_range("10.0.1.0/24".parse().unwrap());
+        let trusted_ips = sample_trusted_ips().add_ip_range("10.0.1.0/24".parse().unwrap());
 
         let req = TestRequest::default()
             .insert_header(("CF-Connecting-IP", "4.5.6.7"))

@@ -2,7 +2,7 @@
 name = "actix-client-ip-cloudflare"
 version = "0.1.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
-description = "Extractor for client IP addresses when proxied through Cloudflare"
+description = "Extractor for trustworthy client IP addresses when proxied through Cloudflare"
 keywords = ["actix", "web", "client", "ip", "cloudflare"]
 categories = ["web-programming"]
 repository = "https://github.com/robjtede/actix-web-lab"

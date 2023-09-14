@@ -10,14 +10,18 @@ use actix_web::{
 #[allow(clippy::declare_interior_mutable_const)]
 pub const CF_CONNECTING_IPV6: HeaderName = HeaderName::from_static("cf-connecting-ipv6");
 
-/// A source for client's IP address when server is behind Cloudflare.
+/// Header containing client's IPv6 address when server is behind Cloudflare.
 #[derive(Debug, Clone)]
 pub enum CfConnectingIpv6 {
+    /// Extracted client IPv6 address that has been forwarded by a trustworthy peer.
     Trusted(IpAddr),
+
+    /// Extracted client IPv6 address that has no trust guarantee.
     Untrusted(IpAddr),
 }
 
 impl CfConnectingIpv6 {
+    /// Returns client IPv6 address, whether trusted or not.
     pub fn ip(&self) -> IpAddr {
         match self {
             Self::Trusted(ip) => *ip,
@@ -25,12 +29,11 @@ impl CfConnectingIpv6 {
         }
     }
 
-    // pub(crate) fn into_trusted(self) -> Self {
-    //     match self {
-    //         Self::Trusted(ip) => Self::Trusted(ip),
-    //         Self::Untrusted(ip) => Self::Trusted(ip),
-    //     }
-    // }
+    /// Returns `true` if this header is `Trusted`.
+    #[must_use]
+    pub fn is_trusted(&self) -> bool {
+        matches!(self, Self::Trusted(..))
+    }
 }
 
 impl_more::impl_display_enum!(

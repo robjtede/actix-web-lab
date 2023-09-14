@@ -1,6 +1,6 @@
 # actix-client-ip-cloudflare
 
-> Extractor for client IP addresses when proxied through Cloudflare
+> Extractor for trustworthy client IP addresses when proxied through Cloudflare
 
 <!-- prettier-ignore-start -->
 
@@ -14,4 +14,4 @@
 
 <!-- prettier-ignore-end -->
 
-See <https://developers.cloudflare.com/fundamentals/reference/http-request-headers> for more documentation.
+See <https://developers.cloudflare.com/fundamentals/reference/http-request-headers> for more documentation on the headers interpreted by this crate.

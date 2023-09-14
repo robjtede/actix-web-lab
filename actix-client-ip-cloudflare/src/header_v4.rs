@@ -10,27 +10,24 @@ use actix_web::{
 #[allow(clippy::declare_interior_mutable_const)]
 pub const CF_CONNECTING_IP: HeaderName = HeaderName::from_static("cf-connecting-ip");
 
-/// A source for client's IP address when server is behind Cloudflare.
+/// Header containing client's IPv4 address when server is behind Cloudflare.
 #[derive(Debug, Clone)]
 pub enum CfConnectingIp {
+    /// Extracted client IPv4 address that has been forwarded by a trustworthy peer.
     Trusted(IpAddr),
+
+    /// Extracted client IPv4 address that has no trust guarantee.
     Untrusted(IpAddr),
 }
 
 impl CfConnectingIp {
+    /// Returns client IPv4 address, whether trusted or not.
     pub fn ip(&self) -> IpAddr {
         match self {
             Self::Trusted(ip) => *ip,
             Self::Untrusted(ip) => *ip,
         }
     }
-
-    // pub(crate) fn into_trusted(self) -> Self {
-    //     match self {
-    //         Self::Trusted(ip) => Self::Trusted(ip),
-    //         Self::Untrusted(ip) => Self::Trusted(ip),
-    //     }
-    // }
 }
 
 impl_more::impl_display_enum!(
