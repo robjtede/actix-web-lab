@@ -163,6 +163,8 @@ pub async fn fetch_trusted_cf_ips() -> Result<TrustedIps, CfIpsFetchErr> {
 
 #[cfg(test)]
 mod tests {
+    use cidr_utils::cidr::Ipv6Cidr;
+
     use super::*;
 
     #[test]
@@ -172,5 +174,39 @@ mod tests {
 
         let res = CfIpsResponse::Failure { success: false };
         assert!(TrustedIps::try_from_response(res).is_err());
+
+        let res = CfIpsResponse::Success {
+            result: CfIpsResult {
+                ipv4_cidrs: vec![Ipv4Cidr::from_prefix_and_mask([0, 0, 0, 0], 0).unwrap()],
+                ipv6_cidrs: vec![Ipv6Cidr::from_prefix_and_mask(0u128, 0).unwrap()],
+            },
+        };
+        assert!(TrustedIps::try_from_response(res).is_ok());
+    }
+
+    #[test]
+    fn trusted_ips_membership() {
+        let ips = TrustedIps::new();
+        assert!(!ips.contains("127.0.0.1".parse().unwrap()));
+        assert!(!ips.contains("10.0.1.1".parse().unwrap()));
+
+        let ips = TrustedIps::new().add_loopback_ips();
+        assert!(ips.contains("127.0.0.1".parse().unwrap()));
+        assert!(!ips.contains("10.0.1.1".parse().unwrap()));
+
+        let ips = TrustedIps::new().add_loopback_ips().add_private_ips();
+        assert!(ips.contains("127.0.0.1".parse().unwrap()));
+        assert!(ips.contains("10.0.1.1".parse().unwrap()));
+    }
+
+    #[test]
+    fn trusted_ips_clone() {
+        let ips = TrustedIps::new().add_loopback_ips();
+        assert!(ips.contains("127.0.0.1".parse().unwrap()));
+        assert!(!ips.contains("10.0.1.1".parse().unwrap()));
+
+        let ips = ips.clone();
+        assert!(ips.contains("127.0.0.1".parse().unwrap()));
+        assert!(!ips.contains("10.0.1.1".parse().unwrap()));
     }
 }

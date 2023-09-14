@@ -5,6 +5,7 @@
         "bytestring",
         "cbor",
         "clippy",
+        "codecov",
         "dalek",
         "deque",
         "deserialization",

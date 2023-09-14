@@ -11,6 +11,14 @@ test toolchain="":
     cargo {{toolchain}} hack --workspace test --no-fail-fast
     cargo {{toolchain}} hack --workspace test --no-fail-fast --all-features
 
+# Run tests on all crates in workspace and produce coverage file (Codecov format).
+test-coverage-codecov toolchain="":
+    cargo {{toolchain}} llvm-cov --workspace --all-features --codecov --output-path codecov.json
+
+# Run tests on all crates in workspace and produce coverage file (lcov format).
+test-coverage-lcov toolchain="":
+    cargo {{toolchain}} llvm-cov --workspace --all-features --lcov --output-path lcov.info
+
 # Check project.
 check:
     just --unstable --fmt --check
