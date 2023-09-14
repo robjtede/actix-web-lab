@@ -21,6 +21,7 @@
         "rdef",
         "refcell",
         "RUSTDOCFLAGS",
+        "rustfmt",
         "rustls",
         "rustversion",
         "serde",

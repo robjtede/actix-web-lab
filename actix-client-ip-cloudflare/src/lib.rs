@@ -22,6 +22,33 @@
 //!    trusted IP set using [`fetch_trusted_cf_ips()`] and add any further trusted ranges to that.
 //! 1. Use the [`TrustedClientIp`] extractor in your handlers.
 //!
+//! # Example
+//!
+//! ```no_run
+//! # async {
+//! # use actix_web::{App, get, HttpServer};
+//! use actix_client_ip_cloudflare::{fetch_trusted_cf_ips, TrustedClientIp};
+//!
+//! let cloudflare_ips = fetch_trusted_cf_ips()
+//!     # // rustfmt ignore
+//!     .await
+//!     .unwrap()
+//!     .add_loopback_ips();
+//!
+//! HttpServer::new(move || {
+//!     App::new()
+//!         # // rustfmt ignore
+//!         .app_data(cloudflare_ips.clone())
+//!         .service(handler)
+//! });
+//!
+//! #[get("/")]
+//! async fn handler(client_ip: TrustedClientIp) -> String {
+//!     client_ip.to_string()
+//! }
+//! # };
+//! ```
+//!
 //! # Crate Features
 //!
 //! `fetch-ips` (default): Enables functionality to (asynchronously) fetch Cloudflare's trusted IP list from
