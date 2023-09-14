@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.1
+
 - Add `TrustedIps::new()` constructor.
 - Add `TrustedIps::add_ip_range()` method.
 - Add `TrustedIps::{add_loopback_ips, add_private_ips}()` methods.
