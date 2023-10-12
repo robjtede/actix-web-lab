@@ -3,49 +3,46 @@
 //! See [`XForwardedPrefix`] docs.
 
 use actix_http::{
+    body::MessageBody,
     error::ParseError,
     header::{Header, HeaderName, HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
     HttpMessage,
 };
+use actix_web::{
+    dev::{ServiceRequest, ServiceResponse},
+    http::Uri,
+};
 use derive_more::{Deref, DerefMut, Display};
 use http::uri::PathAndQuery;
+
+use crate::middleware_from_fn::Next;
 
 /// TODO
 #[allow(clippy::declare_interior_mutable_const)]
 pub const X_FORWARDED_PREFIX: HeaderName = HeaderName::from_static("x-forwarded-prefix");
 
-/// The `Cache-Control` header, defined in [RFC 7234 §5.2].
+/// The `X-Forwarded-Prefix` header, defined in [RFC XXX §X.X].
 ///
-/// Includes built-in support for directives introduced in subsequent specifications. [Read more
-/// about the full list of supported directives on MDN][mdn].
+/// The `X-Forwarded-Prefix` header field is used
 ///
-/// The `Cache-Control` header field is used to specify [directives](CacheDirective) for caches
-/// along the request/response chain. Such cache directives are unidirectional in that the presence
-/// of a directive in a request does not imply that the same directive is to be given in the
-/// response.
-///
-/// # ABNF
-/// ```text
-/// Cache-Control   = 1#cache-directive
-/// cache-directive = token [ \"=\" ( token / quoted-string ) ]
-/// ```
+/// Also see
 ///
 /// # Example Values
-/// - `max-age=30`
-/// - `no-cache, no-store`
-/// - `public, max-age=604800, immutable`
-/// - `private, community=\"UCI\"`
+///
+/// - `/`
+/// - `/foo`
 ///
 /// # Examples
+///
 /// ```
-/// use actix_web::{
-///     http::header::{CacheDirective, XForwardedPrefix},
-///     HttpResponse,
-/// };
+/// use actix_web::{HttpResponse};
+/// use actix_web_lab::header::XForwardedPrefix;
 ///
 /// let mut builder = HttpResponse::Ok();
 /// builder.insert_header(XForwardedPrefix(vec![CacheDirective::MaxAge(86400u32)]));
 /// ```
+///
+/// TODO
 ///
 /// ```
 /// use actix_web::{
@@ -95,7 +92,7 @@ impl Header for XForwardedPrefix {
 }
 
 #[cfg(test)]
-mod tests {
+mod header_tests {
     use actix_web::test::{self};
 
     use super::*;
@@ -147,3 +144,40 @@ mod tests {
         );
     }
 }
+
+/// Reconstructs original path using `X-Forwarded-Prefix` header.
+///
+/// # Examples
+///
+/// ```
+/// # use actix_web::App;
+/// use actix_web_lab::middleware::{from_fn, redirect_to_www};
+///
+/// // TODO
+///     # ;
+/// ```
+pub async fn restore_original_path(
+    mut req: ServiceRequest,
+    next: Next<impl MessageBody + 'static>,
+) -> actix_web::Result<ServiceResponse<impl MessageBody>> {
+    let path = req.path();
+    let mut parts = req.head().uri.clone().into_parts();
+    let prefix = XForwardedPrefix::parse(&req).unwrap();
+
+    let reconstructed = [prefix.as_str(), path].concat();
+    parts.path_and_query = Some(PathAndQuery::from_maybe_shared(reconstructed).unwrap());
+
+    let uri = Uri::from_parts(parts).unwrap();
+    req.match_info_mut().get_mut().update(&uri);
+    req.head_mut().uri = uri;
+
+    next.call(req).await
+}
+
+// #[cfg(test)]
+// mod middleware_tests {
+//     use super::*;
+
+//     #[test]
+//     fn noop() {}
+// }
