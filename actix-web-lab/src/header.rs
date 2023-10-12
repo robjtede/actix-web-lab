@@ -5,6 +5,7 @@ pub use crate::{
     content_length::ContentLength,
     forwarded::Forwarded,
     strict_transport_security::StrictTransportSecurity,
+    x_forwarded_prefix::{XForwardedPrefix, X_FORWARDED_PREFIX},
 };
 
 #[cfg(test)]
