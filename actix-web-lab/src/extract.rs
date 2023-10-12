@@ -15,4 +15,5 @@ pub use crate::{
     request_signature::{RequestSignature, RequestSignatureError, RequestSignatureScheme},
     swap_data::SwapData,
     url_encoded_form::{UrlEncodedForm, DEFAULT_URL_ENCODED_FORM_LIMIT},
+    x_forwarded_prefix::ReconstructedPath,
 };

@@ -2,6 +2,8 @@
 //!
 //! See [`XForwardedPrefix`] docs.
 
+use std::future::{ready, Ready};
+
 use actix_http::{
     body::MessageBody,
     error::ParseError,
@@ -11,6 +13,7 @@ use actix_http::{
 use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
     http::Uri,
+    FromRequest,
 };
 use derive_more::{Deref, DerefMut, Display};
 use http::uri::PathAndQuery;
@@ -35,7 +38,7 @@ pub const X_FORWARDED_PREFIX: HeaderName = HeaderName::from_static("x-forwarded-
 /// # Examples
 ///
 /// ```
-/// use actix_web::{HttpResponse};
+/// use actix_web::HttpResponse;
 /// use actix_web_lab::header::XForwardedPrefix;
 ///
 /// let mut builder = HttpResponse::Ok();
@@ -81,11 +84,11 @@ impl Header for XForwardedPrefix {
         let header = msg.headers().get(Self::name());
 
         header
-            .and_then(|hdr| dbg!(hdr).to_str().ok())
-            .map(|hdr| dbg!(hdr).trim())
-            .filter(|hdr| !dbg!(hdr).is_empty())
-            .and_then(|hdr| dbg!(hdr).parse::<actix_web::http::uri::PathAndQuery>().ok())
-            .filter(|path| dbg!(path).query().is_none())
+            .and_then(|hdr| hdr.to_str().ok())
+            .map(|hdr| hdr.trim())
+            .filter(|hdr| !hdr.is_empty())
+            .and_then(|hdr| hdr.parse::<actix_web::http::uri::PathAndQuery>().ok())
+            .filter(|path| path.query().is_none())
             .map(XForwardedPrefix)
             .ok_or(ParseError::Header)
     }
@@ -151,7 +154,7 @@ mod header_tests {
 ///
 /// ```
 /// # use actix_web::App;
-/// use actix_web_lab::middleware::{from_fn, redirect_to_www};
+/// use actix_web_lab::middleware::{from_fn, restore_original_path};
 ///
 /// // TODO
 ///     # ;
@@ -160,11 +163,14 @@ pub async fn restore_original_path(
     mut req: ServiceRequest,
     next: Next<impl MessageBody + 'static>,
 ) -> actix_web::Result<ServiceResponse<impl MessageBody>> {
-    let path = req.path();
     let mut parts = req.head().uri.clone().into_parts();
+    let path_and_query = parts
+        .path_and_query
+        .unwrap_or(PathAndQuery::from_static("/"));
+
     let prefix = XForwardedPrefix::parse(&req).unwrap();
 
-    let reconstructed = [prefix.as_str(), path].concat();
+    let reconstructed = [prefix.as_str(), path_and_query.as_str()].concat();
     parts.path_and_query = Some(PathAndQuery::from_maybe_shared(reconstructed).unwrap());
 
     let uri = Uri::from_parts(parts).unwrap();
@@ -181,3 +187,48 @@ pub async fn restore_original_path(
 //     #[test]
 //     fn noop() {}
 // }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReconstructedPath(pub PathAndQuery);
+
+impl FromRequest for ReconstructedPath {
+    type Error = actix_web::Error;
+    type Future = Ready<Result<Self, Self::Error>>;
+
+    fn from_request(
+        req: &actix_web::HttpRequest,
+        _payload: &mut actix_http::Payload,
+    ) -> Self::Future {
+        let parts = req.head().uri.clone().into_parts();
+        let path_and_query = parts
+            .path_and_query
+            .unwrap_or(PathAndQuery::from_static("/"));
+
+        let prefix = XForwardedPrefix::parse(req).unwrap();
+
+        let reconstructed = [prefix.as_str(), path_and_query.as_str()].concat();
+
+        ready(Ok(ReconstructedPath(
+            PathAndQuery::from_maybe_shared(reconstructed).unwrap(),
+        )))
+    }
+}
+
+#[cfg(test)]
+mod extractor_tests {
+    use actix_web::test::{self};
+
+    use super::*;
+
+    #[actix_web::test]
+    async fn basic() {
+        let req = test::TestRequest::with_uri("/bar")
+            .insert_header((X_FORWARDED_PREFIX, "/foo"))
+            .to_http_request();
+
+        assert_eq!(
+            ReconstructedPath::extract(&req).await.unwrap(),
+            ReconstructedPath(PathAndQuery::from_static("/foo/bar")),
+        );
+    }
+}
