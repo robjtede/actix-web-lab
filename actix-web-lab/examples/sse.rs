@@ -54,14 +54,14 @@ fn common_countdown(n: i32) -> impl Responder {
 
 #[get("/time")]
 async fn timestamp() -> impl Responder {
-    let (sender, sse) = sse::channel(2);
+    let (sender, receiver) = tokio::sync::mpsc::channel(2);
 
     actix_web::rt::spawn(async move {
         loop {
             let time = time::OffsetDateTime::now_utc();
             let msg = sse::Data::new(time.format(&Rfc3339).unwrap()).event("timestamp");
 
-            if sender.send(msg).await.is_err() {
+            if sender.send(msg.into()).await.is_err() {
                 tracing::warn!("client disconnected; could not send SSE message");
                 break;
             }
@@ -70,7 +70,7 @@ async fn timestamp() -> impl Responder {
         }
     });
 
-    sse.with_keep_alive(Duration::from_secs(3))
+    sse::Sse::from_infallible_receiver(receiver).with_keep_alive(Duration::from_secs(3))
 }
 
 #[actix_web::main]
