@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.19.2
+
 - Add `extract::ReconstructedPath` extractor.
 - Add `header::XForwardedPath` header.
 - Expose `extract::DEFAULT_BODY_LIMIT`.
