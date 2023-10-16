@@ -5,22 +5,17 @@
 use std::future::{ready, Ready};
 
 use actix_http::{
-    body::MessageBody,
     error::ParseError,
     header::{Header, HeaderName, HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
     HttpMessage,
 };
-use actix_web::{
-    dev::{ServiceRequest, ServiceResponse},
-    http::Uri,
-    FromRequest,
-};
+use actix_web::FromRequest;
 use derive_more::{Deref, DerefMut, Display};
 use http::uri::PathAndQuery;
 
-use crate::middleware_from_fn::Next;
-
-/// TODO
+/// Conventional `X-Forwarded-Prefix` header.
+///
+/// See <https://github.com/dotnet/aspnetcore/issues/23263#issuecomment-776192575>.
 #[allow(clippy::declare_interior_mutable_const)]
 pub const X_FORWARDED_PREFIX: HeaderName = HeaderName::from_static("x-forwarded-prefix");
 
@@ -42,28 +37,10 @@ pub const X_FORWARDED_PREFIX: HeaderName = HeaderName::from_static("x-forwarded-
 /// use actix_web_lab::header::XForwardedPrefix;
 ///
 /// let mut builder = HttpResponse::Ok();
-/// builder.insert_header(XForwardedPrefix(vec![CacheDirective::MaxAge(86400u32)]));
-/// ```
-///
-/// TODO
-///
-/// ```
-/// use actix_web::{
-///     http::header::{CacheDirective, XForwardedPrefix},
-///     HttpResponse,
-/// };
-///
-/// let mut builder = HttpResponse::Ok();
-/// builder.insert_header(XForwardedPrefix(vec![
-///     CacheDirective::NoCache,
-///     CacheDirective::Private,
-///     CacheDirective::MaxAge(360u32),
-///     CacheDirective::Extension("foo".to_owned(), Some("bar".to_owned())),
-/// ]));
+/// builder.insert_header(XForwardedPrefix("/bar".parse().unwrap()));
 /// ```
 ///
 /// [RFC 7234 §5.2]: https://datatracker.ietf.org/doc/html/rfc7234#section-5.2
-/// [mdn]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
 #[derive(Debug, Clone, PartialEq, Eq, Deref, DerefMut, Display)]
 pub struct XForwardedPrefix(pub PathAndQuery);
 
@@ -148,47 +125,22 @@ mod header_tests {
     }
 }
 
-/// Reconstructs original path using `X-Forwarded-Prefix` header.
-///
-/// # Examples
+/// Reconstructed path using x-forwarded-prefix header.
 ///
 /// ```
-/// # use actix_web::App;
-/// use actix_web_lab::middleware::{from_fn, restore_original_path};
+/// # use actix_web::{FromRequest as _, test::TestRequest};
+/// # actix_web::rt::System::new().block_on(async {
+/// use actix_web_lab::extract::ReconstructedPath;
 ///
-/// // TODO
-///     # ;
+/// let req = TestRequest::with_uri("/bar")
+///     .insert_header(("x-forwarded-prefix", "/foo"))
+///     .to_http_request();
+///
+/// let path = ReconstructedPath::extract(&req).await.unwrap();
+/// assert_eq!(format!("{path}"), "/foo/bar");
+/// # })
 /// ```
-pub async fn restore_original_path(
-    mut req: ServiceRequest,
-    next: Next<impl MessageBody + 'static>,
-) -> actix_web::Result<ServiceResponse<impl MessageBody>> {
-    let mut parts = req.head().uri.clone().into_parts();
-    let path_and_query = parts
-        .path_and_query
-        .unwrap_or(PathAndQuery::from_static("/"));
-
-    let prefix = XForwardedPrefix::parse(&req).unwrap();
-
-    let reconstructed = [prefix.as_str(), path_and_query.as_str()].concat();
-    parts.path_and_query = Some(PathAndQuery::from_maybe_shared(reconstructed).unwrap());
-
-    let uri = Uri::from_parts(parts).unwrap();
-    req.match_info_mut().get_mut().update(&uri);
-    req.head_mut().uri = uri;
-
-    next.call(req).await
-}
-
-// #[cfg(test)]
-// mod middleware_tests {
-//     use super::*;
-
-//     #[test]
-//     fn noop() {}
-// }
-
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Display)]
 pub struct ReconstructedPath(pub PathAndQuery);
 
 impl FromRequest for ReconstructedPath {

@@ -13,5 +13,4 @@ pub use crate::{
     panic_reporter::PanicReporter,
     redirect_to_https::RedirectHttps,
     redirect_to_www::redirect_to_www,
-    x_forwarded_prefix::restore_original_path,
 };
