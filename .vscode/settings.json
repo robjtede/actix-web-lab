@@ -27,6 +27,7 @@
         "rustversion",
         "serde",
         "splitn",
+        "struct",
         "trybuild",
         "vals"
     ]

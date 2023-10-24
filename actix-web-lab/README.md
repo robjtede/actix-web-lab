@@ -73,12 +73,12 @@
 
 ### Services
 
-- `Redirect`: (graduated 🎉) simple redirects [(docs)](https://docs.rs/actix-web-lab/0.19.2/actix_web_lab/web/struct.Redirect.html)
+- `Redirect`: (graduated 🎉) simple redirects [(docs)](https://docs.rs/actix-web/4/actix_web/web/struct.Redirect.html)
 - `spa`: Easy Single-page Application (SPA) service [(docs)](https://docs.rs/actix-web-lab/0.19.2/actix_web_lab/web/fn.spa.html)
 
 ### Route Guards
 
-- `Acceptable`: (graduated 🎉) verifies that an `Accept` header is present and it contains a compatible MIME type [(docs)](https://docs.rs/actix-web-lab/0.19.2/actix_web_lab/guard/struct.Acceptable.html)
+- `Acceptable`: (graduated 🎉) verifies that an `Accept` header is present and it contains a compatible MIME type [(docs)](https://docs.rs/actix-web/4/actix_web/guard/struct.Acceptable.html)
 
 ### Test Utilities
 
