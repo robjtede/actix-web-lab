@@ -7,6 +7,19 @@
 //! use actix_web::{get, Responder};
 //! use actix_web_lab::sse;
 //!
+//! #[get("/from-channel")]
+//! async fn from_channel() -> impl Responder {
+//!     let (tx, rx) = tokio::sync::mpsc::channel(10);
+//!
+//!     // note: sender will typically be spawned or handed off somewhere else
+//!     let _ = tx.send(sse::Event::Comment("my comment".into())).await;
+//!     let _ = tx
+//!         .send(sse::Data::new("my data").event("chat_msg").into())
+//!         .await;
+//!
+//!     sse::Sse::from_infallible_receiver(rx).with_retry_duration(Duration::from_secs(10))
+//! }
+//!
 //! #[get("/from-stream")]
 //! async fn from_stream() -> impl Responder {
 //!     let event_stream = futures_util::stream::iter([Ok::<_, Infallible>(sse::Event::Data(
@@ -18,7 +31,6 @@
 //! ```
 //!
 //! Complete usage examples can be found in the examples directory of the source code repo.
-
 #![doc(
     alias = "server sent",
     alias = "server-sent",
@@ -28,7 +40,6 @@
 )]
 
 use std::{
-    convert::Infallible,
     pin::Pin,
     task::{Context, Poll},
     time::Duration,
@@ -46,7 +57,7 @@ use futures_core::Stream;
 use pin_project_lite::pin_project;
 use serde::Serialize;
 use tokio::{
-    sync::mpsc::{self, Receiver},
+    sync::mpsc,
     time::{interval, Interval},
 };
 use tokio_stream::wrappers::ReceiverStream;
@@ -338,14 +349,14 @@ where
     E: Into<BoxError> + 'static,
 {
     /// Create an SSE response from a receiver that yields SSE [Event]s.
-    pub fn from_receiver(receiver: Receiver<Result<Event, E>>) -> Self {
+    pub fn from_receiver(receiver: mpsc::Receiver<Result<Event, E>>) -> Self {
         Self::from_stream(ReceiverStream::new(receiver))
     }
 }
 
 impl Sse<InfallibleStream<ReceiverStream<Event>>> {
     /// Create an SSE response from a receiver that yields SSE [Event]s.
-    pub fn from_infallible_receiver(receiver: Receiver<Event>) -> Self {
+    pub fn from_infallible_receiver(receiver: mpsc::Receiver<Event>) -> Self {
         Self::from_stream(InfallibleStream::new(ReceiverStream::new(receiver)))
     }
 }
