@@ -4,8 +4,6 @@
 
 use std::borrow::Cow;
 
-#[allow(deprecated)]
-pub use crate::redirect::Redirect;
 #[cfg(feature = "spa")]
 pub use crate::spa::Spa;
 

@@ -24,7 +24,6 @@
 #![warn(future_incompatible, missing_docs)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-mod acceptable;
 mod body_async_write;
 mod body_channel;
 mod body_limit;
@@ -55,7 +54,6 @@ mod normalize_path;
 mod panic_reporter;
 mod path;
 mod query;
-mod redirect;
 mod redirect_to_https;
 mod redirect_to_www;
 mod request_signature;

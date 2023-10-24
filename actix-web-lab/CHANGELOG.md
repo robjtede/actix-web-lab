@@ -2,11 +2,14 @@
 
 ## Unreleased
 
+- Add `sse::Sse::from_infallible_stream()` method.
+- Add `sse::Sse::{from_receiver, from_infallible_receiver}()` methods.
 - Remove `sse::Sender` type.
 - Remove `sse::ChannelStream` type.
 - Remove `sse::channel` function.
-- Add `sse::Sse::from_infallible_stream()` method.
-- Add `sse::Sse::{from_receiver, from_infallible_receiver}()` methods.
+- Remove `sse::{SseSendError, SseTrySendError, SseData, SseMessage}` type aliases.
+- Remove `web::Redirect` responder.
+- Remove `guard::Acceptable` guard type.
 
 ## 0.19.2
 

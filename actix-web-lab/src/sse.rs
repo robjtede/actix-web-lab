@@ -74,13 +74,6 @@ use crate::{
 #[non_exhaustive]
 pub struct SendError(#[error(not(source))] Event);
 
-#[doc(hidden)]
-#[deprecated(
-    since = "0.17.0",
-    note = "Renamed to `SendError`. Prefer `sse::SendError`."
-)]
-pub type SseSendError = SendError;
-
 /// Error returned from [`SseSender::try_send()`].
 ///
 /// In each case, the original message is returned back to you.
@@ -95,13 +88,6 @@ pub enum TrySendError {
     #[display(fmt = "channel closed")]
     Closed(#[error(not(source))] Event),
 }
-
-#[doc(hidden)]
-#[deprecated(
-    since = "0.17.0",
-    note = "Renamed to `TrySendError`. Prefer `sse::TrySendError`."
-)]
-pub type SseTrySendError = TrySendError;
 
 /// Server-sent events data message containing a `data` field and optional `id` and `event` fields.
 ///
@@ -143,10 +129,6 @@ pub struct Data {
     event: Option<ByteString>,
     data: ByteString,
 }
-
-#[doc(hidden)]
-#[deprecated(since = "0.17.0", note = "Renamed to `Data`. Prefer `sse::Data`.")]
-pub type SseData = Data;
 
 impl Data {
     /// Constructs a new SSE data message with just the `data` field.
@@ -247,10 +229,6 @@ pub enum Event {
     /// ```
     Comment(ByteString),
 }
-
-#[doc(hidden)]
-#[deprecated(since = "0.17.0", note = "Renamed to `Event`. Prefer `sse::Event`.")]
-pub type SseMessage = Event;
 
 impl Event {
     /// Splits data into lines and prepend each line with `prefix`.
