@@ -1,7 +1,11 @@
-use actix_web::{error, middleware, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{
+    error::{InternalError, JsonPayloadError},
+    middleware::{Logger, NormalizePath},
+    web, App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
 use actix_web_lab::extract::Json;
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use serde_json::json;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct MyObj {
@@ -9,60 +13,78 @@ struct MyObj {
     number: i32,
 }
 
+/// This handler uses the JSON extractor with the default size limit.
 async fn index(
-    res: Result<Json<MyObj>, error::JsonPayloadError>,
+    res: Result<Json<MyObj>, JsonPayloadError>,
     req: HttpRequest,
-) -> Result<impl Responder, error::Error> {
+) -> actix_web::Result<impl Responder> {
     let item = res.map_err(|err| json_error_handler(err, &req))?;
-    println!("model: {:?}", &item);
+    tracing::debug!("model: {item:?}");
+
     Ok(HttpResponse::Ok().json(item.0))
 }
 
-fn json_error_handler(err: error::JsonPayloadError, _req: &HttpRequest) -> error::Error {
-    use actix_web::error::JsonPayloadError;
+/// This handler uses the JSON extractor with the default size limit.
+async fn json_error(
+    res: Result<Json<MyObj>, JsonPayloadError>,
+) -> actix_web::Result<impl Responder> {
+    let item = res.map_err(|err| {
+        tracing::error!("failed to deserialize JSON: {err}");
+        let res = HttpResponse::BadGateway().json(json!({
+            "error": "invalid_json",
+            "detail": err.to_string(),
+        }));
+        InternalError::from_response(err, res)
+    })?;
+    tracing::debug!("model: {item:?}");
 
-    info!(%err);
+    Ok(HttpResponse::Ok().json(item.0))
+}
+
+fn json_error_handler(err: JsonPayloadError, _req: &HttpRequest) -> actix_web::Error {
+    tracing::error!(%err);
 
     let detail = err.to_string();
-    let resp = match &err {
+    let res = match &err {
         JsonPayloadError::ContentType => HttpResponse::UnsupportedMediaType().body(detail),
         JsonPayloadError::Deserialize(json_err) if json_err.is_data() => {
             HttpResponse::UnprocessableEntity().body(detail)
         }
         _ => HttpResponse::BadRequest().body(detail),
     };
-    error::InternalError::from_response(err, resp).into()
+
+    InternalError::from_response(err, res).into()
 }
 
-/// This handler uses json extractor with limit
+/// This handler uses the JSON extractor with a 1KiB size limit.
 async fn extract_item(item: Json<MyObj, 1024>, req: HttpRequest) -> HttpResponse {
-    println!("request: {req:?}");
-    println!("model: {item:?}");
-
-    HttpResponse::Ok().json(item.0) // <- send json response
+    tracing::info!("model: {item:?}, req: {req:?}");
+    HttpResponse::Ok().json(item.0)
 }
 
-/// This handler manually load request payload and parse json object
-async fn index_manual(body: web::Bytes) -> Result<HttpResponse, error::Error> {
-    // body is loaded, now we can deserialize serde-json
+/// This handler manually loads the request payload and parses the JSON data.
+async fn index_manual(body: web::Bytes) -> actix_web::Result<HttpResponse> {
+    // body is loaded, now we can deserialize using serde_json
     let obj = serde_json::from_slice::<MyObj>(&body)?;
-    Ok(HttpResponse::Ok().json(obj)) // <- send response
+
+    Ok(HttpResponse::Ok().json(obj))
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    info!("starting HTTP server at http://localhost:8080");
+    tracing::info!("starting HTTP server at http://localhost:8080");
 
     HttpServer::new(|| {
         App::new()
-            // enable logger
-            .wrap(middleware::Logger::default())
             .service(web::resource("/extractor").route(web::post().to(index)))
             .service(web::resource("/extractor2").route(web::post().to(extract_item)))
+            .service(web::resource("/extractor3").route(web::post().to(json_error)))
             .service(web::resource("/manual").route(web::post().to(index_manual)))
             .service(web::resource("/").route(web::post().to(index)))
+            .wrap(NormalizePath::trim())
+            .wrap(Logger::default())
     })
     .bind(("127.0.0.1", 8080))?
     .run()
