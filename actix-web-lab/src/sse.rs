@@ -309,6 +309,9 @@ impl Event {
 
 pin_project! {
     /// Server-sent events (`text/event-stream`) responder.
+    ///
+    /// Constructed using a [Tokio channel](Self::from_receiver) or using your [own
+    /// stream](Self::from_stream).
     #[must_use]
     #[derive(Debug)]
     pub struct Sse<S> {
