@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Remove `sse::Sender` type.
+- Remove `sse::ChannelStream` type.
+- Remove `sse::channel` function.
+- Add `sse::Sse::from_infallible_stream()` method.
+- Add `sse::Sse::{from_receiver, from_infallible_receiver}()` methods.
+
 ## 0.19.2
 
 - Add `extract::ReconstructedPath` extractor.

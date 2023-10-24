@@ -1,4 +1,4 @@
-//! Semantic server-sent events (SSE) responder with a channel-like interface.
+//! Semantic server-sent events (SSE) responder
 //!
 //! # Examples
 //! ```no_run
@@ -9,15 +9,15 @@
 //!
 //! #[get("/from-channel")]
 //! async fn from_channel() -> impl Responder {
-//!     let (sender, sse_stream) = sse::channel(10);
+//!     let (tx, rx) = tokio::sync::mpsc::channel(10);
 //!
 //!     // note: sender will typically be spawned or handed off somewhere else
-//!     let _ = sender.send(sse::Event::Comment("my comment".into())).await;
-//!     let _ = sender
-//!         .send(sse::Data::new("my data").event("chat_msg"))
+//!     let _ = tx.send(sse::Event::Comment("my comment".into())).await;
+//!     let _ = tx
+//!         .send(sse::Data::new("my data").event("chat_msg").into())
 //!         .await;
 //!
-//!     sse_stream.with_retry_duration(Duration::from_secs(10))
+//!     sse::Sse::from_infallible_receiver(rx).with_retry_duration(Duration::from_secs(10))
 //! }
 //!
 //! #[get("/from-stream")]
@@ -31,7 +31,6 @@
 //! ```
 //!
 //! Complete usage examples can be found in the examples directory of the source code repo.
-
 #![doc(
     alias = "server sent",
     alias = "server-sent",
@@ -41,7 +40,6 @@
 )]
 
 use std::{
-    convert::Infallible,
     pin::Pin,
     task::{Context, Poll},
     time::Duration,
@@ -62,9 +60,11 @@ use tokio::{
     sync::mpsc,
     time::{interval, Interval},
 };
+use tokio_stream::wrappers::ReceiverStream;
 
 use crate::{
     header::{CacheControl, CacheDirective},
+    util::InfallibleStream,
     BoxError,
 };
 
@@ -307,69 +307,11 @@ impl Event {
     }
 }
 
-/// Sender half of a server-sent events stream.
-#[must_use]
-#[derive(Debug, Clone)]
-pub struct Sender {
-    tx: mpsc::Sender<Event>,
-}
-
-#[doc(hidden)]
-#[deprecated(since = "0.17.0", note = "Renamed to `Sender`. Prefer `sse::Sender`.")]
-pub type SseSender = Sender;
-
-impl Sender {
-    /// Send an SSE message.
-    ///
-    /// # Errors
-    /// Errors if the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
-    ///
-    /// # Examples
-    /// ```
-    /// #[actix_web::main] async fn test() {
-    /// use actix_web_lab::sse;
-    ///
-    /// let (sender, sse_stream) = sse::channel(5);
-    /// sender.send(sse::Data::new("my data").event("my event name")).await.unwrap();
-    /// sender.send(sse::Event::Comment("my comment".into())).await.unwrap();
-    /// # } test();
-    /// ```
-    pub async fn send(&self, msg: impl Into<Event>) -> Result<(), SendError> {
-        self.tx
-            .send(msg.into())
-            .await
-            .map_err(|mpsc::error::SendError(ev)| SendError(ev))
-    }
-
-    /// Tries to send SSE message.
-    ///
-    /// # Errors
-    /// Errors if:
-    /// - the the SSE buffer is currently full;
-    /// - the receiving ([`Sse`]) has been dropped, likely because the client disconnected.
-    ///
-    /// # Examples
-    /// ```
-    /// #[actix_web::main] async fn test() {
-    /// use actix_web_lab::sse;
-    ///
-    /// let (sender, sse_stream) = sse::channel(5);
-    /// sender.try_send(sse::Data::new("my data").event("my event name")).unwrap();
-    /// sender.try_send(sse::Event::Comment("my comment".into())).unwrap();
-    /// # } test();
-    /// ```
-    pub fn try_send(&self, msg: impl Into<Event>) -> Result<(), TrySendError> {
-        self.tx.try_send(msg.into()).map_err(|err| match err {
-            mpsc::error::TrySendError::Full(ev) => TrySendError::Full(ev),
-            mpsc::error::TrySendError::Closed(ev) => TrySendError::Closed(ev),
-        })
-    }
-}
-
 pin_project! {
     /// Server-sent events (`text/event-stream`) responder.
     ///
-    /// Constructed with an [SSE channel](channel) or [using your own stream](Self::from_stream).
+    /// Constructed using a [Tokio channel](Self::from_receiver) or using your [own
+    /// stream](Self::from_stream).
     #[must_use]
     #[derive(Debug)]
     pub struct Sse<S> {
@@ -392,6 +334,33 @@ where
             keep_alive: None,
             retry_interval: None,
         }
+    }
+}
+
+impl<S> Sse<InfallibleStream<S>>
+where
+    S: Stream<Item = Event> + 'static,
+{
+    /// Create an SSE response from an infallible stream that yields SSE [Event]s.
+    pub fn from_infallible_stream(stream: S) -> Self {
+        Sse::from_stream(InfallibleStream::new(stream))
+    }
+}
+
+impl<E> Sse<ReceiverStream<Result<Event, E>>>
+where
+    E: Into<BoxError> + 'static,
+{
+    /// Create an SSE response from a receiver that yields SSE [Event]s.
+    pub fn from_receiver(receiver: mpsc::Receiver<Result<Event, E>>) -> Self {
+        Self::from_stream(ReceiverStream::new(receiver))
+    }
+}
+
+impl Sse<InfallibleStream<ReceiverStream<Event>>> {
+    /// Create an SSE response from a receiver that yields SSE [Event]s.
+    pub fn from_infallible_receiver(receiver: mpsc::Receiver<Event>) -> Self {
+        Self::from_stream(InfallibleStream::new(ReceiverStream::new(receiver)))
     }
 }
 
@@ -472,47 +441,6 @@ where
     }
 }
 
-/// Create server-sent events (SSE) channel pair.
-///
-/// The `buffer` argument controls how many unsent messages can be stored without waiting.
-///
-/// The first item in the tuple is the sender half. Much like a regular channel, it can be cloned,
-/// sent to another thread/task, and send event messages to the response stream. It provides several
-/// methods that represent the event-stream format.
-///
-/// The second item is the responder and can, therefore, be used as a handler return type directly.
-/// The stream will be closed after all [senders](SseSender) are dropped.
-///
-/// Read more about server-sent events in [this MDN article][mdn-sse].
-///
-/// See [module docs](self) for usage example.
-///
-/// [mdn-sse]: https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
-pub fn channel(buffer: usize) -> (Sender, Sse<ChannelStream>) {
-    let (tx, rx) = mpsc::channel(buffer);
-
-    (
-        Sender { tx },
-        Sse {
-            stream: ChannelStream(rx),
-            keep_alive: None,
-            retry_interval: None,
-        },
-    )
-}
-
-/// Stream implementation for channel-based SSE [`Sender`].
-#[derive(Debug)]
-pub struct ChannelStream(mpsc::Receiver<Event>);
-
-impl Stream for ChannelStream {
-    type Item = Result<Event, Infallible>;
-
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        self.0.poll_recv(cx).map(|ev| ev.map(Ok))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::convert::Infallible;
@@ -522,7 +450,7 @@ mod tests {
     use tokio::time::sleep;
 
     use super::*;
-    use crate::assert_response_matches;
+    use crate::{assert_response_matches, util::InfallibleStream};
 
     #[test]
     fn format_retry_message() {
@@ -607,27 +535,12 @@ mod tests {
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);
 
-        {
-            let (_sender, mut sse) = channel(9);
-            assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
+        let mut sse = Sse::from_stream(InfallibleStream::new(tokio_stream::empty()))
+            .with_retry_duration(Duration::from_millis(42));
+        match Pin::new(&mut sse).poll_next(&mut cx) {
+            Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "retry: 42\n\n"),
+            res => panic!("poll should return retry message, got {res:?}"),
         }
-
-        {
-            let (_sender, sse) = channel(9);
-            let mut sse = sse.with_retry_duration(Duration::from_millis(42));
-            match Pin::new(&mut sse).poll_next(&mut cx) {
-                Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "retry: 42\n\n"),
-                res => panic!("poll should return retry message, got {res:?}"),
-            }
-        }
-    }
-
-    #[actix_web::test]
-    async fn dropping_responder_causes_send_fails() {
-        let (sender, sse) = channel(9);
-        drop(sse);
-
-        assert!(sender.send(Data::new("late data")).await.is_err());
     }
 
     #[actix_web::test]
@@ -664,13 +577,17 @@ mod tests {
 
     #[actix_web::test]
     async fn messages_are_received_from_sender() {
-        let (sender, mut sse) = channel(9);
+        let (sender, receiver) = tokio::sync::mpsc::channel(2);
+        let mut sse = Sse::from_infallible_receiver(receiver);
 
         assert!(poll_fn(|cx| Pin::new(&mut sse).poll_next(cx))
             .now_or_never()
             .is_none());
 
-        sender.send(Data::new("bar").event("foo")).await.unwrap();
+        sender
+            .send(Data::new("bar").event("foo").into())
+            .await
+            .unwrap();
 
         match poll_fn(|cx| Pin::new(&mut sse).poll_next(cx)).now_or_never() {
             Some(Some(Ok(bytes))) => assert_eq!(bytes, "event: foo\ndata: bar\n\n"),
@@ -683,8 +600,9 @@ mod tests {
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);
 
-        let (sender, sse) = channel(9);
-        let mut sse = sse.with_keep_alive(Duration::from_millis(4));
+        let (sender, receiver) = tokio::sync::mpsc::channel(2);
+        let mut sse =
+            Sse::from_infallible_receiver(receiver).with_keep_alive(Duration::from_millis(4));
 
         assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
 
@@ -697,7 +615,7 @@ mod tests {
 
         assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
 
-        sender.send(Data::new("foo")).await.unwrap();
+        sender.send(Data::new("foo").into()).await.unwrap();
 
         match Pin::new(&mut sse).poll_next(&mut cx) {
             Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "data: foo\n\n"),
