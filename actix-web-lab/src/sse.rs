@@ -52,7 +52,6 @@ use actix_web::{
 };
 use bytes::{BufMut as _, Bytes, BytesMut};
 use bytestring::ByteString;
-use derive_more::{Display, Error};
 use futures_core::Stream;
 use pin_project_lite::pin_project;
 use serde::Serialize;
@@ -68,31 +67,7 @@ use crate::{
     BoxError,
 };
 
-/// Error returned from [`SseSender::send()`].
-#[derive(Debug, Display, Error)]
-#[display(fmt = "channel closed")]
-#[non_exhaustive]
-pub struct SendError(#[error(not(source))] Event);
-
-/// Error returned from [`SseSender::try_send()`].
-///
-/// In each case, the original message is returned back to you.
-#[derive(Debug, Display, Error)]
-#[non_exhaustive]
-pub enum TrySendError {
-    /// The SSE send buffer is full.
-    #[display(fmt = "buffer full")]
-    Full(#[error(not(source))] Event),
-
-    /// The receiving ([`Sse`]) has been dropped, likely because the client disconnected.
-    #[display(fmt = "channel closed")]
-    Closed(#[error(not(source))] Event),
-}
-
 /// Server-sent events data message containing a `data` field and optional `id` and `event` fields.
-///
-/// Since it implements `Into<SseMessage>`, this can be passed directly to [`send`](SseSender::send)
-/// or [`try_send`](SseSender::try_send).
 ///
 /// # Examples
 /// ```
