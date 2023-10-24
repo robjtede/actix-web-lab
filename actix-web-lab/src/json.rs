@@ -10,8 +10,7 @@ use std::{
 // #[cfg(feature = "__compress")]
 // use crate::dev::Decompress;
 use actix_web::{
-    dev::Payload, error::JsonPayloadError, http::header, web, Error, FromRequest, HttpMessage,
-    HttpRequest,
+    dev::Payload, error::JsonPayloadError, http::header, web, FromRequest, HttpMessage, HttpRequest,
 };
 use futures_core::Stream as _;
 use serde::de::DeserializeOwned;
@@ -32,11 +31,11 @@ pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
 /// that is exported (`DEFAULT_LIMIT`) is 2MiB.
 ///
 /// ```
-/// use actix_web::{post, App};
+/// use actix_web::{error, post, App, HttpRequest, HttpResponse, Responder};
 /// use actix_web_lab::extract::{Json, DEFAULT_JSON_LIMIT};
-/// use serde::Deserialize;
+/// use serde::{Deserialize, Serialize};
 ///
-/// #[derive(Deserialize)]
+/// #[derive(Deserialize, Serialize)]
 /// struct Info {
 ///     username: String,
 /// }
@@ -53,6 +52,20 @@ pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
 /// #[post("/big-payload")]
 /// async fn big_payload(info: Json<Info, LIMIT_32_MB>) -> String {
 ///     format!("Welcome {}!", info.username)
+/// }
+///
+/// /// Capture the error that may have occured when deserializing
+/// /// the body of `req`
+/// #[post("/normal-payload")]
+/// async fn normal_payload(
+///     res: Result<Json<Info>, error::JsonPayloadError>,
+///     req: HttpRequest,
+/// ) -> Result<impl Responder, error::Error> {
+///     let item = res.map_err(|err| {
+///         println!("failed to deserialise JSON in {req:?}: {err}");
+///         err
+///     })?;
+///     Ok(HttpResponse::Ok().json(item.0))
 /// }
 /// ```
 #[derive(Debug)]
@@ -92,7 +105,7 @@ impl<T, const LIMIT: usize> Json<T, LIMIT> {
 
 /// See [here](#extractor) for example of usage as an extractor.
 impl<T: DeserializeOwned, const LIMIT: usize> FromRequest for Json<T, LIMIT> {
-    type Error = Error;
+    type Error = JsonPayloadError;
     type Future = JsonExtractFut<T, LIMIT>;
 
     #[inline]
@@ -110,7 +123,7 @@ pub struct JsonExtractFut<T, const LIMIT: usize> {
 }
 
 impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonExtractFut<T, LIMIT> {
-    type Output = Result<Json<T, LIMIT>, Error>;
+    type Output = Result<Json<T, LIMIT>, JsonPayloadError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
@@ -126,7 +139,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonExtractFut<T, LIMIT
                     req.match_name().unwrap_or_else(|| req.path())
                 );
 
-                Err(err.into())
+                Err(err)
             }
             Ok(data) => Ok(Json(data)),
         };
@@ -180,10 +193,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> JsonBody<T, LIMIT> {
             .and_then(|l| l.to_str().ok())
             .and_then(|s| s.parse::<usize>().ok());
 
-        // Notice the content-length is not checked against limit of json config here.
-        // As the internal usage always call JsonBody::limit after JsonBody::new.
-        // And limit check to return an error variant of JsonBody happens there.
-
+        // maybe remove support for decompression at the extractor level for all extractors ?
         let payload = {
             // cfg_if::cfg_if! {
             //     if #[cfg(feature = "__compress")] {
