@@ -8,7 +8,7 @@
 - Add `sse::Sse::{from_receiver, from_infallible_receiver}()` methods.
 - Remove `sse::{Sender, ChannelStream}` types.
 - Remove `sse::{SendError, TrySendError}` types.
-- Remove `sse::channel` function.
+- Remove `sse::channel()` function.
 - Remove `sse::{SseSendError, SseTrySendError, SseData, SseMessage}` type aliases.
 - Remove `web::Redirect` responder and `web::redirect()` function.
 - Remove `guard::Acceptable` guard type.
