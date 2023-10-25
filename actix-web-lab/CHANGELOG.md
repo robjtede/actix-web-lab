@@ -12,7 +12,6 @@
 - Remove `sse::{SseSendError, SseTrySendError, SseData, SseMessage}` type aliases.
 - Remove `web::Redirect` responder and `web::redirect()` function.
 - Remove `guard::Acceptable` guard type.
-- Update `ed25519-dalek` dependency to `2`.
 
 ## 0.19.2
 

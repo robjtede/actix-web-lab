@@ -13,20 +13,20 @@ use actix_web::{
 use actix_web_lab::extract::{Json, RequestSignature, RequestSignatureScheme};
 use async_trait::async_trait;
 use bytes::{BufMut as _, BytesMut};
-use ed25519_dalek::{PublicKey, Signature, Verifier as _};
+use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use hex_literal::hex;
 use once_cell::sync::Lazy;
 use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use tracing::info;
 
-const APP_PUBLIC_KEY_BYTES: &[u8] =
+const APP_PUBLIC_KEY_BYTES: &[u8; 32] =
     &hex!("d7d9a14753b591be99a0c5721be8083b1e486c3fcdc6ac08bfb63a6e5c204569");
 
 static SIG_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-ed25519");
 static TS_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-timestamp");
-static APP_PUBLIC_KEY: Lazy<PublicKey> =
-    Lazy::new(|| PublicKey::from_bytes(APP_PUBLIC_KEY_BYTES).unwrap());
+static APP_PUBLIC_KEY: Lazy<VerifyingKey> =
+    Lazy::new(|| VerifyingKey::from_bytes(APP_PUBLIC_KEY_BYTES).unwrap());
 
 #[derive(Debug)]
 struct DiscordWebhook {
