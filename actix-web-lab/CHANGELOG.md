@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.20.0
+
 - Add `sse::Sse::from_infallible_stream()` method.
 - Add `sse::Sse::{from_receiver, from_infallible_receiver}()` methods.
 - Remove `sse::{Sender, ChannelStream}` types.
@@ -10,6 +12,7 @@
 - Remove `sse::{SseSendError, SseTrySendError, SseData, SseMessage}` type aliases.
 - Remove `web::Redirect` responder and `web::redirect()` function.
 - Remove `guard::Acceptable` guard type.
+- Update `ed25519-dalek` dependency to `2`.
 
 ## 0.19.2
 
