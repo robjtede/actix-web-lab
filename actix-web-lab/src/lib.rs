@@ -55,6 +55,7 @@ mod panic_reporter;
 mod path;
 mod query;
 mod redirect_to_https;
+mod redirect_to_non_www;
 mod redirect_to_www;
 mod request_signature;
 #[cfg(feature = "spa")]
