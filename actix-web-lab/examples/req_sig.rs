@@ -8,7 +8,6 @@ use actix_web::{
     App, Error, HttpRequest, HttpServer,
 };
 use actix_web_lab::extract::{RequestSignature, RequestSignatureScheme};
-use async_trait::async_trait;
 use base64::prelude::*;
 use digest::{CtOutput, Digest, Mac};
 use generic_array::GenericArray;
@@ -61,7 +60,6 @@ struct ExampleApi {
     hasher: Sha256,
 }
 
-#[async_trait(?Send)]
 impl RequestSignatureScheme for ExampleApi {
     type Signature = CtOutput<SimpleHmac<Sha512>>;
     type Error = Error;

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove use of `async-trait` on `RequestSignatureScheme` trait.
+
 ## 0.20.0
 
 - Add `sse::Sse::from_infallible_stream()` method.
