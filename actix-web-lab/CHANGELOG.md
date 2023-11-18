@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.20.1
+
 - Add `redirect_to_non_www` fn middleware.
 
 ## 0.20.0
