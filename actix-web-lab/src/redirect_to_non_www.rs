@@ -7,9 +7,10 @@ use actix_web::{
 
 use crate::middleware_from_fn::Next;
 
-/// A function middleware to redirect traffic from `www.` to base host.
+/// A function middleware to redirect traffic away from `www.` if it's present.
 ///
 /// # Examples
+///
 /// ```
 /// # use actix_web::App;
 /// use actix_web_lab::middleware::{from_fn, redirect_to_non_www};
@@ -26,11 +27,10 @@ pub async fn redirect_to_non_www(
     let (req, pl) = req.into_parts();
     let conn_info = req.connection_info();
 
-    if conn_info.host().starts_with("www.") {
+    if let Some(host_no_www) = conn_info.host().strip_prefix("www.") {
         let scheme = conn_info.scheme();
-        let host = conn_info.host()[4..].to_string(); // Skipping www.
         let path = req.uri().path();
-        let uri = format!("{scheme}://{host}{path}");
+        let uri = format!("{scheme}://{host_no_www}{path}");
 
         let res = Redirect::to(uri).respond_to(&req);
 
@@ -44,7 +44,7 @@ pub async fn redirect_to_non_www(
 }
 
 #[cfg(test)]
-mod test_super {
+mod tests {
     use actix_web::{
         dev::ServiceFactory,
         http::{header, StatusCode},
@@ -81,7 +81,7 @@ mod test_super {
 
         let loc = res.headers().get(header::LOCATION);
         assert!(loc.is_some());
-        assert_eq!(loc.unwrap().as_bytes().starts_with(b"http://www"), false);
+        assert!(!loc.unwrap().as_bytes().starts_with(b"http://www."));
 
         let body = test::read_body(res).await;
         assert!(body.is_empty());

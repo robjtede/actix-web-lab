@@ -10,6 +10,7 @@ use crate::middleware_from_fn::Next;
 /// A function middleware to redirect traffic to `www.` if not already there.
 ///
 /// # Examples
+///
 /// ```
 /// # use actix_web::App;
 /// use actix_web_lab::middleware::{from_fn, redirect_to_www};
@@ -44,7 +45,7 @@ pub async fn redirect_to_www(
 }
 
 #[cfg(test)]
-mod test_super {
+mod tests {
     use actix_web::{
         dev::ServiceFactory,
         http::{header, StatusCode},
@@ -79,7 +80,7 @@ mod test_super {
 
         let loc = res.headers().get(header::LOCATION);
         assert!(loc.is_some());
-        assert!(loc.unwrap().as_bytes().starts_with(b"http://www"));
+        assert!(loc.unwrap().as_bytes().starts_with(b"http://www."));
 
         let body = test::read_body(res).await;
         assert!(body.is_empty());

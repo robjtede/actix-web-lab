@@ -1,5 +1,7 @@
 //! Experimental typed headers.
 
+#[cfg(test)]
+pub(crate) use self::header_test_helpers::{assert_parse_eq, assert_parse_fail};
 pub use crate::{
     cache_control::{CacheControl, CacheDirective},
     content_length::ContentLength,
@@ -51,6 +53,3 @@ mod header_test_helpers {
         H::parse(&req).unwrap_err();
     }
 }
-
-#[cfg(test)]
-pub(crate) use header_test_helpers::{assert_parse_eq, assert_parse_fail};

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `redirect_to_non_www` fn middleware.
+
 ## 0.20.0
 
 - Add `sse::Sse::from_infallible_stream()` method.
