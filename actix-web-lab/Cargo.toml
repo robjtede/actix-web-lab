@@ -92,7 +92,7 @@ time = { version = "0.3", features = ["formatting"] }
 tokio = { version = "1.18.5", features = ["full"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 
-rustls = "0.21" # 0.21 blocked on actix-web
+rustls = "0.21" # 0.22 blocked on actix-web
 
 [[example]]
 name = "cbor"
