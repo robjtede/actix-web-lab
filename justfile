@@ -22,14 +22,15 @@ test-coverage-lcov toolchain="":
 # Check project.
 check:
     just --unstable --fmt --check
-    npx -y prettier --check '**/*.md'
+    npx -y prettier --check (fd --hidden -e=md -e=yml)
     taplo lint
     cargo +nightly fmt -- --check
 
 # Format project.
 fmt:
     just --unstable --fmt
-    npx -y prettier --write '**/*.md'
+    nix fmt
+    npx -y prettier --write (fd --hidden -e=md -e=yml)
     taplo format
     cargo +nightly fmt
 
