@@ -72,13 +72,13 @@ actix-files = { version = "0.6", optional = true }
 [dev-dependencies]
 actix-web-lab-derive = "=0.20.0"
 
-actix-web = { version = "4", features = ["rustls"] }
-async_zip = { version = "0.0.15", features = ["deflate", "tokio"] }
+actix-web = { version = "4", features = ["rustls-0_21"] }
+async_zip = { version = "0.0.16", features = ["deflate", "tokio"] }
 base64 = "0.21"
 digest = "0.10"
 ed25519-dalek = "2"
 env_logger = "0.10"
-futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
+futures-util = { version = "0.3.17", default-features = false, features = ["std", "io"] }
 generic-array = "0.14"
 hex = "0.4"
 hex-literal = "0.4"
@@ -92,7 +92,7 @@ time = { version = "0.3", features = ["formatting"] }
 tokio = { version = "1.18.5", features = ["full"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 
-rustls = "0.20" # 0.21 blocked on actix-web
+rustls = "0.21" # 0.21 blocked on actix-web
 
 [[example]]
 name = "cbor"

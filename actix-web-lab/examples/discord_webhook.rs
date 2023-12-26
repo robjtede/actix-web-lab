@@ -132,7 +132,7 @@ async fn main() -> io::Result<()> {
         )
     })
     .workers(1)
-    .bind_rustls(("0.0.0.0", 443), load_rustls_config())?
+    .bind_rustls_021(("0.0.0.0", 443), load_rustls_config())?
     .run()
     .await
 }
