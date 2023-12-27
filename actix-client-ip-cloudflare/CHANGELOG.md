@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replace visible types from `cidr-utils` with equivalent types from the `ipnetwork` crate.
+
 ## 0.1.1
 
 - Add `TrustedIps::new()` constructor.
