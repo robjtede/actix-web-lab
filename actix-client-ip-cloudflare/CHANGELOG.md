@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0
+
 - Replace visible types from `cidr-utils` with equivalent types from the `ipnetwork` crate.
 
 ## 0.1.1

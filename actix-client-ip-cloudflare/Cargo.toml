@@ -1,6 +1,6 @@
 [package]
 name = "actix-client-ip-cloudflare"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Extractor for trustworthy client IP addresses when proxied through Cloudflare"
 keywords = ["actix", "web", "client", "ip", "cloudflare"]
