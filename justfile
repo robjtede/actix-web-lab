@@ -19,10 +19,10 @@ test-coverage-codecov toolchain="":
 test-coverage-lcov toolchain="":
     cargo {{ toolchain }} llvm-cov --workspace --all-features --lcov --output-path lcov.info
 
-# Check project.
+# Check project formatting.
 check:
     just --unstable --fmt --check
-    npx -y prettier --check (fd --hidden -e=md -e=yml)
+    npx -y prettier --check $(fd --type=file --hidden -e=md -e=yml)
     taplo lint
     cargo +nightly fmt -- --check
 
@@ -30,7 +30,7 @@ check:
 fmt:
     just --unstable --fmt
     nix fmt
-    npx -y prettier --write (fd --hidden -e=md -e=yml)
+    npx -y prettier --write $(fd --type=file --hidden -e=md -e=yml)
     taplo format
     cargo +nightly fmt
 

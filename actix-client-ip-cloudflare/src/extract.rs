@@ -59,17 +59,16 @@ impl FromRequest for TrustedClientIp {
 #[cfg(test)]
 mod tests {
     use actix_web::test::TestRequest;
-    use cidr_utils::utils::IpCidrCombiner;
 
     use super::*;
 
     fn sample_trusted_ips() -> TrustedIps {
-        let mut cidr_ranges = IpCidrCombiner::new();
-
-        cidr_ranges.push("103.21.244.0/22".parse().unwrap());
-        cidr_ranges.push("198.41.128.0/17".parse().unwrap());
-
-        TrustedIps { cidr_ranges }
+        TrustedIps {
+            cidr_ranges: Vec::from([
+                "103.21.244.0/22".parse().unwrap(),
+                "198.41.128.0/17".parse().unwrap(),
+            ]),
+        }
     }
 
     #[test]

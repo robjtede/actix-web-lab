@@ -24,8 +24,8 @@ fetch-ips-openssl = ["awc", "awc/openssl"]
 actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 awc = { version = "3", optional = true }
-cidr-utils = { version = "0.5", features = ["serde"] }
 impl-more = "0.1.5"
+ipnetwork = { version = "0.20", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 tracing = { version = "0.1.30", features = ["log"] }
 
