@@ -84,7 +84,7 @@ hex = "0.4"
 hex-literal = "0.4"
 hmac = { version = "0.12", features = ["reset"] }
 rand = "0.8"
-rustls-pemfile = "1"
+rustls-pemfile = "2"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
 static_assertions = "1.1"
