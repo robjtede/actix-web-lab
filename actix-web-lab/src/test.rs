@@ -1,4 +1,4 @@
-//! Expiremental testing utilities.
+//! Experimental testing utilities.
 
 #[doc(inline)]
 #[cfg(test)]

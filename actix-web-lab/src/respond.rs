@@ -1,4 +1,4 @@
-//! Expiremental responders and response helpers.
+//! Experimental responders and response helpers.
 
 #[cfg(feature = "cbor")]
 pub use crate::cbor::Cbor;
