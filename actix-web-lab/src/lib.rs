@@ -67,6 +67,7 @@ mod test_header_macros;
 mod test_request_macros;
 mod test_response_macros;
 mod test_services;
+mod thin_data;
 mod url_encoded_form;
 mod x_forwarded_prefix;
 
