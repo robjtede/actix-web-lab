@@ -47,6 +47,7 @@
 - `LazyData`: app data/state initialized on first use [(docs)](https://docs.rs/actix-web-lab/0.20.1/actix_web_lab/extract/struct.LazyData.html)
 - `SwapData`: app data/state that can be replaced at runtime (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.20.1/actix_web_lab/extract/struct.SwapData.html)
 - `LocalData`: app data/state that uses an `Rc` internally, avoiding atomic overhead (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.20.1/actix_web_lab/extract/struct.LocalData.html)
+- `ThinData`: app data/state for cheaply-cloned types [(docs)](https://docs.rs/actix-web-lab/0.20.1/actix_web_lab/extract/struct.ThinData.html)
 - `Json`: simplified JSON extractor with const-generic payload limits [(docs)](https://docs.rs/actix-web-lab/0.20.1/actix_web_lab/extract/struct.Json.html)
 - `Path`: simplified path parameter extractor that supports destructuring [(docs)](https://docs.rs/actix-web-lab/0.20.1/actix_web_lab/extract/struct.Path.html)
 - `Query`: simplified query-string extractor that can also collect multi-value items [(docs)](https://docs.rs/actix-web-lab/0.20.1/actix_web_lab/extract/struct.Query.html)

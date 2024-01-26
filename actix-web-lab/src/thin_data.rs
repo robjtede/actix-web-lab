@@ -5,11 +5,39 @@ use actix_web::{dev::Payload, error, FromRequest, HttpRequest};
 use derive_more::{AsMut, AsRef, Deref, DerefMut};
 use tracing::log;
 
-/// Like [`actix_web::web::Data`](https://docs.rs/actix-web/latest/actix_web/web/struct.Data.html) but for `Clone` types that
-/// are already an `Arc` internally or share state using some other means when cloned.
+/// Application data wrapper and extractor for cheaply-cloned types.
 ///
-/// Unlike `Data`, this wrapper clones `T` directly. Therefore it is the user's responsibility to ensure that clones of `T`
-/// do actually share the same state, otherwise state may be randomly different while using `ThinData<T>`.
+/// Similar to Actix Web's `Data` wrapper but for `Clone` types that are already an `Arc` internally
+/// or shares state using some other means when cloned.
+///
+/// Unlike `Data`, this wrapper clones `T` during extraction. Therefore, it is the user's
+/// responsibility to ensure that clones of `T` do actually share the same state, otherwise state
+/// may be unexpectedly different across multiple requests.
+///
+/// Note that if your type is an `Arc<T>` then it's recommended to use Actix Web's `Data::from(arc)`
+/// conversion instead.
+///
+/// # Examples
+///
+/// ```rust
+/// use actix_web_lab::extract::ThinData;
+/// use actix_web::{App, Responder, HttpResponse, web};
+///
+/// // Use the `ThinData<T>` extractor to access a database connection pool.
+/// async fn index(ThinData(db_pool): ThinData<DbPool>) -> impl Responder {
+///     // database action ...
+///
+///     HttpResponse::Ok()
+/// }
+///
+/// # type DbPool = ();
+/// let db_pool = DbPool::default();
+///
+/// App::new()
+///     .app_data(ThinData(db_pool.clone()))
+///     .service(web::resource("/").get(index))
+/// # ;
+/// ```
 #[derive(AsRef, AsMut, Deref, DerefMut, Clone, Debug)]
 pub struct ThinData<T>(pub T);
 
