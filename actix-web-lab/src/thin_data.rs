@@ -38,7 +38,7 @@ use tracing::log;
 ///     .service(web::resource("/").get(index))
 /// # ;
 /// ```
-#[derive(AsRef, AsMut, Deref, DerefMut, Clone, Debug)]
+#[derive(Debug, Clone, AsRef, AsMut, Deref, DerefMut)]
 pub struct ThinData<T>(pub T);
 
 impl<T: Clone + 'static> FromRequest for ThinData<T> {

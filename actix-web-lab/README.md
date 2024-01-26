@@ -11,6 +11,7 @@
 [![dependency status](https://deps.rs/crate/actix-web-lab/0.20.2/status.svg)](https://deps.rs/crate/actix-web-lab/0.20.2)
 [![Download](https://img.shields.io/crates/d/actix-web-lab.svg)](https://crates.io/crates/actix-web-lab)
 [![CircleCI](https://circleci.com/gh/robjtede/actix-web-lab/tree/main.svg?style=shield)](https://circleci.com/gh/robjtede/actix-web-lab/tree/main)
+[![codecov](https://codecov.io/gh/robjtede/actix-web-lab/branch/main/graph/badge.svg)](https://codecov.io/gh/robjtede/actix-web-lab)
 
 <!-- prettier-ignore-end -->
 
