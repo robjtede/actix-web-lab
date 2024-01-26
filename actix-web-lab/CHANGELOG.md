@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.20.2
+
 - Add `extract::ThinData` extractor.
 
 ## 0.20.1
