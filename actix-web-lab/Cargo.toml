@@ -44,7 +44,7 @@ csv = "1.1"
 derive_more = { version = "0.99.8", features = ["nightly"] }
 futures-core = "0.3.17"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
-http = "0.2.7"
+http = "1.1.0"
 impl-more = "0.1.3"
 itertools = "0.12"
 local-channel = "0.1"
