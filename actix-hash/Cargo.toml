@@ -47,7 +47,7 @@ subtle = "2"
 
 [dev-dependencies]
 actix-web = "4"
-base64 = "0.21"
+base64 = "0.22"
 env_logger = "0.11"
 hex-literal = "0.4"
 sha2 = "0.10"
