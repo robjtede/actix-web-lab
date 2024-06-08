@@ -10,6 +10,5 @@
 <br />
 [![dependency status](https://deps.rs/crate/actix-hash/0.5.0/status.svg)](https://deps.rs/crate/actix-hash/0.5.0)
 [![Download](https://img.shields.io/crates/d/actix-hash.svg)](https://crates.io/crates/actix-hash)
-[![CircleCI](https://circleci.com/gh/robjtede/actix-web-lab/tree/main.svg?style=shield)](https://circleci.com/gh/robjtede/actix-web-lab/tree/main)
 
 <!-- prettier-ignore-end -->
