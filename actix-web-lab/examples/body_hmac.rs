@@ -8,7 +8,6 @@ use actix_web::{
     App, Error, FromRequest, HttpRequest, HttpServer,
 };
 use actix_web_lab::extract::{RequestSignature, RequestSignatureScheme};
-use async_trait::async_trait;
 use digest::{CtOutput, Mac};
 use hmac::SimpleHmac;
 use sha2::Sha256;
@@ -28,7 +27,6 @@ struct AbcApi {
     hmac: SimpleHmac<Sha256>,
 }
 
-#[async_trait(?Send)]
 impl RequestSignatureScheme for AbcApi {
     type Signature = CtOutput<SimpleHmac<Sha256>>;
     type Error = Error;

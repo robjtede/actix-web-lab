@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove use of `async-trait` on `RequestSignatureScheme` trait.
+
 ## 0.20.2
 
 - Add `extract::ThinData` extractor.
