@@ -1,11 +1,11 @@
 version: 2.1
 
 orbs:
-  codecov: codecov/codecov@3.3.0
+  codecov: codecov/codecov@4.1.0
 
 jobs:
   clippy:
-    docker: [image: cimg/rust:1.74.1]
+    docker: [image: cimg/rust:1.78.0]
     steps:
       - checkout
       - run: cargo --version
@@ -18,7 +18,7 @@ jobs:
             - './target'
 
   test:
-    docker: [image: cimg/rust:1.74.1]
+    docker: [image: cimg/rust:1.78.0]
     steps:
       - checkout
       - run: cargo --version
@@ -35,7 +35,7 @@ jobs:
             - './target'
 
   doc-test:
-    docker: [image: cimg/rust:1.74.1]
+    docker: [image: cimg/rust:1.78.0]
     steps:
       - checkout
       - run: cargo --version
@@ -49,7 +49,7 @@ jobs:
             - './target'
 
   test-coverage:
-    docker: [image: cimg/rust:1.74.1]
+    docker: [image: cimg/rust:1.78.0]
     steps:
       - checkout
       - run: cargo --version
@@ -68,7 +68,7 @@ jobs:
             - './target'
 
   feature-checks:
-    docker: [image: cimg/rust:1.74.1]
+    docker: [image: cimg/rust:1.78.0]
     steps:
       - checkout
       - run: cargo --version

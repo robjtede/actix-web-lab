@@ -16,7 +16,7 @@ use bytes::{BufMut as _, BytesMut};
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use hex_literal::hex;
 use once_cell::sync::Lazy;
-use rustls::{Certificate, PrivateKey, ServerConfig};
+use rustls::{pki_types::PrivateKeyDer, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use tracing::info;
 
@@ -131,39 +131,27 @@ async fn main() -> io::Result<()> {
             ),
         )
     })
-    .workers(1)
-    .bind_rustls_021(("0.0.0.0", 443), load_rustls_config())?
+    .workers(2)
+    .bind_rustls_0_23(("0.0.0.0", 443), load_rustls_config())?
     .run()
     .await
 }
 
 fn load_rustls_config() -> rustls::ServerConfig {
     // init server config builder with safe defaults
-    let config = ServerConfig::builder()
-        .with_safe_defaults()
-        .with_no_client_auth();
+    let config = ServerConfig::builder().with_no_client_auth();
 
     // load TLS key/cert files
     let cert_file = &mut BufReader::new(File::open("fullchain.pem").unwrap());
     let key_file = &mut BufReader::new(File::open("privkey.pem").unwrap());
 
     // convert files to key/cert objects
-    let cert_chain = certs(cert_file)
-        .unwrap()
-        .into_iter()
-        .map(Certificate)
-        .collect();
-    let mut keys: Vec<PrivateKey> = pkcs8_private_keys(key_file)
-        .unwrap()
-        .into_iter()
-        .map(PrivateKey)
-        .collect();
+    let cert_chain = certs(cert_file).collect::<Result<Vec<_>, _>>().unwrap();
+    let keys = pkcs8_private_keys(key_file)
+        .flat_map(Result::ok)
+        .next()
+        .map(PrivateKeyDer::Pkcs8)
+        .unwrap();
 
-    // exit if no keys could be parsed
-    if keys.is_empty() {
-        eprintln!("Could not locate PKCS 8 private keys.");
-        std::process::exit(1);
-    }
-
-    config.with_single_cert(cert_chain, keys.remove(0)).unwrap()
+    config.with_single_cert(cert_chain, keys).unwrap()
 }
