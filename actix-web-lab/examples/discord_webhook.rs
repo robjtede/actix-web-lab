@@ -1,7 +1,4 @@
-use std::{
-    fs::File,
-    io::{self, BufReader},
-};
+use std::{fs::File, io};
 
 use actix_web::{
     error,
@@ -11,7 +8,6 @@ use actix_web::{
     App, Error, HttpRequest, HttpServer,
 };
 use actix_web_lab::extract::{Json, RequestSignature, RequestSignatureScheme};
-use async_trait::async_trait;
 use bytes::{BufMut as _, BytesMut};
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use hex_literal::hex;
@@ -61,7 +57,6 @@ impl DiscordWebhook {
     }
 }
 
-#[async_trait(?Send)]
 impl RequestSignatureScheme for DiscordWebhook {
     type Signature = (BytesMut, Signature);
 
@@ -142,8 +137,8 @@ fn load_rustls_config() -> rustls::ServerConfig {
     let config = ServerConfig::builder().with_no_client_auth();
 
     // load TLS key/cert files
-    let cert_file = &mut BufReader::new(File::open("fullchain.pem").unwrap());
-    let key_file = &mut BufReader::new(File::open("privkey.pem").unwrap());
+    let cert_file = &mut io::BufReader::new(File::open("fullchain.pem").unwrap());
+    let key_file = &mut io::BufReader::new(File::open("privkey.pem").unwrap());
 
     // convert files to key/cert objects
     let cert_chain = certs(cert_file).collect::<Result<Vec<_>, _>>().unwrap();

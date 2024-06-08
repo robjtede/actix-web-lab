@@ -1,8 +1,7 @@
-use std::fmt;
+use std::{fmt, future::Future};
 
 use actix_http::BoxedPayloadStream;
 use actix_web::{dev, web::Bytes, Error, FromRequest, HttpRequest};
-use async_trait::async_trait;
 use derive_more::Display;
 use futures_core::future::LocalBoxFuture;
 use futures_util::{FutureExt as _, StreamExt as _, TryFutureExt as _};
@@ -45,7 +44,6 @@ use tracing::trace;
 /// ```
 /// use actix_web::{web::Bytes, Error, HttpRequest};
 /// use actix_web_lab::extract::RequestSignatureScheme;
-/// use async_trait::async_trait;
 /// use hmac::{digest::CtOutput, Mac, SimpleHmac};
 /// use sha2::Sha256;
 ///
@@ -54,7 +52,6 @@ use tracing::trace;
 ///     hmac: SimpleHmac<Sha256>,
 /// }
 ///
-/// #[async_trait(?Send)]
 /// impl RequestSignatureScheme for AbcApi {
 ///     /// The constant-time verifiable output of the HMAC type.
 ///     type Signature = CtOutput<SimpleHmac<Sha256>>;
@@ -85,7 +82,6 @@ use tracing::trace;
 ///     }
 /// }
 /// ```
-#[async_trait(?Send)]
 pub trait RequestSignatureScheme: Sized {
     /// The signature type returned from [`finalize`](Self::finalize) and checked in
     /// [`verify`](Self::verify).
@@ -107,20 +103,27 @@ pub trait RequestSignatureScheme: Sized {
     /// - initialization of signature scheme type
     /// - key lookup / initialization
     /// - pre-body digest updates
-    async fn init(req: &HttpRequest) -> Result<Self, Self::Error>;
+    fn init(req: &HttpRequest) -> impl Future<Output = Result<Self, Self::Error>>;
 
     /// Fold received body chunk into signature.
     ///
     /// If processing the request body one chunk at a time is not equivalent to processing it all at
     /// once, then the chunks will need to be added to a buffer.
-    async fn consume_chunk(&mut self, req: &HttpRequest, chunk: Bytes) -> Result<(), Self::Error>;
+    fn consume_chunk(
+        &mut self,
+        req: &HttpRequest,
+        chunk: Bytes,
+    ) -> impl Future<Output = Result<(), Self::Error>>;
 
     /// Finalize and output `Signature` type.
     ///
     /// Possible steps that should be included in `finalize` implementations:
     /// - post-body digest updates
     /// - signature finalization
-    async fn finalize(self, req: &HttpRequest) -> Result<Self::Signature, Self::Error>;
+    fn finalize(
+        self,
+        req: &HttpRequest,
+    ) -> impl Future<Output = Result<Self::Signature, Self::Error>>;
 
     /// Verify _true signature_ against _candidate signature_.
     ///
@@ -309,7 +312,6 @@ mod tests {
     #[derive(Debug, Default)]
     struct JustHash(sha2::Sha256);
 
-    #[async_trait(?Send)]
     impl RequestSignatureScheme for JustHash {
         type Signature = CtOutput<sha2::Sha256>;
         type Error = Infallible;
