@@ -7,6 +7,12 @@ members = [
   "./actix-web-lab",
 ]
 
+[workspace.package]
+repository = "https://github.com/robjtede/actix-web-lab"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+rust-version = "1.75"
+
 [patch.crates-io]
 actix-client-ip-cloudflare = { path = "./actix-client-ip-cloudflare" }
 actix-hash = { path = "./actix-hash" }

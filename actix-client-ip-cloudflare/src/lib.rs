@@ -59,8 +59,7 @@
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
-#![warn(future_incompatible)]
-#![warn(missing_docs)]
+#![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 mod extract;

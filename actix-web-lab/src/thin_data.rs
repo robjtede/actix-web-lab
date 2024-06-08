@@ -19,9 +19,9 @@ use tracing::log;
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```
+/// use actix_web::{web, App, HttpResponse, Responder};
 /// use actix_web_lab::extract::ThinData;
-/// use actix_web::{App, Responder, HttpResponse, web};
 ///
 /// // Use the `ThinData<T>` extractor to access a database connection pool.
 /// async fn index(ThinData(db_pool): ThinData<DbPool>) -> impl Responder {
