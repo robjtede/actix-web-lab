@@ -144,6 +144,7 @@ pub enum BytesBody<const LIMIT: usize> {
     Error(Option<BytesPayloadError>),
     Body {
         /// Length as reported by `Content-Length` header, if present.
+        #[allow(dead_code)]
         length: Option<usize>,
         payload: dev::Payload,
         buf: web::BytesMut,

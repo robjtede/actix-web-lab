@@ -169,6 +169,7 @@ pub enum JsonBody<T, const LIMIT: usize> {
     Error(Option<JsonPayloadError>),
     Body {
         /// Length as reported by `Content-Length` header, if present.
+        #[allow(dead_code)]
         length: Option<usize>,
         // #[cfg(feature = "__compress")]
         // payload: Decompress<Payload>,
