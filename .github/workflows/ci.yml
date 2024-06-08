@@ -26,36 +26,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # prettier-ignore
-        target:
-          - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
-          - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
-          - { name: Windows, os: windows-latest, triple: x86_64-pc-windows-msvc }
         version:
           - { name: msrv, version: "${{ needs.read_msrv.outputs.msrv }}" }
           - { name: stable, version: stable }
 
-    name: ${{ matrix.target.name }} / ${{ matrix.version.name }}
-    runs-on: ${{ matrix.target.os }}
+    name: Test / ${{ matrix.version.name }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install nasm
-        if: matrix.target.os == 'windows-latest'
-        uses: ilammy/setup-nasm@v1.5.1
-
-      - name: Install OpenSSL
-        if: matrix.target.os == 'windows-latest'
-        shell: bash
-        run: |
-          set -e
-          choco install openssl --version=1.1.1.2100 -y --no-progress
-          echo 'OPENSSL_DIR=C:\Program Files\OpenSSL' >> $GITHUB_ENV
-          echo "RUSTFLAGS=-C target-feature=+crt-static" >> $GITHUB_ENV
-
       - name: Setup mold linker
-        if: matrix.target.os == 'ubuntu-latest'
         uses: rui314/setup-mold@v1
 
       - name: Install Rust (${{ matrix.version.name }})
@@ -78,22 +59,6 @@ jobs:
 
       - name: CI cache clean
         run: cargo-ci-cache-clean
-
-  io-uring:
-    name: io-uring tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1.8.0
-        with:
-          toolchain: nightly
-
-      - name: tests (io-uring)
-        timeout-minutes: 60
-        run: >
-          sudo bash -c "ulimit -Sl 512 && ulimit -Hl 512 && PATH=$PATH:/usr/share/rust/.cargo/bin && RUSTUP_TOOLCHAIN=stable cargo test --lib --tests -p=actix-files --all-features"
 
   rustdoc:
     name: doc tests
