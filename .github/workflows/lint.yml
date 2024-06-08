@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   fmt:
+    name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +28,8 @@ jobs:
         run: cargo fmt --all -- --check
 
   clippy:
+    name: Clippy
+
     permissions:
       contents: read
       checks: write # to add clippy checks to PR diffs
@@ -50,6 +53,7 @@ jobs:
             -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
   public-api-diff:
+    name: Public API Diff
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main branch
