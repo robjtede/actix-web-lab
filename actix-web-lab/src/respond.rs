@@ -2,6 +2,8 @@
 
 #[cfg(feature = "cbor")]
 pub use crate::cbor::Cbor;
+#[allow(deprecated)]
+pub use crate::html::Html;
 #[cfg(feature = "msgpack")]
 pub use crate::msgpack::{MessagePack, MessagePackNamed};
-pub use crate::{csv::Csv, display_stream::DisplayStream, html::Html, ndjson::NdJson};
+pub use crate::{csv::Csv, display_stream::DisplayStream, ndjson::NdJson};

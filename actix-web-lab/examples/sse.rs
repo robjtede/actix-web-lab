@@ -1,11 +1,14 @@
 use std::{convert::Infallible, io, time::Duration};
 
 use actix_web::{get, middleware::Logger, App, HttpRequest, HttpServer, Responder};
-use actix_web_lab::{extract::Path, respond::Html, sse};
+#[allow(deprecated)]
+use actix_web_lab::respond::Html;
+use actix_web_lab::{extract::Path, sse};
 use futures_util::stream;
 use time::format_description::well_known::Rfc3339;
 use tokio::time::sleep;
 
+#[allow(deprecated)]
 #[get("/")]
 async fn index() -> impl Responder {
     Html(include_str!("./assets/sse.html").to_string())
