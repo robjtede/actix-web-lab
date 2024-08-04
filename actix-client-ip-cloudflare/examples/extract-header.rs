@@ -1,3 +1,5 @@
+//! Demonstrates use of the client IP header extractor.
+
 use actix_client_ip_cloudflare::{fetch_trusted_cf_ips, CfConnectingIp, TrustedClientIp};
 use actix_web::{get, web::Header, App, HttpServer, Responder};
 

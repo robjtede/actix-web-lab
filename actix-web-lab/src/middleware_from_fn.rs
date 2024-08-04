@@ -86,6 +86,7 @@ pub fn from_fn<F, Es>(mw_fn: F) -> MiddlewareFn<F, Es> {
 }
 
 /// Middleware transform for [`from_fn`].
+#[allow(missing_debug_implementations)]
 pub struct MiddlewareFn<F, Es> {
     mw_fn: Rc<F>,
     _phantom: PhantomData<Es>,
@@ -114,6 +115,7 @@ where
 }
 
 /// Middleware service for [`from_fn`].
+#[allow(missing_debug_implementations)]
 pub struct MiddlewareFnService<F, B, Es> {
     service: RcService<ServiceRequest, ServiceResponse<B>, Error>,
     mw_fn: Rc<F>,
@@ -212,6 +214,7 @@ impl_middleware_fn_service!(E1, E2, E3, E4, E5, E6, E7, E8);
 impl_middleware_fn_service!(E1, E2, E3, E4, E5, E6, E7, E8, E9);
 
 /// Wraps the "next" service in the middleware chain.
+#[allow(missing_debug_implementations)]
 pub struct Next<B> {
     service: RcService<ServiceRequest, ServiceResponse<B>, Error>,
 }

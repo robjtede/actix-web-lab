@@ -154,6 +154,9 @@ where
     }
 }
 
+/// Middleware service implementation for [`NormalizePath`].
+#[doc(hidden)]
+#[allow(missing_debug_implementations)]
 pub struct NormalizePathService<S> {
     service: S,
     merge_slash: Regex,

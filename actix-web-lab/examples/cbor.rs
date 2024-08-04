@@ -1,3 +1,5 @@
+//! Demonstrates use of the CBOR responder.
+
 use std::io;
 
 use actix_web::{get, App, HttpServer, Responder};

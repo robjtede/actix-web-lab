@@ -2,7 +2,7 @@ _list:
     @just --list
 
 # Check project formatting.
-check:
+check: && clippy
     just --unstable --fmt --check
     fd --hidden --type=file -e=md -e=yml --exec-batch prettier --check
     fd --hidden -e=toml --exec-batch taplo format --check

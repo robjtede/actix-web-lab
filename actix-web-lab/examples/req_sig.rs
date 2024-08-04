@@ -1,3 +1,5 @@
+//! Implements `RequestSignatureScheme` for a made-up API.
+
 use std::io;
 
 use actix_web::{

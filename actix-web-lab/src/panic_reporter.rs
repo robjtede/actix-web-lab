@@ -76,6 +76,9 @@ where
     }
 }
 
+/// Middleware service implementation for [`PanicReporter`].
+#[doc(hidden)]
+#[allow(missing_debug_implementations)]
 pub struct PanicReporterMiddleware<S> {
     service: Rc<S>,
     cb: PanicCallback,

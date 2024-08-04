@@ -14,11 +14,11 @@ edition = "2021"
 rust-version = "1.75"
 
 [workspace.lints.rust]
-rust_2018_idioms = "deny"
-nonstandard_style = "deny"
+rust_2018_idioms = { level = "deny", priority = 10 }
+nonstandard_style = { level = "deny", priority = 5 }
 future_incompatible = "warn"
 missing_docs = "warn"
-missing_debug_implementation = "warn"
+missing_debug_implementations = "warn"
 
 [patch.crates-io]
 actix-client-ip-cloudflare = { path = "./actix-client-ip-cloudflare" }

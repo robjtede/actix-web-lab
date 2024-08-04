@@ -63,6 +63,11 @@ where
     }
 }
 
+/// A middleware to catch panics in wrapped handlers and middleware, returning empty 500 responses.
+///
+/// See [`CatchPanic`].
+#[doc(hidden)]
+#[allow(missing_debug_implementations)]
 pub struct CatchPanicMiddleware<S> {
     service: Rc<S>,
 }

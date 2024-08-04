@@ -1,3 +1,5 @@
+//! Demonstrates using an `AsyncWrite` as a response body.
+
 use std::{io, time::Duration};
 
 use actix_web::{

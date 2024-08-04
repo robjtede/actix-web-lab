@@ -1,3 +1,5 @@
+//! Demonstrates use of alternative JSON extractor with const-generic size limits.
+
 use actix_web::{
     error::{InternalError, JsonPayloadError},
     middleware::{Logger, NormalizePath},

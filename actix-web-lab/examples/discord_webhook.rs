@@ -1,3 +1,5 @@
+//! Implements verification of Discord Webhook signatures.
+
 use std::{fs::File, io};
 
 use actix_web::{

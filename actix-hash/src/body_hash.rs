@@ -13,6 +13,7 @@ use pin_project_lite::pin_project;
 use tracing::trace;
 
 /// Parts of the resulting body hash extractor.
+#[derive(Debug)]
 pub struct BodyHashParts<T> {
     /// Extracted item.
     pub inner: T,

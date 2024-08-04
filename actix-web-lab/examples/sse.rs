@@ -1,3 +1,5 @@
+//! Demonstrates use of the Server-Sent Events (SSE) responder.
+
 use std::{convert::Infallible, io, time::Duration};
 
 use actix_web::{get, middleware::Logger, App, HttpRequest, HttpServer, Responder};

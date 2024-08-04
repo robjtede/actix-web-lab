@@ -1,3 +1,5 @@
+//! Demonstrates obtaining the trusted set of CloudFlare IPs.
+
 use std::net::IpAddr;
 
 use actix_client_ip_cloudflare::fetch_trusted_cf_ips;

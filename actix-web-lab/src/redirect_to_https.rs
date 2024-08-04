@@ -14,7 +14,7 @@ use futures_core::future::LocalBoxFuture;
 
 use crate::header::StrictTransportSecurity;
 
-/// A middleware to redirect traffic to HTTPS if connection is insecure.
+/// Middleware to redirect traffic to HTTPS if connection is insecure.
 ///
 /// # HSTS
 ///
@@ -85,6 +85,9 @@ where
     }
 }
 
+/// Middleware service implementation for [`RedirectHttps`].
+#[doc(hidden)]
+#[allow(missing_debug_implementations)]
 pub struct RedirectHttpsMiddleware<S> {
     service: Rc<S>,
     hsts: Option<StrictTransportSecurity>,

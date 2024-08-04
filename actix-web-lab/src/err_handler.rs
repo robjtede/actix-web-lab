@@ -1,6 +1,7 @@
 //! For middleware documentation, see [`ErrorHandlers`].
 
 use std::{
+    fmt,
     future::Future,
     pin::Pin,
     rc::Rc,
@@ -55,6 +56,17 @@ pub struct ErrorHandlers<B> {
     handlers: Handlers<B>,
 }
 
+impl<B> fmt::Debug for ErrorHandlers<B> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ErrorHandlers")
+            .field(
+                "handlers",
+                &format_args!("[<{} items>]", self.handlers.len()),
+            )
+            .finish()
+    }
+}
+
 impl<B> Default for ErrorHandlers<B> {
     fn default() -> Self {
         ErrorHandlers {
@@ -100,7 +112,11 @@ where
     }
 }
 
+/// Middleware for registering custom status code based error handlers.
+///
+/// See [`ErrorHandlers`].
 #[doc(hidden)]
+#[allow(missing_debug_implementations)]
 pub struct ErrorHandlersMiddleware<S, B> {
     service: S,
     handlers: Handlers<B>,

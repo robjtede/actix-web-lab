@@ -1,3 +1,5 @@
+//! Demonstrates use of the MessagePack responder.
+
 use std::io;
 
 use actix_web::{get, http::StatusCode, App, HttpServer, Responder};

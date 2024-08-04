@@ -126,6 +126,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> FromRequest for Json<T, LIMIT> {
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub struct JsonExtractFut<T, const LIMIT: usize> {
     req: Option<HttpRequest>,
     fut: JsonBody<T, LIMIT>,

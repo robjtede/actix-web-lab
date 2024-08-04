@@ -103,6 +103,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> FromRequest for UrlEncodedForm<T, 
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub struct UrlEncodedFormExtractFut<T, const LIMIT: usize> {
     req: Option<HttpRequest>,
     fut: UrlEncodedFormBody<T, LIMIT>,

@@ -151,6 +151,7 @@ pub trait RequestSignatureScheme: Sized {
 ///
 /// Warning: Currently, this will always take the body meaning that if a body extractor is used,
 /// this needs to wrap it or else it will not work.
+#[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub struct RequestSignature<T, S: RequestSignatureScheme> {
     extractor: T,

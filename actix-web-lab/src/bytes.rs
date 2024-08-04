@@ -105,6 +105,7 @@ impl<const LIMIT: usize> FromRequest for Bytes<LIMIT> {
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub struct BytesExtractFut<const LIMIT: usize> {
     req: Option<HttpRequest>,
     fut: BytesBody<LIMIT>,

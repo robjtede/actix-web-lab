@@ -54,6 +54,7 @@ pub fn map_response<F>(mapper_fn: F) -> MapResMiddleware<F> {
 }
 
 /// Middleware transform for [`map_response`].
+#[allow(missing_debug_implementations)]
 pub struct MapResMiddleware<F> {
     mw_fn: Rc<F>,
 }
@@ -81,6 +82,7 @@ where
 }
 
 /// Middleware service for [`from_fn`].
+#[allow(missing_debug_implementations)]
 pub struct MapResService<S, F, B> {
     service: S,
     mw_fn: Rc<F>,

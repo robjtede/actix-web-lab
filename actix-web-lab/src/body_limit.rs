@@ -99,6 +99,7 @@ where
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub struct BodyLimitFut<T, const LIMIT: usize>
 where
     T: FromRequest + 'static,
