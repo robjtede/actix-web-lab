@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.21.0
+
 - Remove use of `async-trait` on `RequestSignatureScheme` trait.
 - Deprecate `respond::Html` now it has graduated to Actix Web.
 
