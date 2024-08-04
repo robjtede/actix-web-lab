@@ -13,7 +13,7 @@ license = "MIT OR Apache-2.0"
 edition = "2021"
 rust-version = "1.75"
 
-[workspace.lints.rustc]
+[workspace.lints.rust]
 rust_2018_idioms = "deny"
 nonstandard_style = "deny"
 future_incompatible = "warn"
