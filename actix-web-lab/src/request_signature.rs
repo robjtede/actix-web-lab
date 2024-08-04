@@ -13,27 +13,27 @@ use tracing::trace;
 ///
 /// There are 4 phases to calculating a signature while a request is being received:
 /// 1. [Initialize](Self::init): Construct the signature scheme type and perform any pre-body
-///   calculation steps with request head parts.
+///    calculation steps with request head parts.
 /// 1. [Consume body](Self::consume_chunk): For each body chunk received, fold it to the signature
-///   calculation.
+///    calculation.
 /// 1. [Finalize](Self::finalize): Perform post-body calculation steps and finalize signature type.
 /// 1. [Verify](Self::verify): Check the _true signature_ against a _candidate signature_; for
-///   example, a header added by the client. This phase is optional.
-///
-/// You'll need to use the [`async-trait`](https://docs.rs/async-trait) when implementing. Annotate
-/// your implementations with `#[async_trait(?Send)]`.
+///    example, a header added by the client. This phase is optional.
 ///
 /// # Bring Your Own Crypto
+///
 /// It is up to the implementor to ensure that best security practices are being followed when
 /// implementing this trait, and in particular the `verify` method. There is no inherent preference
 /// for certain crypto ecosystems though many of the examples shown here will use types from
 /// [RustCrypto](https://github.com/RustCrypto).
 ///
 /// # `RequestSignature` Extractor
+///
 /// Types that implement this trait can be used with the [`RequestSignature`] extractor to
 /// declaratively derive the request signature alongside the desired body extractor.
 ///
 /// # Examples
+///
 /// This trait can be used to define:
 /// - API authentication schemes that requires a signature to be attached to the request, either
 ///   with static keys or dynamic, per-user keys that are looked asynchronously from a database.
