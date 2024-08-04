@@ -1,5 +1,8 @@
 //! Experimental macros for Actix Web.
 
+#![forbid(unsafe_code)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 use quote::{format_ident, quote};
 use syn::{parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, Ident};
 

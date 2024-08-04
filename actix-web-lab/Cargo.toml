@@ -92,7 +92,6 @@ time = { version = "0.3", features = ["formatting"] }
 tokio = { version = "1.18.5", features = ["full"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 
-
 [[example]]
 name = "cbor"
 required-features = ["cbor"]
@@ -104,3 +103,6 @@ required-features = ["msgpack"]
 [[example]]
 name = "spa"
 required-features = ["spa"]
+
+[lints]
+workspace = true

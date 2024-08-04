@@ -32,3 +32,6 @@ futures-util = { version = "0.3.17", default-features = false, features = ["std"
 rustversion = "1"
 tokio = { version = "1.18.5", features = ["macros"] }
 trybuild = "1"
+
+[lints]
+workspace = true

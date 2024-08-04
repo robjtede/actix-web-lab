@@ -59,3 +59,6 @@ required-features = ["sha2"]
 [[example]]
 name = "body_sha2"
 required-features = ["sha2"]
+
+[lints]
+workspace = true

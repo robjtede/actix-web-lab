@@ -40,3 +40,6 @@ required-features = ["fetch-ips"]
 [[example]]
 name = "extract-header"
 required-features = ["fetch-ips"]
+
+[lints]
+workspace = true

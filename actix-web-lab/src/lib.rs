@@ -20,8 +20,6 @@
 //!
 //! [examples]: https://github.com/robjtede/actix-web-lab/tree/HEAD/actix-web-lab/examples
 
-#![deny(rust_2018_idioms, nonstandard_style)]
-#![warn(future_incompatible, missing_docs)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 mod body_async_write;

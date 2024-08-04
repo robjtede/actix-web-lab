@@ -13,6 +13,13 @@ license = "MIT OR Apache-2.0"
 edition = "2021"
 rust-version = "1.75"
 
+[workspace.lints.rustc]
+rust_2018_idioms = "deny"
+nonstandard_style = "deny"
+future_incompatible = "warn"
+missing_docs = "warn"
+missing_debug_implementation = "warn"
+
 [patch.crates-io]
 actix-client-ip-cloudflare = { path = "./actix-client-ip-cloudflare" }
 actix-hash = { path = "./actix-hash" }
