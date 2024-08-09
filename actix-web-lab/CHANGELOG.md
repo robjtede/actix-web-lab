@@ -3,7 +3,8 @@
 ## Unreleased
 
 - Implement `Clone` for `extract::Path<T: Clone>`.
-- `header::CacheControl` now `Deref`s to a slice instead of a `Vec`.
+- The `Deref` implementation for `header::CacheControl` now returns a slice instead of a `Vec`.
+- Deprecate `extract::ThinData` now it has graduated to Actix Web.
 
 ## 0.21.0
 

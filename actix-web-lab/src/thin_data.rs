@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use std::any::type_name;
 
 use actix_utils::future::{ready, Ready};
@@ -37,6 +39,7 @@ use actix_web::{dev::Payload, error, FromRequest, HttpRequest};
 /// # ;
 /// ```
 #[derive(Debug, Clone)]
+#[deprecated(since = "0.22.0", note = "Graduated to Actix Web.")]
 pub struct ThinData<T>(pub T);
 
 impl_more::impl_as_ref!(ThinData<T> => T);

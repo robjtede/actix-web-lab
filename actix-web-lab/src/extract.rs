@@ -3,6 +3,8 @@
 /// An alias for [`actix_web::web::Data<T>`] with a more descriptive name.
 pub type SharedData<T> = actix_web::web::Data<T>;
 
+#[allow(deprecated)]
+pub use crate::thin_data::ThinData;
 pub use crate::{
     body_limit::{BodyLimit, DEFAULT_BODY_LIMIT},
     bytes::{Bytes, DEFAULT_BYTES_LIMIT},
@@ -14,7 +16,6 @@ pub use crate::{
     query::Query,
     request_signature::{RequestSignature, RequestSignatureError, RequestSignatureScheme},
     swap_data::SwapData,
-    thin_data::ThinData,
     url_encoded_form::{UrlEncodedForm, DEFAULT_URL_ENCODED_FORM_LIMIT},
     x_forwarded_prefix::ReconstructedPath,
 };
