@@ -177,11 +177,11 @@ where
     S::Error: fmt::Debug + fmt::Display,
 {
     /// Inner extractor error.
-    #[display(fmt = "Inner extractor error: {_0}")]
+    #[display("Inner extractor error: {_0}")]
     Extractor(T::Error),
 
     /// Signature calculation error.
-    #[display(fmt = "Signature calculation error: {_0}")]
+    #[display("Signature calculation error: {_0}")]
     Signature(S::Error),
 }
 

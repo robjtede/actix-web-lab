@@ -10,7 +10,7 @@ use actix_http::{
     HttpMessage,
 };
 use actix_web::FromRequest;
-use derive_more::{Deref, DerefMut, Display};
+use derive_more::Display;
 use http::uri::PathAndQuery;
 
 /// Conventional `X-Forwarded-Prefix` header.
@@ -41,8 +41,10 @@ pub const X_FORWARDED_PREFIX: HeaderName = HeaderName::from_static("x-forwarded-
 /// ```
 ///
 /// [RFC 7234 §5.2]: https://datatracker.ietf.org/doc/html/rfc7234#section-5.2
-#[derive(Debug, Clone, PartialEq, Eq, Deref, DerefMut, Display)]
+#[derive(Debug, Clone, PartialEq, Eq, Display)]
 pub struct XForwardedPrefix(pub PathAndQuery);
+
+impl_more::impl_deref_and_mut!(XForwardedPrefix => PathAndQuery);
 
 impl TryIntoHeaderValue for XForwardedPrefix {
     type Error = InvalidHeaderValue;

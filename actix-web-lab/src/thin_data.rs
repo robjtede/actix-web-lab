@@ -2,8 +2,6 @@ use std::any::type_name;
 
 use actix_utils::future::{ready, Ready};
 use actix_web::{dev::Payload, error, FromRequest, HttpRequest};
-use derive_more::{AsMut, AsRef, Deref, DerefMut};
-use tracing::log;
 
 /// Application data wrapper and extractor for cheaply-cloned types.
 ///
@@ -38,8 +36,12 @@ use tracing::log;
 ///     .service(web::resource("/").get(index))
 /// # ;
 /// ```
-#[derive(Debug, Clone, AsRef, AsMut, Deref, DerefMut)]
+#[derive(Debug, Clone)]
 pub struct ThinData<T>(pub T);
+
+impl_more::impl_as_ref!(ThinData<T> => T);
+impl_more::impl_as_mut!(ThinData<T> => T);
+impl_more::impl_deref_and_mut!(<T> in ThinData<T> => T);
 
 impl<T: Clone + 'static> FromRequest for ThinData<T> {
     type Error = actix_web::Error;
@@ -48,12 +50,12 @@ impl<T: Clone + 'static> FromRequest for ThinData<T> {
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         ready(req.app_data::<Self>().cloned().ok_or_else(|| {
-            log::debug!(
+            tracing::debug!(
                 "Failed to extract `ThinData<{}>` for `{}` handler. For the ThinData extractor to work \
                 correctly, wrap the data with `ThinData()` and pass it to `App::app_data()`. \
                 Ensure that types align in both the set and retrieve calls.",
                 type_name::<T>(),
-                req.match_name().unwrap_or_else(|| req.path())
+                req.match_name().unwrap_or(req.path())
             );
 
             error::ErrorInternalServerError(

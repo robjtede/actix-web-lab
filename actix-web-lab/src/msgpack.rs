@@ -2,7 +2,7 @@
 
 use actix_web::{HttpRequest, HttpResponse, Responder};
 use bytes::Bytes;
-use derive_more::{Deref, DerefMut, Display};
+use derive_more::Display;
 use mime::Mime;
 use once_cell::sync::Lazy;
 use serde::Serialize;
@@ -12,8 +12,10 @@ static MSGPACK_MIME: Lazy<Mime> = Lazy::new(|| "application/msgpack".parse().unw
 /// MessagePack responder.
 ///
 /// If you require the fields to be named, use [`MessagePackNamed`].
-#[derive(Debug, Deref, DerefMut, Display)]
+#[derive(Debug, Display)]
 pub struct MessagePack<T>(pub T);
+
+impl_more::impl_deref_and_mut!(<T> in MessagePack<T> => T);
 
 impl<T: Serialize> Responder for MessagePack<T> {
     type Body = Bytes;
@@ -29,8 +31,10 @@ impl<T: Serialize> Responder for MessagePack<T> {
 }
 
 /// MessagePack responder with named fields.
-#[derive(Debug, Deref, DerefMut, Display)]
+#[derive(Debug, Display)]
 pub struct MessagePackNamed<T>(pub T);
+
+impl_more::impl_deref_and_mut!(<T> in MessagePackNamed<T> => T);
 
 impl<T: Serialize> Responder for MessagePackNamed<T> {
     type Body = Bytes;

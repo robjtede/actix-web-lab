@@ -8,9 +8,7 @@ use std::{
     task::{ready, Context, Poll},
 };
 
-use actix_web::{
-    dev, http::StatusCode, web, Error, FromRequest, HttpMessage, HttpRequest, ResponseError,
-};
+use actix_web::{dev, http::StatusCode, web, FromRequest, HttpMessage, HttpRequest, ResponseError};
 use derive_more::{Display, Error};
 use futures_core::Stream as _;
 use tracing::debug;
@@ -93,7 +91,7 @@ impl<const LIMIT: usize> Bytes<LIMIT> {
 
 /// See [here](#extractor) for example of usage as an extractor.
 impl<const LIMIT: usize> FromRequest for Bytes<LIMIT> {
-    type Error = Error;
+    type Error = actix_web::Error;
     type Future = BytesExtractFut<LIMIT>;
 
     #[inline]
@@ -112,7 +110,7 @@ pub struct BytesExtractFut<const LIMIT: usize> {
 }
 
 impl<const LIMIT: usize> Future for BytesExtractFut<LIMIT> {
-    type Output = Result<Bytes<LIMIT>, Error>;
+    type Output = actix_web::Result<Bytes<LIMIT>>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
@@ -219,15 +217,15 @@ impl<const LIMIT: usize> Future for BytesBody<LIMIT> {
 #[non_exhaustive]
 pub enum BytesPayloadError {
     /// Payload size is bigger than allowed & content length header set. (default: 4MiB)
-    #[display(fmt = "Payload ({length} bytes) is larger than allowed (limit: {limit} bytes).")]
+    #[display("Payload ({length} bytes) is larger than allowed (limit: {limit} bytes).")]
     OverflowKnownLength { length: usize, limit: usize },
 
     /// Payload size is bigger than allowed but no content length header set. (default: 4MiB)
-    #[display(fmt = "Payload has exceeded limit ({limit} bytes).")]
+    #[display("Payload has exceeded limit ({limit} bytes).")]
     Overflow { limit: usize },
 
     /// Payload error.
-    #[display(fmt = "Error that occur during reading payload: {_0}")]
+    #[display("Error that occur during reading payload: {_0}")]
     Payload(actix_web::error::PayloadError),
 }
 

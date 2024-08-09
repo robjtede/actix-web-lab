@@ -7,7 +7,7 @@ use actix_web::{
     error::{Error, ErrorNotFound},
     FromRequest, HttpRequest,
 };
-use derive_more::{AsRef, Display, From};
+use derive_more::Display;
 use serde::de;
 use tracing::debug;
 
@@ -53,7 +53,7 @@ use tracing::debug;
 ///     format!("Welcome {}!", info.name)
 /// }
 /// ```
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, AsRef, Display, From)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Display)]
 pub struct Path<T>(pub T);
 
 impl<T> Path<T> {
@@ -62,6 +62,9 @@ impl<T> Path<T> {
         self.0
     }
 }
+
+impl_more::impl_as_ref!(Path<T> => T);
+impl_more::impl_from!(<T> in T => Path<T>);
 
 /// See [here](#Examples) for example of usage as an extractor.
 impl<T> FromRequest for Path<T>
@@ -98,7 +101,7 @@ mod tests {
     use super::*;
 
     #[derive(Deserialize, Debug, Display)]
-    #[display(fmt = "MyStruct({key}, {value})")]
+    #[display("MyStruct({key}, {value})")]
     struct MyStruct {
         key: String,
         value: String,

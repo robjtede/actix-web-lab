@@ -33,6 +33,10 @@ downgrade-for-msrv:
 clippy toolchain="":
     cargo {{ toolchain }} clippy --workspace --all-targets --all-features
 
+# Run tests on all crates in workspace using specified (or default) toolchain and watch for changes.
+clippy-watch toolchain="":
+    cargo watch -- just clippy {{ toolchain }}
+
 # Run tests on all crates in workspace using its MSRV.
 test-msrv: downgrade-for-msrv (test msrv_rustup)
 

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Implement `Clone` for `extract::Path<T: Clone>`.
+- `header::CacheControl` now `Deref`s to a slice instead of a `Vec`.
+
 ## 0.21.0
 
 - Remove use of `async-trait` on `RequestSignatureScheme` trait.

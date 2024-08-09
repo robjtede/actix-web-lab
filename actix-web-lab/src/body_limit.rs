@@ -193,10 +193,10 @@ where
     T: FromRequest + 'static,
     T::Error: fmt::Debug + fmt::Display,
 {
-    #[display(fmt = "Wrapped extractor error: {_0}")]
+    #[display("Wrapped extractor error: {_0}")]
     Extractor(T::Error),
 
-    #[display(fmt = "Body was too large")]
+    #[display("Body was too large")]
     Overflow,
 }
 

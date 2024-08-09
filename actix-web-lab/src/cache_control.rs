@@ -7,13 +7,11 @@ use std::{fmt, str};
 use actix_http::{
     error::ParseError,
     header::{
-        fmt_comma_delimited, from_comma_delimited, Header, HeaderName, HeaderValue,
+        self, fmt_comma_delimited, from_comma_delimited, Header, HeaderName, HeaderValue,
         InvalidHeaderValue, TryIntoHeaderValue,
     },
     HttpMessage,
 };
-use actix_web::http::header;
-use derive_more::{Deref, DerefMut};
 
 /// The `Cache-Control` header, defined in [RFC 7234 §5.2].
 ///
@@ -65,11 +63,13 @@ use derive_more::{Deref, DerefMut};
 ///
 /// [RFC 7234 §5.2]: https://datatracker.ietf.org/doc/html/rfc7234#section-5.2
 /// [mdn]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-#[derive(Debug, Clone, PartialEq, Eq, Deref, DerefMut)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CacheControl(pub Vec<CacheDirective>);
 
+impl_more::forward_deref_and_mut!(CacheControl => [CacheDirective]);
+
 impl fmt::Display for CacheControl {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt_comma_delimited(f, &self.0[..])
     }
 }
