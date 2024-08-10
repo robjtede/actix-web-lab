@@ -262,7 +262,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonBody<T, LIMIT> {
                 }
             },
 
-            JsonBody::Error(e) => Poll::Ready(Err(e.take().unwrap())),
+            JsonBody::Error(err) => Poll::Ready(Err(err.take().unwrap())),
         }
     }
 }

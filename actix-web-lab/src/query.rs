@@ -101,8 +101,8 @@ impl<T: DeserializeOwned> FromRequest for Query<T> {
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         serde_html_form::from_str::<T>(req.query_string())
             .map(|val| ready(Ok(Query(val))))
-            .unwrap_or_else(move |e| {
-                let err = QueryPayloadError::Deserialize(e);
+            .unwrap_or_else(move |err| {
+                let err = QueryPayloadError::Deserialize(err);
 
                 debug!(
                     "Failed during Query extractor deserialization. \
