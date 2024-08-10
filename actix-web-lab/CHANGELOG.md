@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.22.0
+
 - Add `extract::QueryDeserializeError` type.
 - Re-work `Query` deserialization error handling.
 - Implement `Clone` for `extract::Path<T: Clone>`.
