@@ -1,10 +1,11 @@
 //! For query parameter extractor documentation, see [`Query`].
 
+use std::fmt;
 use std::future::{ready, Ready};
 
-use actix_web::{dev::Payload, error::QueryPayloadError, Error, FromRequest, HttpRequest};
+use actix_web::{dev::Payload, http::StatusCode, FromRequest, HttpRequest, ResponseError};
+use derive_more::Error;
 use serde::de::DeserializeOwned;
-use tracing::debug;
 
 /// Extract typed information from the request's query.
 ///
@@ -85,33 +86,67 @@ impl<T: DeserializeOwned> Query<T> {
     /// assert_eq!(numbers.get("two"), Some(&2));
     /// assert!(numbers.get("three").is_none());
     /// ```
-    pub fn from_query(query_str: &str) -> Result<Self, QueryPayloadError> {
-        serde_html_form::from_str::<T>(query_str)
+    pub fn from_query(query_str: &str) -> Result<Self, QueryDeserializeError> {
+        let parser = form_urlencoded::parse(query_str.as_bytes());
+        let de = serde_html_form::Deserializer::new(parser);
+
+        serde_path_to_error::deserialize(de)
             .map(Self)
-            .map_err(QueryPayloadError::Deserialize)
+            .map_err(|err| QueryDeserializeError {
+                path: err.path().clone(),
+                source: err.into_inner(),
+            })
     }
 }
 
 /// See [here](#examples) for example of usage as an extractor.
 impl<T: DeserializeOwned> FromRequest for Query<T> {
-    type Error = Error;
-    type Future = Ready<Result<Self, Error>>;
+    type Error = QueryDeserializeError;
+    type Future = Ready<Result<Self, Self::Error>>;
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        serde_html_form::from_str::<T>(req.query_string())
-            .map(|val| ready(Ok(Query(val))))
-            .unwrap_or_else(move |err| {
-                let err = QueryPayloadError::Deserialize(err);
+        ready(Self::from_query(req.query_string()).inspect_err(|err| {
+            tracing::debug!(
+                "Failed during Query extractor deserialization. \
+                Request path: \"{}\". \
+                Error path: \"{}\".",
+                req.match_name().unwrap_or(req.path()),
+                err.path(),
+            );
+        }))
+    }
+}
 
-                debug!(
-                    "Failed during Query extractor deserialization. \
-                     Request path: {:?}",
-                    req.path()
-                );
+/// Deserialization errors that can occur during parsing query strings.
+#[derive(Debug, Error)]
+pub struct QueryDeserializeError {
+    path: serde_path_to_error::Path,
+    source: serde::de::value::Error,
+}
 
-                ready(Err(err.into()))
-            })
+impl QueryDeserializeError {
+    /// Returns the path at which the deserialization error occurred.
+    pub fn path(&self) -> impl fmt::Display + '_ {
+        &self.path
+    }
+}
+
+impl fmt::Display for QueryDeserializeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Query deserialization failed")?;
+
+        if self.path.iter().len() > 0 {
+            write!(f, " at path: {}", &self.path)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl ResponseError for QueryDeserializeError {
+    fn status_code(&self) -> StatusCode {
+        StatusCode::UNPROCESSABLE_ENTITY
     }
 }
 

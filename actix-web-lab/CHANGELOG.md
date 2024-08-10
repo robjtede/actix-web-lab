@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `extract::QueryDeserializeError` type.
+- Re-work `Query` deserialization error handling.
 - Implement `Clone` for `extract::Path<T: Clone>`.
 - The `Deref` implementation for `header::CacheControl` now returns a slice instead of a `Vec`.
 - Deprecate `middleware::from_fn()` now it has graduated to Actix Web.

@@ -61,6 +61,7 @@ csv = "1.1"
 derive_more = { version = "1", features = ["display", "error"] }
 futures-core = "0.3.17"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
+form_urlencoded = "1"
 http = "0.2.7"
 impl-more = "0.1.3"
 itertools = "0.13"
@@ -73,6 +74,7 @@ regex = "1.5.5"
 serde = "1"
 serde_html_form = "0.2"
 serde_json = "1"
+serde_path_to_error = "0.1"
 tokio = { version = "1.23.1", features = ["sync", "macros"] }
 tokio-stream = "0.1.1"
 tracing = { version = "0.1.30", features = ["log"] }

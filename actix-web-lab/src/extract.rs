@@ -13,7 +13,7 @@ pub use crate::{
     lazy_data::LazyData,
     local_data::LocalData,
     path::Path,
-    query::Query,
+    query::{Query, QueryDeserializeError},
     request_signature::{RequestSignature, RequestSignatureError, RequestSignatureScheme},
     swap_data::SwapData,
     url_encoded_form::{UrlEncodedForm, DEFAULT_URL_ENCODED_FORM_LIMIT},
