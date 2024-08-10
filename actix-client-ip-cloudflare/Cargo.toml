@@ -14,6 +14,15 @@ rust-version.workspace = true
 rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
+[package.metadata.cargo_check_external_types]
+allowed_external_types = [
+    "actix_http::*",
+    "actix_utils::*",
+    "actix_web::*",
+    "http::*",
+    "ipnetwork::*",
+]
+
 [features]
 default = ["fetch-ips"]
 fetch-ips = ["fetch-ips-rustls"]

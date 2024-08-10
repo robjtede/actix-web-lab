@@ -19,6 +19,24 @@ rust-version.workspace = true
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[package.metadata.cargo_check_external_types]
+allowed_external_types = [
+    "actix_http::*",
+    "actix_service::*",
+    "actix_utils::*",
+    "actix_web_lab_derive::*",
+    "actix_web::*",
+    "arc_swap::*",
+    "bytes::*",
+    "bytestring::*",
+    "futures_core::*",
+    "http::*",
+    "mime::*",
+    "serde_json::*",
+    "serde::*",
+    "tokio::*",
+]
+
 [features]
 default = ["derive"]
 derive = ["actix-web-lab-derive"]
