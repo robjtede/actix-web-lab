@@ -52,8 +52,10 @@ mod tests {
     };
 
     use super::*;
+    #[allow(deprecated)]
     use crate::middleware::from_fn;
 
+    #[allow(deprecated)]
     fn test_app() -> App<
         impl ServiceFactory<
             ServiceRequest,

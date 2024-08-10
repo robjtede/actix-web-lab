@@ -1,4 +1,7 @@
+#![allow(deprecated)]
+
 use std::{
+    future::Future,
     future::{ready, Ready},
     marker::PhantomData,
     rc::Rc,
@@ -13,7 +16,7 @@ use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
     Error, FromRequest,
 };
-use futures_core::{future::LocalBoxFuture, Future};
+use futures_core::future::LocalBoxFuture;
 
 /// Wraps an async function to be used as a middleware.
 ///
@@ -78,6 +81,7 @@ use futures_core::{future::LocalBoxFuture, Future};
 ///     // post-processing
 /// }
 /// # actix_web::App::new().wrap(actix_web_lab::middleware::from_fn(my_extracting_mw));
+#[deprecated(since = "0.22.0", note = "Graduated to Actix Web.")]
 pub fn from_fn<F, Es>(mw_fn: F) -> MiddlewareFn<F, Es> {
     MiddlewareFn {
         mw_fn: Rc::new(mw_fn),

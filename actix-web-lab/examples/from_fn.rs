@@ -1,5 +1,7 @@
 //! Shows a couple of ways to use the `from_fn` middleware.
 
+#![allow(deprecated)]
+
 use std::{collections::HashMap, io, rc::Rc, time::Duration};
 
 use actix_web::{
