@@ -2,18 +2,28 @@ exclude = ["target/*"]
 include = ["**/*.toml"]
 
 [formatting]
-column_width = 100
+column_width = 110
 
 [[rule]]
 include = ["**/Cargo.toml"]
-keys = ["dependencies", "*-dependencies"]
-
-[rule.formatting]
-reorder_keys = true
+keys = [
+  "dependencies",
+  "*-dependencies",
+  "workspace.dependencies",
+  "workspace.*-dependencies",
+  "target.*.dependencies",
+  "target.*.*-dependencies",
+]
+formatting.reorder_keys = true
 
 [[rule]]
 include = ["**/Cargo.toml"]
-keys = ["dependencies.*", "*-dependencies.*"]
-
-[rule.formatting]
-reorder_keys = false
+keys = [
+  "dependencies.*",
+  "*-dependencies.*",
+  "workspace.dependencies.*",
+  "workspace.*-dependencies.*",
+  "target.*.dependencies",
+  "target.*.*-dependencies",
+]
+formatting.reorder_keys = false
