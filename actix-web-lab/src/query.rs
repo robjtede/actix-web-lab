@@ -1,7 +1,9 @@
 //! For query parameter extractor documentation, see [`Query`].
 
-use std::fmt;
-use std::future::{ready, Ready};
+use std::{
+    fmt,
+    future::{ready, Ready},
+};
 
 use actix_web::{dev::Payload, http::StatusCode, FromRequest, HttpRequest, ResponseError};
 use derive_more::Error;

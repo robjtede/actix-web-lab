@@ -1,8 +1,7 @@
 #![allow(deprecated)]
 
 use std::{
-    future::Future,
-    future::{ready, Ready},
+    future::{ready, Future, Ready},
     marker::PhantomData,
     rc::Rc,
 };
