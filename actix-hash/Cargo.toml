@@ -45,7 +45,7 @@ sha3 = ["dep:sha3"]
 actix-http = "3"
 actix-web = { version = "4", default-features = false }
 actix-web-lab = "0.22"
-futures-core = "0.3.17"
+futures-core = "0.3.31"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 local-channel = "0.1"
 pin-project-lite = "0.2"
