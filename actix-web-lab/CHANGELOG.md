@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.23.0
+
 - Add `header::ClearSiteData` header.
 - Add `header::ClearSiteDataDirective` type
 - Remove `response::Html` responder.
