@@ -1,6 +1,6 @@
 //! Implements verification of Discord Webhook signatures.
 
-use std::{fs::File, io};
+use std::{fs::File, io, sync::LazyLock};
 
 use actix_web::{
     error,
@@ -13,7 +13,6 @@ use actix_web_lab::extract::{Json, RequestSignature, RequestSignatureScheme};
 use bytes::{BufMut as _, BytesMut};
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use hex_literal::hex;
-use once_cell::sync::Lazy;
 use rustls::{pki_types::PrivateKeyDer, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use tracing::info;
@@ -23,8 +22,8 @@ const APP_PUBLIC_KEY_BYTES: &[u8; 32] =
 
 static SIG_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-ed25519");
 static TS_HDR_NAME: HeaderName = HeaderName::from_static("x-signature-timestamp");
-static APP_PUBLIC_KEY: Lazy<VerifyingKey> =
-    Lazy::new(|| VerifyingKey::from_bytes(APP_PUBLIC_KEY_BYTES).unwrap());
+static APP_PUBLIC_KEY: LazyLock<VerifyingKey> =
+    LazyLock::new(|| VerifyingKey::from_bytes(APP_PUBLIC_KEY_BYTES).unwrap());
 
 #[derive(Debug)]
 struct DiscordWebhook {

@@ -14,7 +14,7 @@ use itertools::Itertools as _;
 // TODO: implement typed parsing of Node identifiers as per:
 // https://datatracker.ietf.org/doc/html/rfc7239#section-6
 
-/// `Forwarded` header, defined in [RFC 7239].
+/// The `Forwarded` header, defined in [RFC 7239].
 ///
 /// Also see the [Forwarded header's MDN docs][mdn] for field semantics.
 ///

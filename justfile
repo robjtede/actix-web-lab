@@ -59,8 +59,19 @@ test-docs toolchain="": && doc
     cargo {{ toolchain }} test --doc --workspace --all-features --no-fail-fast -- --nocapture
 
 # Document crates in workspace.
-doc *args:
+doc *args: && doc-set-workspace-crates
+    rm -f "$(cargo metadata --format-version=1 | jq -r '.target_directory')/doc/crates.js"
     RUSTDOCFLAGS="--cfg=docsrs -Dwarnings" cargo +nightly doc --no-deps --workspace --all-features {{ args }}
+
+[private]
+doc-set-workspace-crates:
+    #!/usr/bin/env bash
+    (
+        echo "window.ALL_CRATES ="
+        cargo metadata --format-version=1 \
+        | jq '[.packages[] | select(.source == null) | .targets | map(select(.doc) | .name)] | flatten'
+        echo ";"
+    ) > "$(cargo metadata --format-version=1 | jq -r '.target_directory')/doc/crates.js"
 
 # Build rustdoc for all crates in workspace and watch for changes.
 doc-watch:

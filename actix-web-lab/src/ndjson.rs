@@ -1,4 +1,4 @@
-use std::{convert::Infallible, error::Error as StdError, io::Write as _};
+use std::{convert::Infallible, error::Error as StdError, io::Write as _, sync::LazyLock};
 
 use actix_web::{
     body::{BodyStream, MessageBody},
@@ -8,13 +8,12 @@ use bytes::{Bytes, BytesMut};
 use futures_core::Stream;
 use futures_util::TryStreamExt as _;
 use mime::Mime;
-use once_cell::sync::Lazy;
 use pin_project_lite::pin_project;
 use serde::Serialize;
 
 use crate::util::{InfallibleStream, MutWriter};
 
-static NDJSON_MIME: Lazy<Mime> = Lazy::new(|| "application/x-ndjson".parse().unwrap());
+static NDJSON_MIME: LazyLock<Mime> = LazyLock::new(|| "application/x-ndjson".parse().unwrap());
 
 pin_project! {
     /// A buffered [NDJSON] serializing body stream.

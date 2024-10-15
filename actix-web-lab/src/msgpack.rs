@@ -1,13 +1,14 @@
 //! MessagePack responder.
 
+use std::sync::LazyLock;
+
 use actix_web::{HttpRequest, HttpResponse, Responder};
 use bytes::Bytes;
 use derive_more::Display;
 use mime::Mime;
-use once_cell::sync::Lazy;
 use serde::Serialize;
 
-static MSGPACK_MIME: Lazy<Mime> = Lazy::new(|| "application/msgpack".parse().unwrap());
+static MSGPACK_MIME: LazyLock<Mime> = LazyLock::new(|| "application/msgpack".parse().unwrap());
 
 /// MessagePack responder.
 ///

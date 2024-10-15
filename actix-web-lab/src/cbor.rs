@@ -1,13 +1,14 @@
 //! CBOR responder.
 
+use std::sync::LazyLock;
+
 use actix_web::{HttpRequest, HttpResponse, Responder};
 use bytes::Bytes;
 use derive_more::Display;
 use mime::Mime;
-use once_cell::sync::Lazy;
 use serde::Serialize;
 
-static CBOR_MIME: Lazy<Mime> = Lazy::new(|| "application/cbor".parse().unwrap());
+static CBOR_MIME: LazyLock<Mime> = LazyLock::new(|| "application/cbor".parse().unwrap());
 
 /// CBOR responder.
 #[derive(Debug, Display)]

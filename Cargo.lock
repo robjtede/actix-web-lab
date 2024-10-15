@@ -358,7 +358,6 @@ dependencies = [
  "local-channel",
  "mediatype",
  "mime",
- "once_cell",
  "pin-project-lite",
  "rand",
  "regex",

@@ -12,7 +12,7 @@ use actix_web::{
     HttpMessage,
 };
 
-/// `Content-Length` header, defined in [RFC 9110 §8.6].
+/// The `Content-Length` header, defined in [RFC 9110 §8.6].
 ///
 /// The "Content-Length" header field indicates the associated representation's data length as a
 /// decimal non-negative integer number of octets.
