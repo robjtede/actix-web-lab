@@ -37,12 +37,12 @@ macro_rules! body_hash_alias {
         /// #
         /// # // test that the documented hash size is correct
         #[doc = concat!("# type Hasher = ", stringify!($digest), ";")]
-        #[doc = concat!("# const OutSize: usize = ", $out_size, ";")]
+        #[doc = concat!("# const OUT_SIZE: usize = ", $out_size, ";")]
         /// # assert_eq!(
         /// #     digest::generic_array::GenericArray::<u8,
         /// #         <Hasher as digest::OutputSizeUser>::OutputSize
         /// #     >::default().len(),
-        /// #     OutSize
+        /// #     OUT_SIZE,
         /// # );
         /// ```
         #[cfg(feature = $feature)]

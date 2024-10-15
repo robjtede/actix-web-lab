@@ -1,11 +1,10 @@
 use actix_web::{
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
+    middleware::Next,
     web::Redirect,
     Error, Responder,
 };
-
-use crate::middleware_from_fn::Next;
 
 /// A function middleware to redirect traffic to `www.` if not already there.
 ///
@@ -13,7 +12,8 @@ use crate::middleware_from_fn::Next;
 ///
 /// ```
 /// # use actix_web::App;
-/// use actix_web_lab::middleware::{from_fn, redirect_to_www};
+/// use actix_web::middleware::from_fn;
+/// use actix_web_lab::middleware::redirect_to_www;
 ///
 /// App::new().wrap(from_fn(redirect_to_www))
 ///     # ;
@@ -49,14 +49,12 @@ mod tests {
     use actix_web::{
         dev::ServiceFactory,
         http::{header, StatusCode},
+        middleware::from_fn,
         test, web, App, HttpResponse,
     };
 
     use super::*;
-    #[allow(deprecated)]
-    use crate::middleware::from_fn;
 
-    #[allow(deprecated)]
     fn test_app() -> App<
         impl ServiceFactory<
             ServiceRequest,

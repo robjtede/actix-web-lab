@@ -30,19 +30,18 @@ mod cache_control;
 mod catch_panic;
 #[cfg(feature = "cbor")]
 mod cbor;
+mod clear_site_data;
 mod content_length;
 mod csv;
 mod display_stream;
 mod err_handler;
 mod forwarded;
 mod host;
-mod html;
 mod infallible_body_stream;
 mod json;
 mod lazy_data;
 mod load_shed;
 mod local_data;
-mod middleware_from_fn;
 mod middleware_map_response;
 mod middleware_map_response_body;
 #[cfg(feature = "msgpack")]
@@ -65,7 +64,6 @@ mod test_header_macros;
 mod test_request_macros;
 mod test_response_macros;
 mod test_services;
-mod thin_data;
 mod url_encoded_form;
 mod x_forwarded_prefix;
 

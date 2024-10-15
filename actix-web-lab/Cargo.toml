@@ -52,7 +52,7 @@ actix-http = "3"
 actix-router = "0.5"
 actix-service = "2"
 actix-utils = "3"
-actix-web = { version = "4.3", default-features = false }
+actix-web = { version = "4.9", default-features = false }
 ahash = "0.8"
 arc-swap = "1.1"
 bytes = "1"

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add `header::ClearSiteData` header.
+- Add `header::ClearSiteDataDirective` type
+- Remove `response::Html` responder.
+- Remove `middleware::from_fn()` middleware.
+- Remove `extract::ThinData` extractor.
+
 ## 0.22.0
 
 - Add `extract::QueryDeserializeError` type.

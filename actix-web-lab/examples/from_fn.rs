@@ -1,18 +1,15 @@
 //! Shows a couple of ways to use the `from_fn` middleware.
 
-#![allow(deprecated)]
-
 use std::{collections::HashMap, io, rc::Rc, time::Duration};
 
 use actix_web::{
     body::MessageBody,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     http::header::{self, HeaderValue, Range},
-    middleware::Logger,
+    middleware::{from_fn, Logger, Next},
     web::{self, Header, Query},
     App, Error, HttpResponse, HttpServer,
 };
-use actix_web_lab::middleware::{from_fn, Next};
 use tracing::info;
 
 async fn noop<B>(req: ServiceRequest, next: Next<B>) -> Result<ServiceResponse<B>, Error> {

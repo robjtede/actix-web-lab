@@ -2,8 +2,6 @@
 //!
 //! Analogous to the `middleware` module in Actix Web.
 
-#[allow(deprecated)]
-pub use crate::middleware_from_fn::{from_fn, MiddlewareFn, Next};
 pub use crate::{
     catch_panic::CatchPanic,
     err_handler::ErrorHandlers,

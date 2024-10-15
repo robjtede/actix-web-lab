@@ -63,10 +63,11 @@
 
 ### Headers
 
-- `StrictTransportSecurity`: Strict-Transport-Security (HSTS) configuration [(docs)](https://docs.rs/actix-web-lab/0.22.0/actix_web_lab/header/struct.StrictTransportSecurity.html)
 - `CacheControl`: Cache-Control typed header with support for modern directives [(docs)](https://docs.rs/actix-web-lab/0.22.0/actix_web_lab/header/struct.CacheControl.html)
+- `ClearSiteData`: Clear-Site-Data typed header [(docs)](https://docs.rs/actix-web-lab/0.22.0/actix_web_lab/header/struct.ClearSiteData.html)
 - `ContentLength`: Content-Length typed header [(docs)](https://docs.rs/actix-web-lab/0.22.0/actix_web_lab/header/struct.ContentLength.html)
 - `Forwarded`: Proxy and original client info [(docs)](https://docs.rs/actix-web-lab/0.22.0/actix_web_lab/header/struct.Forwarded.html)
+- `StrictTransportSecurity`: Strict-Transport-Security (HSTS) configuration [(docs)](https://docs.rs/actix-web-lab/0.22.0/actix_web_lab/header/struct.StrictTransportSecurity.html)
 
 ### Body Types
 

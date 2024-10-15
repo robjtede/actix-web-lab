@@ -3,8 +3,6 @@
 /// An alias for [`actix_web::web::Data<T>`] with a more descriptive name.
 pub type SharedData<T> = actix_web::web::Data<T>;
 
-#[allow(deprecated)]
-pub use crate::thin_data::ThinData;
 pub use crate::{
     body_limit::{BodyLimit, DEFAULT_BODY_LIMIT},
     bytes::{Bytes, DEFAULT_BYTES_LIMIT},
