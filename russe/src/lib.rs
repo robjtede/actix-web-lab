@@ -1,14 +1,14 @@
 //! SSE
 
 #![forbid(unsafe_code)]
-#![allow(missing_docs, unused_imports)]
+#![allow(missing_docs)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-use std::io::{self, BufRead as _, BufReader};
+use std::io::{BufRead as _, BufReader};
 
-use aho_corasick::{AhoCorasick, AhoCorasickBuilder, PatternID};
-use futures_util::Stream;
-use memchr::{memchr, memmem};
+use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
+use bytestring::ByteString;
+use memchr::memmem;
 use tokio_util::{bytes::BytesMut, codec::Decoder};
 
 mod error;
@@ -24,10 +24,10 @@ pub struct Message {
     retry: Option<u64>,
 
     /// named event
-    event: Option<String>,
+    event: Option<ByteString>,
 
     /// is always string ?
-    data: Option<String>,
+    data: Option<ByteString>,
 
     /// is always numeric ?
     id: Option<u64>,
@@ -36,7 +36,7 @@ pub struct Message {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
     Retry(u64),
-    Comment,
+    Comment(ByteString),
     Message(Message),
 }
 
@@ -88,6 +88,7 @@ impl Decoder for Codec {
         drop(src.split_to(SSE_DELIMITER.len()));
 
         // TODO: consider if using lines (which also does \r\n) is correct
+        // TODO: replace with ByteString::read_until \n
         let lines_reader = BufReader::new(&*buf).lines();
 
         let mut message = Message {
@@ -97,11 +98,11 @@ impl Decoder for Codec {
             id: None,
         };
 
+        let mut data_buf = BytesMut::new();
         let mut message_event = false;
 
         for line in lines_reader {
-            // TODO: replace with ?
-            let line = line.unwrap();
+            let line = line?;
 
             let matched = self.directive_finder.find(&line).expect("invalid line");
 
@@ -109,17 +110,18 @@ impl Decoder for Codec {
                 panic!("directive matched was not at beginning of line")
             }
 
-            let input = line[matched.end()..].to_owned();
+            let (_directive, input) = line.split_at(matched.end());
 
             match matched.pattern().as_u64() {
                 // data
                 0 | 1 => {
-                    match &mut message.data {
-                        Some(data) => {
-                            data.push(NEWLINE as char);
-                            data.push_str(&input);
-                        }
-                        None => message.data = Some(input),
+                    if data_buf.is_empty() {
+                        // first line
+                        data_buf = input.as_bytes().into()
+                    } else {
+                        // additional lines
+                        data_buf.extend_from_slice(&[NEWLINE]);
+                        data_buf.extend_from_slice(input.as_bytes());
                     }
 
                     message_event = true;
@@ -133,7 +135,7 @@ impl Decoder for Codec {
 
                 // event
                 4 | 5 => {
-                    message.event = Some(input);
+                    message.event = Some(input.into());
                     message_event = true;
                 }
 
@@ -147,7 +149,7 @@ impl Decoder for Codec {
                 }
 
                 // comment
-                8 | 9 => return Ok(Some(Event::Comment)),
+                8 | 9 => return Ok(Some(Event::Comment(input.into()))),
 
                 _ => unreachable!("all search patterns are covered"),
             }
@@ -158,13 +160,17 @@ impl Decoder for Codec {
             _ => {}
         }
 
+        if !data_buf.is_empty() {
+            message.data = Some(ByteString::try_from(data_buf).expect("Invalid UTF-8"));
+        }
+
         Ok(Some(Event::Message(message)))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::pin::pin;
+    use std::{io, pin::pin};
 
     use futures_test::stream::StreamTestExt as _;
     use futures_util::{stream, StreamExt as _};
@@ -173,7 +179,7 @@ mod tests {
     use super::*;
 
     impl Message {
-        fn data(data: impl Into<String>) -> Self {
+        fn data(data: impl Into<ByteString>) -> Self {
             Self {
                 data: Some(data.into()),
                 ..Default::default()
@@ -234,7 +240,10 @@ mod tests {
         assert_eq!(Event::Retry(444), ev);
 
         let ev = event_stream.next().await.unwrap().unwrap();
-        assert_eq!(Event::Comment, ev);
+        assert_eq!(
+            Event::Comment("begin by specifying retry duration".into()),
+            ev,
+        );
 
         let ev = event_stream.next().await.unwrap().unwrap();
         assert_eq!(Event::Message(Message::data("msg1 simple")), ev);
@@ -254,7 +263,7 @@ mod tests {
         let ev = event_stream.next().await.unwrap().unwrap();
         assert_eq!(
             Event::Message(Message {
-                data: Some("msg4 with an ID".to_owned()),
+                data: Some("msg4 with an ID".into()),
                 id: Some(42),
                 ..Default::default()
             }),
@@ -264,7 +273,7 @@ mod tests {
         let ev = event_stream.next().await.unwrap().unwrap();
         assert_eq!(
             Event::Message(Message {
-                data: Some("msg5 specifies new retry".to_owned()),
+                data: Some("msg5 specifies new retry".into()),
                 id: Some(43),
                 retry: Some(999),
                 event: None,
@@ -275,8 +284,8 @@ mod tests {
         let ev = event_stream.next().await.unwrap().unwrap();
         assert_eq!(
             Event::Message(Message {
-                data: Some("msg6 is named".to_owned()),
-                event: Some("msg".to_owned()),
+                data: Some("msg6 is named".into()),
+                event: Some("msg".into()),
                 ..Default::default()
             }),
             ev,

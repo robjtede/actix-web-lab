@@ -21,7 +21,9 @@
         "memchr",
         "memmem",
         "msgpack",
+        "msrv",
         "ndjson",
+        "nixpkgs",
         "pemfile",
         "prehashed",
         "rdef",
@@ -36,6 +38,7 @@
         "serde",
         "splitn",
         "struct",
+        "taplo",
         "trybuild",
         "vals"
     ]

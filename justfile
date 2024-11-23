@@ -10,12 +10,18 @@ check: && clippy
     cargo +nightly fmt -- --check
 
 # Format project.
-fmt:
+[group("lint")]
+fmt: update-readmes
     just --unstable --fmt
     nixpkgs-fmt .
     fd --hidden --type=file -e=md -e=yml --exec-batch prettier --write
     fd --type=file --hidden -e=toml --exec-batch taplo format
     cargo +nightly fmt
+
+# Update READMEs from crate root documentation.
+[group("lint")]
+update-readmes:
+    cd ./russe && cargo rdme --force
 
 msrv := ```
     cargo metadata --format-version=1 \

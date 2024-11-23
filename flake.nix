@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -11,14 +11,13 @@
 
         devShells.default = pkgs.mkShell {
           packages = [
-            pkgs.just
-            pkgs.watchexec
-            pkgs.fd
-
-            # formatters
-            pkgs.taplo
-            pkgs.nodePackages.prettier
             config.formatter
+            pkgs.cargo-rdme
+            pkgs.fd
+            pkgs.just
+            pkgs.nodePackages.prettier
+            pkgs.taplo
+            pkgs.watchexec
           ] ++ lib.optional pkgs.stdenv.isDarwin [
             pkgs.pkgsBuildHost.libiconv
             pkgs.pkgsBuildHost.darwin.apple_sdk.frameworks.Security

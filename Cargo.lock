@@ -1915,6 +1915,7 @@ name = "russe"
 version = "0.1.0"
 dependencies = [
  "aho-corasick",
+ "bytestring",
  "futures-test",
  "futures-util",
  "indoc",

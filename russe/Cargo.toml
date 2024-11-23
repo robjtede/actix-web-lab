@@ -2,7 +2,7 @@
 name = "russe"
 version = "0.1.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
-description = "Server-Sent Events client"
+description = "Server-Sent Events (SSE) decoder"
 keywords = ["sse", "server", "sent", "events"]
 repository.workspace = true
 license.workspace = true
@@ -14,14 +14,17 @@ rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [features]
+awc-3 = []
+mime = []
 reqwest-0_12 = []
 
 [dependencies]
 aho-corasick = "1"
+bytestring = "1"
 futures-util = "0.3.18"
+memchr = "2"
 tokio = "1"
 tokio-util = { version = "0.7", features = ["codec"] }
-memchr = "2"
 
 [dev-dependencies]
 futures-test = "0.3"
