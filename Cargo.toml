@@ -1,6 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["./actix-client-ip-cloudflare", "./actix-hash", "./actix-web-lab-derive", "./actix-web-lab"]
+members = [
+  "./actix-client-ip-cloudflare",
+  "./actix-hash",
+  "./actix-web-lab-derive",
+  "./actix-web-lab",
+  "./russe",
+]
 
 [workspace.package]
 repository = "https://github.com/robjtede/actix-web-lab"
