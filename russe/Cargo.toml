@@ -15,15 +15,17 @@ all-features = true
 
 [features]
 awc-3 = []
-mime = []
-reqwest-0_12 = []
+mime = ["dep:mime"]
+reqwest-0_12 = ["dep:reqwest"]
 
 [dependencies]
 aho-corasick = "1"
 bytes = "1"
-bytestring = "1"
+bytestring = "1.4"
 futures-util = "0.3.18"
 memchr = "2"
+mime = { version = "0.3.17", optional = true }
+reqwest = { version = "0.12.9", optional = true, features = ["stream"] }
 tokio = "1"
 tokio-util = { version = "0.7", features = ["codec"] }
 tracing = "0.1.30"

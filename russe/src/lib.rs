@@ -8,11 +8,20 @@ mod encoder;
 mod error;
 mod event;
 mod message;
+#[cfg(feature = "reqwest-0_12")]
+pub(crate) mod reqwest_0_12;
 
 pub use self::{decoder::Decoder, error::Error, event::Event, message::Message};
 
 pub(crate) const NEWLINE: u8 = b'\n';
 pub(crate) const SSE_DELIMITER: &[u8] = b"\n\n";
+
+/// Media (MIME) type for SSE (`text/event-stream`).
+#[cfg(feature = "mime")]
+pub const MEDIA_TYPE: mime::Mime = mime::TEXT_EVENT_STREAM;
+
+/// Media (MIME) type for SSE (`text/event-stream`).
+pub const MEDIA_TYPE_STR: &str = "text/event-stream";
 
 #[cfg(test)]
 mod tests {

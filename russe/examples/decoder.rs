@@ -7,7 +7,7 @@ use futures_util::{Stream, StreamExt as _};
 use russe::Decoder as SseDecoder;
 use tokio_util::{codec::FramedRead, io::StreamReader};
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     let body_reader = StreamReader::new(chunk_stream());
 
