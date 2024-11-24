@@ -4,20 +4,21 @@ use std::{
 };
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
+use bytes::BytesMut;
 use bytestring::ByteString;
 use memchr::memmem;
-use tokio_util::{bytes::BytesMut, codec::Decoder};
 
 use crate::{event::Event, message::Message, Error, NEWLINE, SSE_DELIMITER};
 
+/// SSE decoder.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
-pub struct Codec {
+pub struct Decoder {
     event_finder: memmem::Finder<'static>,
     directive_finder: AhoCorasick,
 }
 
-impl Default for Codec {
+impl Default for Decoder {
     fn default() -> Self {
         Self {
             event_finder: memmem::Finder::new(SSE_DELIMITER),
@@ -39,20 +40,19 @@ impl Default for Codec {
     }
 }
 
-impl Decoder for Codec {
+impl tokio_util::codec::Decoder for Decoder {
     type Item = Event;
     type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         // find the event delimiter \n\n or return None (more src data needed)
         let Some(idx_end_of_event) = self.event_finder.find(src) else {
-            eprintln!("not enough data in buffer {src:?}");
+            tracing::trace!("not enough data in buffer {src:?}");
             return Ok(None);
         };
 
         // full message received; remove from src buffer
         let buf = src.split_to(idx_end_of_event);
-        eprintln!("{buf:?}");
 
         // remove the delimiter from the buffer too
         drop(src.split_to(SSE_DELIMITER.len()));
@@ -143,9 +143,10 @@ impl Decoder for Codec {
 mod tests {
     use std::{io, pin::pin};
 
+    use bytes::Bytes;
     use futures_test::stream::StreamTestExt as _;
     use futures_util::{stream, StreamExt as _};
-    use tokio_util::{bytes::Bytes, codec::FramedRead, io::StreamReader};
+    use tokio_util::{codec::FramedRead, io::StreamReader};
 
     use super::*;
     use crate::assert_none;
@@ -183,7 +184,7 @@ mod tests {
             .interleave_pending();
         let body_reader = StreamReader::new(body_stream);
 
-        let event_stream = FramedRead::new(body_reader, Codec::default());
+        let event_stream = FramedRead::new(body_reader, Decoder::default());
         let mut event_stream = pin!(event_stream);
 
         let ev = event_stream.next().await.unwrap().unwrap();

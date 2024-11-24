@@ -9,7 +9,7 @@ mod error;
 mod event;
 mod message;
 
-pub use self::{error::Error, event::Event, message::Message};
+pub use self::{decoder::Decoder, error::Error, event::Event, message::Message};
 
 pub(crate) const NEWLINE: u8 = b'\n';
 pub(crate) const SSE_DELIMITER: &[u8] = b"\n\n";

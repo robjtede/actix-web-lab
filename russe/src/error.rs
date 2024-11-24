@@ -2,6 +2,7 @@ use std::{fmt, io};
 
 /// SSE decoding error.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Error {
     /// Invalid SSE format.
     Invalid,

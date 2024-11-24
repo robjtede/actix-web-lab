@@ -6,20 +6,20 @@ use bytestring::ByteString;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Message {
     /// Message data.
-    pub(crate) data: ByteString,
+    pub data: ByteString,
 
     /// Name of event.
-    pub(crate) event: Option<ByteString>,
+    pub event: Option<ByteString>,
 
     /// Recommended retry delay in milliseconds.
-    pub(crate) retry: Option<Duration>,
+    pub retry: Option<Duration>,
 
     /// Event identifier.
     ///
     /// Used in Last-Event-ID header.
     // TODO: not always a number
     // see https://github.com/whatwg/html/issues/7363
-    pub(crate) id: Option<u64>,
+    pub id: Option<u64>,
 }
 
 #[cfg(test)]
