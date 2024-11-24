@@ -1,5 +1,6 @@
-use crate::message::Message;
 use bytestring::ByteString;
+
+use crate::message::Message;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
