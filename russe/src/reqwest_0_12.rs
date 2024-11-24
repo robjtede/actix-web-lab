@@ -1,3 +1,5 @@
+//! Utilities for `reqwest` v0.12.
+
 use std::io;
 
 use futures_util::{stream::BoxStream, TryStreamExt as _};

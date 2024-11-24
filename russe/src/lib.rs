@@ -9,7 +9,7 @@ mod error;
 mod event;
 mod message;
 #[cfg(feature = "reqwest-0_12")]
-pub(crate) mod reqwest_0_12;
+pub mod reqwest_0_12;
 
 pub use self::{decoder::Decoder, error::Error, event::Event, message::Message};
 
