@@ -1,6 +1,6 @@
 [package]
 name = "russe"
-version = "0.1.0"
+version = "0.0.2"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Server-Sent Events (SSE) decoder"
 keywords = ["sse", "server", "sent", "events"]
