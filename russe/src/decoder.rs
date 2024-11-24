@@ -5,7 +5,7 @@ use bytestring::ByteString;
 use memchr::memmem;
 use tokio_util::{bytes::BytesMut, codec::Decoder};
 
-use crate::{Error, Event, Message, NEWLINE, SSE_DELIMITER};
+use crate::{event::Event, message::Message, Error, NEWLINE, SSE_DELIMITER};
 
 #[derive(Debug, Clone)]
 #[non_exhaustive]
