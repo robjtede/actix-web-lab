@@ -13,6 +13,9 @@ pub mod reqwest_0_12;
 
 pub use self::{decoder::Decoder, error::Error, event::Event, message::Message};
 
+/// A specialized `Result` type for `russe` operations.
+pub type Result<T> = std::result::Result<T, Error>;
+
 pub(crate) const NEWLINE: u8 = b'\n';
 pub(crate) const SSE_DELIMITER: &[u8] = b"\n\n";
 
