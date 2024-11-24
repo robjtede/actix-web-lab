@@ -9,7 +9,7 @@ use crate::{Decoder, Error, Event};
 
 mod sealed {
     pub trait Sealed {}
-    impl Sealed for reqwest::Response {}
+    impl Sealed for reqwest_0_12::Response {}
 }
 
 /// SSE extension methods for `reqwest` v0.12.
@@ -18,7 +18,7 @@ pub trait ReqwestExt: sealed::Sealed {
     fn sse_stream(self) -> BoxStream<'static, Result<Event, Error>>;
 }
 
-impl ReqwestExt for reqwest::Response {
+impl ReqwestExt for reqwest_0_12::Response {
     fn sse_stream(self) -> BoxStream<'static, Result<Event, Error>> {
         let body_stream = self.bytes_stream().map_err(io::Error::other);
         let body_reader = StreamReader::new(body_stream);

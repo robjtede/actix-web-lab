@@ -1,6 +1,6 @@
 [package]
 name = "russe"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Server-Sent Events (SSE) decoder"
 keywords = ["sse", "server", "sent", "events"]
@@ -16,7 +16,7 @@ all-features = true
 [features]
 awc-3 = []
 mime = ["dep:mime"]
-reqwest-0_12 = ["dep:reqwest"]
+reqwest-0_12 = ["dep:reqwest-0_12"]
 
 [dependencies]
 aho-corasick = "1"
@@ -25,7 +25,7 @@ bytestring = "1.4"
 futures-util = "0.3.18"
 memchr = "2"
 mime = { version = "0.3.17", optional = true }
-reqwest = { version = "0.12.9", optional = true, features = ["stream"] }
+reqwest-0_12 = { package = "reqwest", version = "0.12", optional = true, features = ["stream"] }
 tokio = "1"
 tokio-util = { version = "0.7", features = ["codec"] }
 tracing = "0.1.30"
