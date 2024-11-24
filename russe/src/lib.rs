@@ -1,10 +1,10 @@
 //! Server-Sent Events (SSE) decoder.
 
 #![forbid(unsafe_code)]
-#![allow(missing_docs)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 mod decoder;
+mod encoder;
 mod error;
 mod event;
 mod message;

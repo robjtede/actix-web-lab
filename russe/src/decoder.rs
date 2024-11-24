@@ -1,4 +1,7 @@
-use std::io::{BufRead as _, BufReader};
+use std::{
+    io::{BufRead as _, BufReader},
+    time::Duration,
+};
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use bytestring::ByteString;
@@ -61,10 +64,11 @@ impl Decoder for Codec {
         let mut message = Message {
             retry: None,
             event: None,
-            data: None,
+            data: ByteString::new(),
             id: None,
         };
 
+        // TODO: if optimistic buffering is desired then remove this
         let mut data_buf = BytesMut::new();
         let mut message_event = false;
 
@@ -108,11 +112,11 @@ impl Decoder for Codec {
 
                 // retry
                 6 | 7 => {
-                    message.retry = Some(
+                    message.retry = Some(Duration::from_millis(
                         input
-                            .parse()
+                            .parse::<u64>()
                             .expect("retry should be an integer number of milliseconds"),
-                    )
+                    ))
                 }
 
                 // comment
@@ -128,7 +132,7 @@ impl Decoder for Codec {
         }
 
         if !data_buf.is_empty() {
-            message.data = Some(ByteString::try_from(data_buf).expect("Invalid UTF-8"));
+            message.data = ByteString::try_from(data_buf).expect("Invalid UTF-8");
         }
 
         Ok(Some(Event::Message(message)))
@@ -183,7 +187,7 @@ mod tests {
         let mut event_stream = pin!(event_stream);
 
         let ev = event_stream.next().await.unwrap().unwrap();
-        assert_eq!(Event::Retry(444), ev);
+        assert_eq!(Event::Retry(Duration::from_millis(444)), ev);
 
         let ev = event_stream.next().await.unwrap().unwrap();
         assert_eq!(
@@ -209,7 +213,7 @@ mod tests {
         let ev = event_stream.next().await.unwrap().unwrap();
         assert_eq!(
             Event::Message(Message {
-                data: Some("msg4 with an ID".into()),
+                data: "msg4 with an ID".into(),
                 id: Some(42),
                 ..Default::default()
             }),
@@ -219,9 +223,9 @@ mod tests {
         let ev = event_stream.next().await.unwrap().unwrap();
         assert_eq!(
             Event::Message(Message {
-                data: Some("msg5 specifies new retry".into()),
+                data: "msg5 specifies new retry".into(),
                 id: Some(43),
-                retry: Some(999),
+                retry: Some(Duration::from_millis(999)),
                 event: None,
             }),
             ev,
@@ -230,7 +234,7 @@ mod tests {
         let ev = event_stream.next().await.unwrap().unwrap();
         assert_eq!(
             Event::Message(Message {
-                data: Some("msg6 is named".into()),
+                data: "msg6 is named".into(),
                 event: Some("msg".into()),
                 ..Default::default()
             }),

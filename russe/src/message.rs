@@ -1,17 +1,24 @@
+use std::time::Duration;
+
 use bytestring::ByteString;
 
+/// An SSE data message.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Message {
-    /// millis
-    pub(crate) retry: Option<u64>,
+    /// Message data.
+    pub(crate) data: ByteString,
 
-    /// named event
+    /// Name of event.
     pub(crate) event: Option<ByteString>,
 
-    /// is always string ?
-    pub(crate) data: Option<ByteString>,
+    /// Recommended retry delay in milliseconds.
+    pub(crate) retry: Option<Duration>,
 
-    /// is always numeric ?
+    /// Event identifier.
+    ///
+    /// Used in Last-Event-ID header.
+    // TODO: not always a number
+    // see https://github.com/whatwg/html/issues/7363
     pub(crate) id: Option<u64>,
 }
 
@@ -22,7 +29,7 @@ mod tests {
     impl Message {
         pub(crate) fn data(data: impl Into<ByteString>) -> Self {
             Self {
-                data: Some(data.into()),
+                data: data.into(),
                 ..Default::default()
             }
         }
@@ -35,7 +42,7 @@ mod tests {
             Self {
                 retry: None,
                 event: None,
-                data: None,
+                data: ByteString::new(),
                 id: None,
             }
         }
