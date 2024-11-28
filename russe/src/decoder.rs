@@ -100,7 +100,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
                 // id
                 2 | 3 => {
-                    message.id = Some(input.parse().expect("ID should be an integer"));
+                    message.id = Some(input.to_owned());
                     message_event = true;
                 }
 
@@ -170,7 +170,7 @@ mod tests {
 
             retry: 999
             data: msg5 specifies new retry
-            id: 43
+            id: 43a
 
             event: msg
             data: msg6 is named
@@ -215,7 +215,7 @@ mod tests {
         assert_eq!(
             Event::Message(Message {
                 data: "msg4 with an ID".into(),
-                id: Some(42),
+                id: Some("42".to_owned()),
                 ..Default::default()
             }),
             ev,
@@ -225,7 +225,7 @@ mod tests {
         assert_eq!(
             Event::Message(Message {
                 data: "msg5 specifies new retry".into(),
-                id: Some(43),
+                id: Some("43a".to_owned()),
                 retry: Some(Duration::from_millis(999)),
                 event: None,
             }),

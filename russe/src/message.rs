@@ -17,9 +17,9 @@ pub struct Message {
     /// Event identifier.
     ///
     /// Used in Last-Event-ID header.
-    // TODO: not always a number
-    // see https://github.com/whatwg/html/issues/7363
-    pub id: Option<u64>,
+    ///
+    /// See <https://github.com/whatwg/html/issues/7363>.
+    pub id: Option<String>,
 }
 
 #[cfg(test)]

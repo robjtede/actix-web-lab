@@ -26,16 +26,23 @@ futures-util = "0.3.18"
 memchr = "2"
 mime = { version = "0.3.17", optional = true }
 reqwest-0_12 = { package = "reqwest", version = "0.12", optional = true, features = ["stream"] }
-tokio = "1"
+tokio = { version = "1", features = ["sync"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 tracing = "0.1.30"
 
 [dev-dependencies]
 futures-test = "0.3"
+eyre = "0.6"
+color-eyre = "0.6"
 indoc = "2"
 tokio = { version = "1.28.2", features = ["macros"] }
 tokio-test = "0.4"
+tokio-stream = "0.1"
 tokio-util = { version = "0.7", features = ["codec", "io", "rt"] }
+
+[[examples]]
+name = "manager"
+required-features = ["reqwest-0_12"]
 
 [lints]
 workspace = true
