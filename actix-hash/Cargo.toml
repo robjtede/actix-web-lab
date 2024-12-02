@@ -50,7 +50,7 @@ futures-util = { version = "0.3.31", default-features = false, features = ["std"
 local-channel = "0.1"
 pin-project-lite = "0.2"
 tokio = { version = "1.40.0", features = ["sync", "macros"] }
-tracing = { version = "0.1.30", features = ["log"] }
+tracing = { version = "0.1.41", features = ["log"] }
 
 blake2 = { package = "blake2", version = "0.10", optional = true }
 blake3 = { package = "blake3", version = "1.5", optional = true, features = ["traits-preview"] }
