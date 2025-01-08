@@ -28,6 +28,7 @@ pub const MEDIA_TYPE_STR: &str = "text/event-stream";
 
 #[cfg(test)]
 mod tests {
+    /// Asserts that `Option<T>` argument is `None`.
     #[macro_export]
     macro_rules! assert_none {
         ($exp:expr) => {{

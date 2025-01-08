@@ -98,8 +98,7 @@ pub fn derive_from_request(input: proc_macro::TokenStream) -> proc_macro::TokenS
         .iter()
         .filter(|field| {
             field.attrs.iter().any(|attr| {
-                attr.parse_args::<Ident>()
-                    .map_or(false, |ident| ident == "copy_from_app_data")
+                attr.parse_args::<Ident>().is_ok_and(|ident| ident == "copy_from_app_data")
             })
         })
         .map(|field| {

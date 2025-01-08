@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use actix_hash::{BodyHash, BodySha256};
 use actix_http::BoxedPayloadStream;
 use actix_web::{

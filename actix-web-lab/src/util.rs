@@ -65,13 +65,13 @@ pub fn fork_request_payload(orig_payload: &mut dev::Payload) -> dev::Payload {
 /// perform a remaining length check before writing.
 pub(crate) struct MutWriter<'a, B>(pub(crate) &'a mut B);
 
-impl<'a, B> MutWriter<'a, B> {
+impl<B> MutWriter<'_, B> {
     pub fn get_ref(&self) -> &B {
         self.0
     }
 }
 
-impl<'a, B: BufMut> io::Write for MutWriter<'a, B> {
+impl<B: BufMut> io::Write for MutWriter<'_, B> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.0.put_slice(buf);
         Ok(buf.len())

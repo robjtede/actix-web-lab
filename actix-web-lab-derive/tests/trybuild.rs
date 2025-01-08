@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 #[rustversion::stable(1.70)] // MSRV
 #[test]
 fn compile_macros() {

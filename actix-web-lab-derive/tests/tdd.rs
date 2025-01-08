@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use actix_web::{
     http::{Method, StatusCode},
     web, App, HttpResponse, Responder,
