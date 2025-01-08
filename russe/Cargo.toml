@@ -40,7 +40,7 @@ tokio-test = "0.4"
 tokio-stream = "0.1"
 tokio-util = { version = "0.7", features = ["codec", "io", "rt"] }
 
-[[examples]]
+[[example]]
 name = "manager"
 required-features = ["reqwest-0_12"]
 
