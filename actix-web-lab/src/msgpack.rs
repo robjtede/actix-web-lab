@@ -10,9 +10,11 @@ use serde::Serialize;
 
 static MSGPACK_MIME: LazyLock<Mime> = LazyLock::new(|| "application/msgpack".parse().unwrap());
 
-/// MessagePack responder.
+/// [MessagePack] responder.
 ///
 /// If you require the fields to be named, use [`MessagePackNamed`].
+///
+/// [MessagePack]: https://msgpack.org/
 #[derive(Debug, Display)]
 pub struct MessagePack<T>(pub T);
 

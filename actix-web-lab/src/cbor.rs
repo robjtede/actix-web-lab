@@ -10,7 +10,9 @@ use serde::Serialize;
 
 static CBOR_MIME: LazyLock<Mime> = LazyLock::new(|| "application/cbor".parse().unwrap());
 
-/// CBOR responder.
+/// [CBOR] responder.
+///
+/// [CBOR]: https://cbor.io/
 #[derive(Debug, Display)]
 pub struct Cbor<T>(pub T);
 

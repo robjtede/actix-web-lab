@@ -39,7 +39,7 @@ pin_project! {
     /// }
     /// ```
     ///
-    /// [NDJSON]: https://ndjson.org/
+    /// [NDJSON]: https://github.com/ndjson/ndjson-spec
     pub struct NdJson<S> {
         // The wrapped item stream.
         #[pin]
