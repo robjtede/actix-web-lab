@@ -28,7 +28,7 @@ mime = { version = "0.3.17", optional = true }
 reqwest-0_12 = { package = "reqwest", version = "0.12", optional = true, features = ["stream"] }
 tokio = { version = "1", features = ["sync"] }
 tokio-util = { version = "0.7", features = ["codec"] }
-tracing = "0.1.30"
+tracing = "0.1.41"
 
 [dev-dependencies]
 futures-test = "0.3"

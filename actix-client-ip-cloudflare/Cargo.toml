@@ -30,7 +30,7 @@ awc = { version = "3.5", optional = true }
 impl-more = "0.1.9"
 ipnetwork = { version = "0.20", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
-tracing = { version = "0.1.30", features = ["log"] }
+tracing = { version = "0.1.41", features = ["log"] }
 
 [dev-dependencies]
 actix-web = "4"
