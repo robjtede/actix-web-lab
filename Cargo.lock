@@ -63,7 +63,6 @@ dependencies = [
  "actix-http",
  "actix-web",
  "actix-web-lab",
- "base64",
  "blake2",
  "blake3",
  "digest",
@@ -71,7 +70,6 @@ dependencies = [
  "futures-core",
  "futures-util",
  "hex-literal",
- "local-channel",
  "md-5",
  "md4",
  "pin-project-lite",
@@ -79,7 +77,6 @@ dependencies = [
  "sha2",
  "sha3",
  "subtle",
- "tokio",
  "tracing",
 ]
 
@@ -356,7 +353,6 @@ dependencies = [
  "impl-more",
  "itertools 0.14.0",
  "local-channel",
- "mediatype",
  "mime",
  "pin-project-lite",
  "rand 0.9.0",
@@ -386,7 +382,6 @@ dependencies = [
  "actix-web",
  "actix-web-lab",
  "futures-util",
- "proc-macro2",
  "quote",
  "rustversion",
  "syn",
@@ -1919,12 +1914,6 @@ checksum = "7da5ac363534dce5fabf69949225e174fbf111a498bf0ff794c8ea1fba9f3dda"
 dependencies = [
  "digest",
 ]
-
-[[package]]
-name = "mediatype"
-version = "0.19.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8878cd8d1b3c8c8ae4b2ba0a36652b7cf192f618a599a7fbdfa25cffd4ea72dd"
 
 [[package]]
 name = "memchr"
