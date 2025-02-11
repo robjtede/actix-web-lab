@@ -16,7 +16,10 @@ use actix_web::{
 use actix_web_lab::respond::NdJson;
 use futures_core::Stream;
 use futures_util::{stream, StreamExt as _};
-use rand::{distributions::Alphanumeric, Rng as _};
+use rand::{
+    distr::{Alphanumeric, SampleString as _},
+    Rng as _,
+};
 use serde::Deserialize;
 use serde_json::json;
 use tracing::info;
@@ -98,19 +101,11 @@ async fn main() -> io::Result<()> {
 }
 
 fn random_email() -> String {
-    let rng = rand::thread_rng();
-
-    let id: String = rng
-        .sample_iter(Alphanumeric)
-        .take(10)
-        .map(char::from)
-        .collect();
-
+    let id = Alphanumeric.sample_string(&mut rand::rng(), 10);
     format!("user_{id}@example.com")
 }
 
 fn random_address() -> String {
-    let mut rng = rand::thread_rng();
-    let street_no: u16 = rng.gen_range(10..99);
+    let street_no: u16 = rand::rng().random_range(10..=99);
     format!("{street_no} Random Street")
 }

@@ -47,9 +47,7 @@ actix-web = { version = "4", default-features = false }
 actix-web-lab = "0.23"
 futures-core = "0.3.17"
 futures-util = { version = "0.3.31", default-features = false, features = ["std"] }
-local-channel = "0.1"
 pin-project-lite = "0.2"
-tokio = { version = "1.43.0", features = ["sync", "macros"] }
 tracing = { version = "0.1.41", features = ["log"] }
 
 blake2 = { package = "blake2", version = "0.10", optional = true }
@@ -64,7 +62,6 @@ subtle = "2"
 
 [dev-dependencies]
 actix-web = "4"
-base64 = "0.22"
 env_logger = "0.11"
 hex-literal = "0.4"
 sha2 = "0.10"
