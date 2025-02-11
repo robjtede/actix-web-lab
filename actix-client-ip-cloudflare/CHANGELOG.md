@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update `ipnetwork` dependency to `0.21`.
+
 ## 0.2.0
 
 - Replace visible types from `cidr-utils` with equivalent types from the `ipnetwork` crate.
