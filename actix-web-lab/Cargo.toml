@@ -58,7 +58,7 @@ arc-swap = "1.1"
 bytes = "1"
 bytestring = "1"
 csv = "1.1"
-derive_more = { version = "1", features = ["display", "error"] }
+derive_more = { version = "2", features = ["display", "error"] }
 form_urlencoded = "1"
 futures-core = "0.3.17"
 futures-util = { version = "0.3.31", default-features = false, features = ["std"] }
