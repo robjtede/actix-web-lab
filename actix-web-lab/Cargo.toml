@@ -98,7 +98,7 @@ env_logger = "0.11"
 futures-util = { version = "0.3.31", default-features = false, features = ["std", "io"] }
 generic-array = "0.14"
 hex = "0.4"
-hex-literal = "0.4"
+hex-literal = "1.0"
 hmac = { version = "0.12", features = ["reset"] }
 rand = "0.9"
 rustls = "0.23"
