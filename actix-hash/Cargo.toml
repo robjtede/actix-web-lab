@@ -51,7 +51,7 @@ pin-project-lite = "0.2"
 tracing = { version = "0.1.41", features = ["log"] }
 
 blake2 = { package = "blake2", version = "0.10", optional = true }
-blake3 = { package = "blake3", version = "1.5", optional = true, features = ["traits-preview"] }
+blake3 = { package = "blake3", version = "1.6", optional = true, features = ["traits-preview"] }
 digest = "0.10"
 md4 = { package = "md4", version = "0.10", optional = true }
 md5 = { package = "md-5", version = "0.10", optional = true }
