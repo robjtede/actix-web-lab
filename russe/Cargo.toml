@@ -31,18 +31,23 @@ tokio-util = { version = "0.7", features = ["codec"] }
 tracing = "0.1.41"
 
 [dev-dependencies]
-futures-test = "0.3"
-eyre = "0.6"
 color-eyre = "0.6"
+divan = "0.1"
+eyre = "0.6"
+futures-test = "0.3"
 indoc = "2"
-tokio = { version = "1.43.0", features = ["macros"] }
-tokio-test = "0.4"
+tokio = { version = "1.43.0", features = ["macros", "rt"] }
 tokio-stream = "0.1"
+tokio-test = "0.4"
 tokio-util = { version = "0.7", features = ["codec", "io", "rt"] }
 
 [[example]]
 name = "manager"
 required-features = ["reqwest-0_12"]
+
+[[bench]]
+name = "decoder"
+harness = false
 
 [lints]
 workspace = true
