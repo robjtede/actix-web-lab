@@ -19,7 +19,7 @@ pub struct Message {
     /// Used in Last-Event-ID header.
     ///
     /// See <https://github.com/whatwg/html/issues/7363>.
-    pub id: Option<String>,
+    pub id: Option<ByteString>,
 }
 
 #[cfg(test)]

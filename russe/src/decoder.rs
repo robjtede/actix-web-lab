@@ -104,9 +104,9 @@ impl tokio_util::codec::Decoder for Decoder {
 
                 // id
                 2 | 3 => {
-                    let id = str::from_utf8(&input).unwrap();
+                    let id = ByteString::try_from(input).map_err(invalid_utf8)?;
 
-                    message.id = Some(id.to_owned());
+                    message.id = Some(id);
                     message_event = true;
                 }
 
@@ -235,7 +235,7 @@ mod tests {
         assert_eq!(
             Event::Message(Message {
                 data: "msg4 with an ID".into(),
-                id: Some("42".to_owned()),
+                id: Some("42".into()),
                 ..Default::default()
             }),
             ev,
@@ -245,7 +245,7 @@ mod tests {
         assert_eq!(
             Event::Message(Message {
                 data: "msg5 specifies new retry".into(),
-                id: Some("43a".to_owned()),
+                id: Some("43a".into()),
                 retry: Some(Duration::from_millis(999)),
                 event: None,
             }),

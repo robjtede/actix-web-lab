@@ -2,6 +2,7 @@
 
 use std::io;
 
+use bytestring::ByteString;
 use futures_util::{stream::BoxStream, StreamExt as _, TryStreamExt as _};
 use reqwest_0_12::{Client, Request, Response};
 use tokio::{
@@ -41,7 +42,7 @@ impl ReqwestExt for Response {
 pub struct Manager {
     client: Client,
     req: Request,
-    last_event_id: Option<String>,
+    last_event_id: Option<ByteString>,
     tx: UnboundedSender<Result<Event, Error>>,
     rx: Option<UnboundedReceiver<Result<Event, Error>>>,
 }
@@ -94,8 +95,8 @@ impl Manager {
     /// Commits an event ID for this manager.
     ///
     /// The given ID will be used as the `Last-Event-Id` header in case of reconnects.
-    pub fn commit_id(&mut self, id: String) {
-        self.last_event_id = Some(id);
+    pub fn commit_id(&mut self, id: impl Into<ByteString>) {
+        self.last_event_id = Some(id.into());
     }
 }
 
