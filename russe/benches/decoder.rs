@@ -15,7 +15,7 @@ static ALLOC: AllocProfiler = AllocProfiler::system();
 fn sse_events(b: Bencher<'_, '_>) {
     let rt = tokio::runtime::Handle::current();
 
-    let input = black_box(indoc::indoc! {"
+    let input = indoc::indoc! {"
         retry: 444
 
         : begin by specifying retry duration
@@ -37,10 +37,10 @@ fn sse_events(b: Bencher<'_, '_>) {
         event: msg
         data: msg6 is named
 
-    "});
+    "};
 
     b.bench(|| {
-        let body_stream = stream::iter(input.as_bytes().chunks(7))
+        let body_stream = stream::iter(black_box(input).as_bytes().chunks(7))
             .map(|line| Ok::<_, io::Error>(Bytes::from(line)))
             .interleave_pending();
         let body_reader = StreamReader::new(body_stream);
@@ -48,7 +48,7 @@ fn sse_events(b: Bencher<'_, '_>) {
         let event_stream = FramedRead::new(body_reader, russe::Decoder::default());
         let event_stream = pin!(event_stream);
 
-        let count = rt.block_on(event_stream.count());
+        let count = rt.block_on(black_box(event_stream).count());
         assert_eq!(count, 8);
     });
 }

@@ -1,5 +1,6 @@
 use std::{
-    io::{BufRead as _, BufReader},
+    io::{self, BufReader},
+    str,
     time::Duration,
 };
 
@@ -8,7 +9,7 @@ use bytes::BytesMut;
 use bytestring::ByteString;
 use memchr::memmem;
 
-use crate::{event::Event, message::Message, Error, NEWLINE, SSE_DELIMITER};
+use crate::{event::Event, message::Message, unix_lines::UnixLines, Error, NEWLINE, SSE_DELIMITER};
 
 /// SSE decoder.
 #[derive(Debug, Clone)]
@@ -57,9 +58,9 @@ impl tokio_util::codec::Decoder for Decoder {
         // remove the delimiter from the buffer too
         drop(src.split_to(SSE_DELIMITER.len()));
 
-        // TODO: consider if using lines (which also does \r\n) is correct
-        // TODO: replace with ByteString::read_until \n
-        let lines_reader = BufReader::new(&*buf).lines();
+        let lines_reader = UnixLines {
+            rdr: BufReader::new(&*buf),
+        };
 
         let mut message = Message {
             retry: None,
@@ -69,30 +70,33 @@ impl tokio_util::codec::Decoder for Decoder {
         };
 
         // TODO: if optimistic buffering is desired then remove this
-        let mut data_buf = BytesMut::new();
+        let mut data_buf = BytesMut::with_capacity(64);
         let mut message_event = false;
 
         for line in lines_reader {
-            let line = line?;
+            let mut line = line?;
 
             let matched = self.directive_finder.find(&line).expect("invalid line");
 
-            if matched.start() != 0 {
-                panic!("directive matched was not at beginning of line")
-            }
+            debug_assert!(
+                matched.start() == 0,
+                "directive matched was not at beginning of line",
+            );
 
-            let (_directive, input) = line.split_at(matched.end());
+            // discard matched directive bytes
+            let _ = line.split_to(matched.end());
+            let input = line;
 
             match matched.pattern().as_u64() {
                 // data
                 0 | 1 => {
                     if data_buf.is_empty() {
                         // first line
-                        data_buf = input.as_bytes().into()
+                        data_buf = input.into()
                     } else {
                         // additional lines
                         data_buf.extend_from_slice(&[NEWLINE]);
-                        data_buf.extend_from_slice(input.as_bytes());
+                        data_buf.extend_from_slice(&input);
                     }
 
                     message_event = true;
@@ -100,18 +104,24 @@ impl tokio_util::codec::Decoder for Decoder {
 
                 // id
                 2 | 3 => {
-                    message.id = Some(input.to_owned());
+                    let id = str::from_utf8(&input).unwrap();
+
+                    message.id = Some(id.to_owned());
                     message_event = true;
                 }
 
                 // event
                 4 | 5 => {
-                    message.event = Some(input.into());
+                    let event = ByteString::try_from(input).map_err(invalid_utf8)?;
+
+                    message.event = Some(event);
                     message_event = true;
                 }
 
                 // retry
                 6 | 7 => {
+                    let input = str::from_utf8(&input).map_err(invalid_utf8)?;
+
                     message.retry = Some(Duration::from_millis(
                         input
                             .parse::<u64>()
@@ -120,7 +130,11 @@ impl tokio_util::codec::Decoder for Decoder {
                 }
 
                 // comment
-                8 | 9 => return Ok(Some(Event::Comment(input.into()))),
+                8 | 9 => {
+                    let comment = ByteString::try_from(input).map_err(invalid_utf8)?;
+
+                    return Ok(Some(Event::Comment(comment)));
+                }
 
                 _ => unreachable!("all search patterns are covered"),
             }
@@ -132,11 +146,17 @@ impl tokio_util::codec::Decoder for Decoder {
         }
 
         if !data_buf.is_empty() {
-            message.data = ByteString::try_from(data_buf).expect("Invalid UTF-8");
+            let data = ByteString::try_from(data_buf).map_err(invalid_utf8)?;
+
+            message.data = data;
         }
 
         Ok(Some(Event::Message(message)))
     }
+}
+
+fn invalid_utf8(err: str::Utf8Error) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, err)
 }
 
 #[cfg(test)]
@@ -241,6 +261,26 @@ mod tests {
             }),
             ev,
         );
+
+        // no more events in the stream
+        assert_none!(event_stream.next().await);
+    }
+
+    #[tokio::test]
+    async fn errors_on_invalid_utf8() {
+        let input = b"data: invalid\xC3\x28msg\n\n".as_slice();
+
+        assert!(input.ends_with(SSE_DELIMITER));
+
+        let body_stream =
+            stream::once(async { input }).map(|line| Ok::<_, io::Error>(Bytes::from(line)));
+        let body_reader = StreamReader::new(body_stream);
+
+        let event_stream = FramedRead::new(body_reader, Decoder::default());
+        let mut event_stream = pin!(event_stream);
+
+        let err = event_stream.next().await.unwrap().unwrap_err();
+        assert_eq!(err.to_string(), "I/O error");
 
         // no more events in the stream
         assert_none!(event_stream.next().await);
