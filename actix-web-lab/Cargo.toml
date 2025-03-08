@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-lab"
-version = "0.23.0"
+version = "0.24.0"
 description = "In-progress extractors and middleware for Actix Web"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 keywords = ["actix", "http", "web", "framework", "async"]
@@ -46,7 +46,7 @@ msgpack = ["rmp-serde"]
 spa = ["actix-files"]
 
 [dependencies]
-actix-web-lab-derive = { version = "=0.23.0", optional = true }
+actix-web-lab-derive = { version = "0.24", optional = true }
 
 actix-http = "3"
 actix-router = "0.5"
@@ -87,7 +87,7 @@ rmp-serde = { version = "1", optional = true }
 actix-files = { version = "0.6", optional = true }
 
 [dev-dependencies]
-actix-web-lab-derive = "=0.23.0"
+actix-web-lab-derive = "0.24"
 
 actix-web = { version = "4", features = ["rustls-0_23"] }
 async_zip = { version = "0.0.17", features = ["deflate", "tokio"] }

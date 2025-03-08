@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.24.0
+
 - Re-work `Json` extractor error handling.
 - Re-work `UrlEncodedForm` extractor error handling.
 - Upgrade to edition 2024.
