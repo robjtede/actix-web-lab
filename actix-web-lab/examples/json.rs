@@ -50,7 +50,7 @@ fn json_error_handler(err: JsonPayloadError, _req: &HttpRequest) -> actix_web::E
     let detail = err.to_string();
     let res = match &err {
         JsonPayloadError::ContentType => HttpResponse::UnsupportedMediaType().body(detail),
-        JsonPayloadError::Deserialize { path: _, source } if source.is_data() => {
+        JsonPayloadError::Deserialize { source: err, .. } if err.source().is_data() => {
             HttpResponse::UnprocessableEntity().body(detail)
         }
         _ => HttpResponse::BadRequest().body(detail),

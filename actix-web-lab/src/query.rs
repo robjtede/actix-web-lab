@@ -135,6 +135,11 @@ impl QueryDeserializeError {
     pub fn path(&self) -> impl fmt::Display + '_ {
         &self.path
     }
+
+    /// Returns the source error.
+    pub fn source(&self) -> &serde_html_form::de::Error {
+        &self.source
+    }
 }
 
 impl fmt::Display for QueryDeserializeError {

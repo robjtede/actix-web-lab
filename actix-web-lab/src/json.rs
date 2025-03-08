@@ -310,13 +310,18 @@ pub struct JsonDeserializeError {
     path: serde_path_to_error::Path,
 
     /// Deserialization error.
-    source: serde_json::error::Error,
+    source: serde_json::Error,
 }
 
 impl JsonDeserializeError {
     /// Returns the path at which the deserialization error occurred.
     pub fn path(&self) -> impl fmt::Display + '_ {
         &self.path
+    }
+
+    /// Returns the source error.
+    pub fn source(&self) -> &serde_json::Error {
+        &self.source
     }
 }
 
