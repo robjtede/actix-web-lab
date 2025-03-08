@@ -123,8 +123,11 @@ impl<T: DeserializeOwned> FromRequest for Query<T> {
 /// Deserialization errors that can occur during parsing query strings.
 #[derive(Debug, Error)]
 pub struct QueryDeserializeError {
+    /// Path where deserialization error occurred.
     path: serde_path_to_error::Path,
-    source: serde::de::value::Error,
+
+    /// Deserialization error.
+    source: serde_html_form::de::Error,
 }
 
 impl QueryDeserializeError {

@@ -1,6 +1,7 @@
 //! JSON extractor with const-generic payload size limit.
 
 use std::{
+    fmt,
     marker::PhantomData,
     pin::Pin,
     task::{Context, Poll, ready},
@@ -249,8 +250,10 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonBody<T, LIMIT> {
                         let mut de = serde_json::Deserializer::from_slice(buf);
                         let json = serde_path_to_error::deserialize(&mut de).map_err(|err| {
                             JsonPayloadError::Deserialize {
-                                path: err.path().clone(),
-                                source: err.into_inner(),
+                                source: JsonDeserializeError {
+                                    path: err.path().clone(),
+                                    source: err.into_inner(),
+                                },
                             }
                         })?;
 
@@ -285,14 +288,11 @@ pub enum JsonPayloadError {
     #[display("Content type error")]
     ContentType,
 
-    /// Deserialize error.
-    #[display("JSON deserialize error")]
+    /// Deserialization error.
+    #[display("Deserialization error")]
     Deserialize {
-        /// Path where deserialization error occurred.
-        path: serde_path_to_error::Path,
-
         /// Deserialization error.
-        source: serde_json::error::Error,
+        source: JsonDeserializeError,
     },
 
     /// Payload error.
@@ -301,6 +301,35 @@ pub enum JsonPayloadError {
         /// Payload error.
         source: actix_web::error::PayloadError,
     },
+}
+
+/// Deserialization errors that can occur during parsing query strings.
+#[derive(Debug, Error)]
+pub struct JsonDeserializeError {
+    /// Path where deserialization error occurred.
+    path: serde_path_to_error::Path,
+
+    /// Deserialization error.
+    source: serde_json::error::Error,
+}
+
+impl JsonDeserializeError {
+    /// Returns the path at which the deserialization error occurred.
+    pub fn path(&self) -> impl fmt::Display + '_ {
+        &self.path
+    }
+}
+
+impl fmt::Display for JsonDeserializeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("JSON deserialization failed")?;
+
+        if self.path.iter().len() > 0 {
+            write!(f, " at path: {}", &self.path)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl ResponseError for JsonPayloadError {
@@ -504,8 +533,8 @@ mod tests {
         let res = Json::<Names>::from_request(&req, &mut pl).await;
         let err = res.unwrap_err();
         match err {
-            JsonPayloadError::Deserialize { path, source: _ } => {
-                assert_eq!("names[1]", path.to_string());
+            JsonPayloadError::Deserialize { source: err } => {
+                assert_eq!("names[1]", err.path().to_string());
             }
             err => panic!("unexpected error variant: {err}"),
         }

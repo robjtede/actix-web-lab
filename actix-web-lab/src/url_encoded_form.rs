@@ -1,15 +1,20 @@
 //! URL-encoded form extractor with const-generic payload size limit.
 
 use std::{
+    fmt,
     marker::PhantomData,
     pin::Pin,
     task::{Context, Poll, ready},
 };
 
 use actix_web::{
-    Error, FromRequest, HttpMessage, HttpRequest, dev::Payload, error::UrlencodedError,
-    http::header, web,
+    Error, FromRequest, HttpMessage, HttpRequest, ResponseError,
+    dev::Payload,
+    error::PayloadError,
+    http::{StatusCode, header},
+    web,
 };
+use derive_more::{Display, Error};
 use futures_core::Stream as _;
 use serde::de::DeserializeOwned;
 use tracing::debug;
@@ -143,7 +148,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for UrlEncodedFormExtractFu
 /// - `Content-Length` is greater than `LIMIT`.
 /// - The payload, when consumed, is not URL-encoded.
 pub enum UrlEncodedFormBody<T, const LIMIT: usize> {
-    Error(Option<UrlencodedError>),
+    Error(Option<UrlEncodedFormError>),
     Body {
         /// Length as reported by `Content-Length` header, if present.
         #[allow(dead_code)]
@@ -167,7 +172,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> UrlEncodedFormBody<T, LIMIT> {
         };
 
         if !can_parse_form {
-            return UrlEncodedFormBody::Error(Some(UrlencodedError::ContentType));
+            return UrlEncodedFormBody::Error(Some(UrlEncodedFormError::ContentType));
         }
 
         let length = req
@@ -184,7 +189,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> UrlEncodedFormBody<T, LIMIT> {
 
         if let Some(len) = length {
             if len > LIMIT {
-                return UrlEncodedFormBody::Error(Some(UrlencodedError::Overflow {
+                return UrlEncodedFormBody::Error(Some(UrlEncodedFormError::Overflow {
                     size: len,
                     limit: LIMIT,
                 }));
@@ -201,7 +206,7 @@ impl<T: DeserializeOwned, const LIMIT: usize> UrlEncodedFormBody<T, LIMIT> {
 }
 
 impl<T: DeserializeOwned, const LIMIT: usize> Future for UrlEncodedFormBody<T, LIMIT> {
-    type Output = Result<T, UrlencodedError>;
+    type Output = Result<T, UrlEncodedFormError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
@@ -212,10 +217,12 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for UrlEncodedFormBody<T, L
 
                 match res {
                     Some(chunk) => {
-                        let chunk = chunk?;
+                        let chunk =
+                            chunk.map_err(|err| UrlEncodedFormError::Payload { source: err })?;
+
                         let buf_len = buf.len() + chunk.len();
                         if buf_len > LIMIT {
-                            return Poll::Ready(Err(UrlencodedError::Overflow {
+                            return Poll::Ready(Err(UrlEncodedFormError::Overflow {
                                 size: buf_len,
                                 limit: LIMIT,
                             }));
@@ -225,8 +232,17 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for UrlEncodedFormBody<T, L
                     }
 
                     None => {
-                        let form = serde_html_form::from_bytes::<T>(buf)
-                            .map_err(UrlencodedError::Parse)?;
+                        let de = serde_html_form::Deserializer::from_bytes(buf);
+
+                        let form = serde_path_to_error::deserialize(de).map_err(|err| {
+                            UrlEncodedFormError::Deserialize {
+                                source: UrlEncodedFormDeserializeError {
+                                    path: err.path().clone(),
+                                    source: err.into_inner(),
+                                },
+                            }
+                        })?;
+
                         return Poll::Ready(Ok(form));
                     }
                 }
@@ -234,6 +250,74 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for UrlEncodedFormBody<T, L
 
             UrlEncodedFormBody::Error(err) => Poll::Ready(Err(err.take().unwrap())),
         }
+    }
+}
+
+/// Errors that can occur while extracting URL-encoded forms.
+#[derive(Debug, Display, Error)]
+#[non_exhaustive]
+pub enum UrlEncodedFormError {
+    /// Payload size is larger than allowed.
+    #[display(
+        "URL encoded payload is larger ({} bytes) than allowed (limit: {} bytes).",
+        size,
+        limit
+    )]
+    Overflow { size: usize, limit: usize },
+
+    /// Content type error.
+    #[display("Content type error.")]
+    ContentType,
+
+    /// Deserialization error.
+    #[display("Deserialization error")]
+    Deserialize {
+        /// Deserialization error.
+        source: UrlEncodedFormDeserializeError,
+    },
+
+    /// Payload error.
+    #[display("Error that occur during reading payload")]
+    Payload { source: PayloadError },
+}
+
+impl ResponseError for UrlEncodedFormError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::Overflow { .. } => StatusCode::PAYLOAD_TOO_LARGE,
+            Self::ContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            Self::Payload { source: err } => err.status_code(),
+            Self::Deserialize { .. } => StatusCode::UNPROCESSABLE_ENTITY,
+        }
+    }
+}
+
+/// Errors that can occur while deserializing URL-encoded forms query strings.
+#[derive(Debug, Error)]
+pub struct UrlEncodedFormDeserializeError {
+    /// Path where deserialization error occurred.
+    path: serde_path_to_error::Path,
+
+    /// Deserialization error.
+    source: serde_html_form::de::Error,
+}
+
+impl UrlEncodedFormDeserializeError {
+    /// Returns the path at which the deserialization error occurred.
+    pub fn path(&self) -> impl fmt::Display + '_ {
+        &self.path
+    }
+}
+
+impl fmt::Display for UrlEncodedFormDeserializeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("URL-encoded form deserialization failed")?;
+
+        if self.path.iter().len() > 0 {
+            write!(f, " at path: {}", &self.path)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -249,13 +333,13 @@ mod tests {
         name: String,
     }
 
-    fn err_eq(err: UrlencodedError, other: UrlencodedError) -> bool {
+    fn err_eq(err: UrlEncodedFormError, other: UrlEncodedFormError) -> bool {
         match err {
-            UrlencodedError::Overflow { .. } => {
-                matches!(other, UrlencodedError::Overflow { .. })
+            UrlEncodedFormError::Overflow { .. } => {
+                matches!(other, UrlEncodedFormError::Overflow { .. })
             }
 
-            UrlencodedError::ContentType => matches!(other, UrlencodedError::ContentType),
+            UrlEncodedFormError::ContentType => matches!(other, UrlEncodedFormError::ContentType),
 
             _ => false,
         }
@@ -322,7 +406,7 @@ mod tests {
         let form =
             UrlEncodedFormBody::<MyObject, DEFAULT_URL_ENCODED_FORM_LIMIT>::new(&req, &mut pl)
                 .await;
-        assert!(err_eq(form.unwrap_err(), UrlencodedError::ContentType));
+        assert!(err_eq(form.unwrap_err(), UrlEncodedFormError::ContentType));
 
         let (req, mut pl) = TestRequest::default()
             .insert_header((
@@ -333,7 +417,7 @@ mod tests {
         let form =
             UrlEncodedFormBody::<MyObject, DEFAULT_URL_ENCODED_FORM_LIMIT>::new(&req, &mut pl)
                 .await;
-        assert!(err_eq(form.unwrap_err(), UrlencodedError::ContentType));
+        assert!(err_eq(form.unwrap_err(), UrlEncodedFormError::ContentType));
 
         let (req, mut pl) = TestRequest::default()
             .insert_header(header::ContentType::form_url_encoded())
@@ -346,7 +430,7 @@ mod tests {
         let form = UrlEncodedFormBody::<MyObject, 100>::new(&req, &mut pl).await;
         assert!(err_eq(
             form.unwrap_err(),
-            UrlencodedError::Overflow {
+            UrlEncodedFormError::Overflow {
                 size: 10000,
                 limit: 100
             }
@@ -361,7 +445,7 @@ mod tests {
 
         assert!(err_eq(
             form.unwrap_err(),
-            UrlencodedError::Overflow {
+            UrlEncodedFormError::Overflow {
                 size: 1000,
                 limit: 100
             }
