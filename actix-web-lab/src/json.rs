@@ -181,7 +181,6 @@ impl<T, const LIMIT: usize> Unpin for JsonBody<T, LIMIT> {}
 
 impl<T: DeserializeOwned, const LIMIT: usize> JsonBody<T, LIMIT> {
     /// Create a new future to decode a JSON request payload.
-    // #[allow(clippy::borrow_interior_mutable_const)]
     pub fn new(req: &HttpRequest, payload: &mut Payload) -> Self {
         // check content-type
         let can_parse_json = if let Ok(Some(mime)) = req.mime_type() {
@@ -342,7 +341,11 @@ impl ResponseError for JsonPayloadError {
         match self {
             Self::Overflow { .. } => StatusCode::PAYLOAD_TOO_LARGE,
             Self::Payload { source } => source.status_code(),
-            _ => StatusCode::BAD_REQUEST,
+            Self::Deserialize { source: err } if err.source().is_data() => {
+                StatusCode::UNPROCESSABLE_ENTITY
+            }
+            Self::Deserialize { .. } => StatusCode::BAD_REQUEST,
+            Self::ContentType => StatusCode::NOT_ACCEPTABLE,
         }
     }
 }
