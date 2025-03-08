@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Re-work `Json` deserialization error handling.
+
 ## 0.23.0
 
 - Add `header::ClearSiteData` header.

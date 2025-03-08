@@ -23,8 +23,10 @@ words:
   - msgpack
   - msrv
   - ndjson
+  - nextest
   - nixpkgs
   - pemfile
+  - pkgs
   - prehashed
   - rdef
   - refcell
@@ -34,6 +36,7 @@ words:
   - RUSTDOCFLAGS
   - rustfmt
   - rustls
+  - rustup
   - rustversion
   - serde
   - splitn

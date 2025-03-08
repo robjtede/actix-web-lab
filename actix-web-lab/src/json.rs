@@ -7,12 +7,12 @@ use std::{
     task::{ready, Context, Poll},
 };
 
-// #[cfg(feature = "__compress")]
-// use crate::dev::Decompress;
 use actix_web::{
-    dev::Payload, error::JsonPayloadError, http::header, web, FromRequest, HttpMessage, HttpRequest,
+    dev::Payload, http::header, web, FromRequest, HttpMessage, HttpRequest, ResponseError,
 };
+use derive_more::{Display, Error};
 use futures_core::Stream as _;
+use http::StatusCode;
 use serde::de::DeserializeOwned;
 use tracing::debug;
 
@@ -204,22 +204,13 @@ impl<T: DeserializeOwned, const LIMIT: usize> JsonBody<T, LIMIT> {
             .and_then(|l| l.to_str().ok())
             .and_then(|s| s.parse::<usize>().ok());
 
-        // maybe remove support for decompression at the extractor level for all extractors ?
-        let payload = {
-            // cfg_if::cfg_if! {
-            //     if #[cfg(feature = "__compress")] {
-            //         Decompress::from_headers(payload.take(), req.headers())
-            //     } else {
-            payload.take()
-            //     }
-            // }
-        };
+        let payload = payload.take();
 
         if let Some(len) = length {
             if len > LIMIT {
-                return JsonBody::Error(Some(JsonPayloadError::OverflowKnownLength {
-                    length: len,
+                return JsonBody::Error(Some(JsonPayloadError::Overflow {
                     limit: LIMIT,
+                    length: Some(len),
                 }));
             }
         }
@@ -245,18 +236,29 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonBody<T, LIMIT> {
 
                 match res {
                     Some(chunk) => {
-                        let chunk = chunk?;
+                        let chunk =
+                            chunk.map_err(|err| JsonPayloadError::Payload { source: err })?;
+
                         let buf_len = buf.len() + chunk.len();
                         if buf_len > LIMIT {
-                            return Poll::Ready(Err(JsonPayloadError::Overflow { limit: LIMIT }));
+                            return Poll::Ready(Err(JsonPayloadError::Overflow {
+                                limit: LIMIT,
+                                length: None,
+                            }));
                         } else {
                             buf.extend_from_slice(&chunk);
                         }
                     }
 
                     None => {
-                        let json = serde_json::from_slice::<T>(buf)
-                            .map_err(JsonPayloadError::Deserialize)?;
+                        let mut de = serde_json::Deserializer::from_slice(buf);
+                        let json = serde_path_to_error::deserialize(&mut de).map_err(|err| {
+                            JsonPayloadError::Deserialize {
+                                path: err.path().clone(),
+                                source: err.into_inner(),
+                            }
+                        })?;
+
                         return Poll::Ready(Ok(json));
                     }
                 }
@@ -267,14 +269,62 @@ impl<T: DeserializeOwned, const LIMIT: usize> Future for JsonBody<T, LIMIT> {
     }
 }
 
+/// A set of errors that can occur during parsing json payloads
+#[derive(Debug, Display, Error)]
+#[non_exhaustive]
+pub enum JsonPayloadError {
+    /// Payload size is bigger than allowed header set.
+    #[display(
+        "JSON payload {}is larger than allowed (limit: {limit} bytes)",
+        length.map(|length| format!("({length} bytes) ")).unwrap_or("".to_owned()),
+    )]
+    Overflow {
+        /// Configured payload size limit.
+        limit: usize,
+
+        /// The Content-Length, if sent.
+        length: Option<usize>,
+    },
+
+    /// Content type error.
+    #[display("Content type error")]
+    ContentType,
+
+    /// Deserialize error.
+    #[display("JSON deserialize error")]
+    Deserialize {
+        /// Path where deserialization error occurred.
+        path: serde_path_to_error::Path,
+
+        /// Deserialization error.
+        source: serde_json::error::Error,
+    },
+
+    /// Payload error.
+    #[display("Error that occur during reading payload")]
+    Payload {
+        source: actix_web::error::PayloadError,
+    },
+}
+
+impl ResponseError for JsonPayloadError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::Overflow { .. } => StatusCode::PAYLOAD_TOO_LARGE,
+            Self::Payload { source } => source.status_code(),
+            _ => StatusCode::BAD_REQUEST,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use actix_web::{http::header, test::TestRequest, web::Bytes};
-    use serde::{Deserialize, Serialize};
+    use serde::Deserialize;
 
     use super::*;
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    #[derive(Debug, PartialEq, Deserialize)]
     struct MyObject {
         name: String,
     }
@@ -283,9 +333,6 @@ mod tests {
         match err {
             JsonPayloadError::Overflow { .. } => {
                 matches!(other, JsonPayloadError::Overflow { .. })
-            }
-            JsonPayloadError::OverflowKnownLength { .. } => {
-                matches!(other, JsonPayloadError::OverflowKnownLength { .. })
             }
             JsonPayloadError::ContentType => matches!(other, JsonPayloadError::ContentType),
             _ => false,
@@ -323,11 +370,11 @@ mod tests {
             .set_payload(Bytes::from_static(b"{\"name\": \"test\"}"))
             .to_http_parts();
 
-        let s = Json::<MyObject, 10>::from_request(&req, &mut pl).await;
-        let err = format!("{}", s.unwrap_err());
-        assert!(
-            err.contains("JSON payload (16 bytes) is larger than allowed (limit: 10 bytes)."),
-            "unexpected error string: {err:?}"
+        let res = Json::<MyObject, 10>::from_request(&req, &mut pl).await;
+        let err = res.unwrap_err();
+        assert_eq!(
+            "JSON payload (16 bytes) is larger than allowed (limit: 10 bytes)",
+            err.to_string(),
         );
 
         let (req, mut pl) = TestRequest::default()
@@ -339,9 +386,9 @@ mod tests {
             .set_payload(Bytes::from_static(b"{\"name\": \"test\"}"))
             .to_http_parts();
         let s = Json::<MyObject, 10>::from_request(&req, &mut pl).await;
-        let err = format!("{}", s.unwrap_err());
+        let err = s.unwrap_err();
         assert!(
-            err.contains("larger than allowed"),
+            err.to_string().contains("larger than allowed"),
             "unexpected error string: {err:?}"
         );
     }
@@ -372,9 +419,9 @@ mod tests {
         let json = JsonBody::<MyObject, 100>::new(&req, &mut pl).await;
         assert!(json_eq(
             json.unwrap_err(),
-            JsonPayloadError::OverflowKnownLength {
-                length: 10000,
-                limit: 100
+            JsonPayloadError::Overflow {
+                limit: 100,
+                length: Some(10000),
             }
         ));
 
@@ -387,7 +434,10 @@ mod tests {
 
         assert!(json_eq(
             json.unwrap_err(),
-            JsonPayloadError::Overflow { limit: 100 }
+            JsonPayloadError::Overflow {
+                limit: 100,
+                length: None
+            }
         ));
 
         let (req, mut pl) = TestRequest::default()
@@ -422,8 +472,9 @@ mod tests {
             .set_payload(Bytes::from_static(b"{\"name\": \"test\"}"))
             .to_http_parts();
 
-        let s = Json::<MyObject, 4096>::from_request(&req, &mut pl).await;
-        assert!(s.is_err())
+        Json::<MyObject, 4096>::from_request(&req, &mut pl)
+            .await
+            .unwrap_err();
     }
 
     #[actix_web::test]
@@ -434,12 +485,33 @@ mod tests {
             .set_payload(Bytes::from_static(b"{\"name\": \"test\"}"))
             .to_http_parts();
 
-        let s = Json::<MyObject, 10>::from_request(&req, &mut pl).await;
-        assert!(s.is_err());
-
-        let err_str = s.unwrap_err().to_string();
-        assert!(
-            err_str.contains("JSON payload (16 bytes) is larger than allowed (limit: 10 bytes).")
+        let res = Json::<MyObject, 10>::from_request(&req, &mut pl).await;
+        let err = res.unwrap_err();
+        assert_eq!(
+            "JSON payload (16 bytes) is larger than allowed (limit: 10 bytes)",
+            err.to_string(),
         );
+    }
+
+    #[actix_web::test]
+    async fn json_deserialize_errors_contain_path() {
+        #[derive(Debug, PartialEq, Deserialize)]
+        struct Names {
+            names: Vec<String>,
+        }
+
+        let (req, mut pl) = TestRequest::default()
+            .insert_header(header::ContentType::json())
+            .set_payload(Bytes::from_static(b"{\"names\": [\"test\", 1]}"))
+            .to_http_parts();
+
+        let res = Json::<Names>::from_request(&req, &mut pl).await;
+        let err = res.unwrap_err();
+        match err {
+            JsonPayloadError::Deserialize { path, source: _ } => {
+                assert_eq!("names[1]", path.to_string());
+            }
+            err => panic!("unexpected error variant: {err}"),
+        }
     }
 }

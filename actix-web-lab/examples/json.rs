@@ -5,7 +5,7 @@ use actix_web::{
     middleware::{Logger, NormalizePath},
     web, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
-use actix_web_lab::extract::Json;
+use actix_web_lab::extract::{Json, JsonPayloadError};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -49,7 +49,7 @@ fn json_error_handler(err: JsonPayloadError, _req: &HttpRequest) -> actix_web::E
     let detail = err.to_string();
     let res = match &err {
         JsonPayloadError::ContentType => HttpResponse::UnsupportedMediaType().body(detail),
-        JsonPayloadError::Deserialize(json_err) if json_err.is_data() => {
+        JsonPayloadError::Deserialize { path: _, source } if source.is_data() => {
             HttpResponse::UnprocessableEntity().body(detail)
         }
         _ => HttpResponse::BadRequest().body(detail),
