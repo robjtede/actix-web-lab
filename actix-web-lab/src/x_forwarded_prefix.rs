@@ -19,11 +19,10 @@ use http::uri::PathAndQuery;
 #[allow(clippy::declare_interior_mutable_const)]
 pub const X_FORWARDED_PREFIX: HeaderName = HeaderName::from_static("x-forwarded-prefix");
 
-/// The `X-Forwarded-Prefix` header, defined in [RFC XXX §X.X].
+/// The conventional `X-Forwarded-Prefix` header.
 ///
-/// The `X-Forwarded-Prefix` header field is used
-///
-/// Also see
+/// The `X-Forwarded-Prefix` header field is used to signal that a prefix was stripped from the path
+/// while being proxied.
 ///
 /// # Example Values
 ///
@@ -39,8 +38,6 @@ pub const X_FORWARDED_PREFIX: HeaderName = HeaderName::from_static("x-forwarded-
 /// let mut builder = HttpResponse::Ok();
 /// builder.insert_header(XForwardedPrefix("/bar".parse().unwrap()));
 /// ```
-///
-/// [RFC 7234 §5.2]: https://datatracker.ietf.org/doc/html/rfc7234#section-5.2
 #[derive(Debug, Clone, PartialEq, Eq, Display)]
 pub struct XForwardedPrefix(pub PathAndQuery);
 
@@ -127,7 +124,7 @@ mod header_tests {
     }
 }
 
-/// Reconstructed path using x-forwarded-prefix header.
+/// Reconstructed path using X-Forwarded-Prefix header.
 ///
 /// ```
 /// # use actix_web::{FromRequest as _, test::TestRequest};
@@ -139,7 +136,7 @@ mod header_tests {
 ///     .to_http_request();
 ///
 /// let path = ReconstructedPath::extract(&req).await.unwrap();
-/// assert_eq!(format!("{path}"), "/foo/bar");
+/// assert_eq!(path.to_string(), "/foo/bar");
 /// # })
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Display)]
