@@ -18,64 +18,60 @@ use tracing::debug;
 /// Default JSON payload size limit of 2MiB.
 pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
 
-/**
-JSON extractor with const-generic payload size limit.
-
-`Json` is used to extract typed data from JSON request payloads.
-
-# Extractor
-To extract typed data from a request body, the inner type `T` must implement the
-[`serde::Deserialize`] trait.
-
-Use the `LIMIT` const generic parameter to control the payload size limit. The default limit
-that is exported (`DEFAULT_LIMIT`) is 2MiB.
-
-```
-use actix_web::{error, post, App, HttpRequest, HttpResponse, Responder};
-use actix_web_lab::extract::{Json, DEFAULT_JSON_LIMIT};
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize, Serialize)]
-struct Info {
-    username: String,
-}
-
-/// Deserialize `Info` from request's body.
-#[post("/")]
-async fn index(info: Json<Info>) -> String {
-    format!("Welcome {}!", info.username)
-}
-
-const LIMIT_32_MB: usize = 33_554_432;
-
-/// Deserialize payload with a higher 32MiB limit.
-#[post("/big-payload")]
-async fn big_payload(info: Json<Info, LIMIT_32_MB>) -> String {
-    format!("Welcome {}!", info.username)
-}
-
-/// Capture the error that may have occurred when deserializing the body.
-#[post("/normal-payload")]
-async fn normal_payload(
-    res: Result<Json<Info>, error::JsonPayloadError>,
-    req: HttpRequest,
-) -> actix_web::Result<impl Responder> {
-    use actix_web::error::InternalError;
-    use serde_json::json;
-
-    let item = res.map_err(|err| {
-        eprintln!("failed to deserialize JSON: {err}");
-        let res = HttpResponse::BadGateway().json(json!({
-            "error": "invalid_json",
-            "detail": err.to_string(),
-        }));
-        error::InternalError::from_response(err, res)
-    })?;
-
-    Ok(HttpResponse::Ok().json(item.0))
-}
-```
-*/
+/// JSON extractor with const-generic payload size limit.
+///
+/// `Json` is used to extract typed data from JSON request payloads.
+///
+/// # Extractor
+/// To extract typed data from a request body, the inner type `T` must implement the
+/// [`serde::Deserialize`] trait.
+///
+/// Use the `LIMIT` const generic parameter to control the payload size limit. The default limit
+/// that is exported (`DEFAULT_LIMIT`) is 2MiB.
+///
+/// ```
+/// use actix_web::{error, post, App, HttpRequest, HttpResponse, Responder};
+/// use actix_web_lab::extract::{Json, JsonPayloadError, DEFAULT_JSON_LIMIT};
+/// use serde::{Deserialize, Serialize};
+/// use serde_json::json;
+///
+/// #[derive(Deserialize, Serialize)]
+/// struct Info {
+///     username: String,
+/// }
+///
+/// /// Deserialize `Info` from request's body.
+/// #[post("/")]
+/// async fn index(info: Json<Info>) -> String {
+///     format!("Welcome {}!", info.username)
+/// }
+///
+/// const LIMIT_32_MB: usize = 33_554_432;
+///
+/// /// Deserialize payload with a higher 32MiB limit.
+/// #[post("/big-payload")]
+/// async fn big_payload(info: Json<Info, LIMIT_32_MB>) -> String {
+///     format!("Welcome {}!", info.username)
+/// }
+///
+/// /// Capture the error that may have occurred when deserializing the body.
+/// #[post("/normal-payload")]
+/// async fn normal_payload(
+///     res: Result<Json<Info>, JsonPayloadError>,
+///     req: HttpRequest,
+/// ) -> actix_web::Result<impl Responder> {
+///     let item = res.map_err(|err| {
+///         eprintln!("failed to deserialize JSON: {err}");
+///         let res = HttpResponse::BadGateway().json(json!({
+///             "error": "invalid_json",
+///             "detail": err.to_string(),
+///         }));
+///         error::InternalError::from_response(err, res)
+///     })?;
+///
+///     Ok(HttpResponse::Ok().json(item.0))
+/// }
+/// ```
 #[derive(Debug)]
 // #[derive(Debug, Deref, DerefMut, Display)]
 pub struct Json<T, const LIMIT: usize = DEFAULT_JSON_LIMIT>(pub T);
