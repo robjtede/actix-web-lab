@@ -65,7 +65,7 @@ test-docs toolchain="": && doc
     cargo {{ toolchain }} test --doc --workspace --all-features --no-fail-fast -- --nocapture
 
 # Document crates in workspace.
-doc *args: && doc-set-workspace-crates
+doc *args: ch
     rm -f "$(cargo metadata --format-version=1 | jq -r '.target_directory')/doc/crates.js"
     RUSTDOCFLAGS="--cfg=docsrs -Dwarnings" cargo +nightly doc --no-deps --workspace --all-features {{ args }}
 

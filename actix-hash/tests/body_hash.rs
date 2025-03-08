@@ -118,10 +118,10 @@ async fn respects_inner_extractor_errors() {
         hex!("03ac6742 16f3e15c 761ee1a5 e255f067 953623c8 b388b445 9e13f978 d7c846f4").as_ref()
     );
 
-    // no body would expect a 400 content type error
+    // no content-type header would expect a 406 not acceptable error
     let req = test::TestRequest::default().to_request();
-    let res = test::call_service(&app, req).await;
-    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    let body = test::call_service(&app, req).await;
+    assert_eq!(body.status(), StatusCode::NOT_ACCEPTABLE);
 
     // body too big would expect a 413 request payload too large
     let req = test::TestRequest::default().set_json(12345).to_request();

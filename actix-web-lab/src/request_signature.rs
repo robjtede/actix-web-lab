@@ -389,10 +389,10 @@ mod tests {
                 .as_ref()
         );
 
-        // no body would expect a 400 content type error
+        // no content-type header would expect a 406 not acceptable error
         let req = test::TestRequest::default().to_request();
         let body = test::call_service(&app, req).await;
-        assert_eq!(body.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(body.status(), StatusCode::NOT_ACCEPTABLE);
 
         // body too big would expect a 413 request payload too large
         let req = test::TestRequest::default().set_json(12345).to_request();
