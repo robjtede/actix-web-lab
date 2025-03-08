@@ -12,7 +12,7 @@ pub use crate::{
     content_length::ContentLength,
     forwarded::Forwarded,
     strict_transport_security::StrictTransportSecurity,
-    x_forwarded_prefix::{XForwardedPrefix, X_FORWARDED_PREFIX},
+    x_forwarded_prefix::{X_FORWARDED_PREFIX, XForwardedPrefix},
 };
 
 /// Parses a group of comma-delimited quoted-string headers.
@@ -79,7 +79,7 @@ mod header_test_helpers {
     use std::fmt;
 
     use actix_http::header::Header;
-    use actix_web::{test, HttpRequest};
+    use actix_web::{HttpRequest, test};
 
     fn req_from_raw_headers<H: Header, I: IntoIterator<Item = V>, V: AsRef<[u8]>>(
         header_lines: I,

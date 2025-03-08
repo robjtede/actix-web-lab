@@ -1,9 +1,9 @@
 use actix_web::{
+    Error, Responder,
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
     middleware::Next,
     web::Redirect,
-    Error, Responder,
 };
 
 /// A function middleware to redirect traffic to `www.` if not already there.
@@ -47,10 +47,11 @@ pub async fn redirect_to_www(
 #[cfg(test)]
 mod tests {
     use actix_web::{
+        App, HttpResponse,
         dev::ServiceFactory,
-        http::{header, StatusCode},
+        http::{StatusCode, header},
         middleware::from_fn,
-        test, web, App, HttpResponse,
+        test, web,
     };
 
     use super::*;

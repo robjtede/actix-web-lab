@@ -1,7 +1,7 @@
 use std::convert::Infallible;
 
-use actix_utils::future::{ok, Ready};
-use actix_web::{dev::Payload, FromRequest, HttpRequest};
+use actix_utils::future::{Ready, ok};
+use actix_web::{FromRequest, HttpRequest, dev::Payload};
 
 /// Host information.
 ///
@@ -33,9 +33,10 @@ impl FromRequest for Host {
 #[cfg(test)]
 mod tests {
     use actix_web::{
+        App, HttpResponse,
         http::StatusCode,
         test::{self, TestRequest},
-        web, App, HttpResponse,
+        web,
     };
 
     use super::*;

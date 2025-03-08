@@ -1,7 +1,7 @@
 use std::{
     io,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
 use actix_web::body::{BodySize, MessageBody};

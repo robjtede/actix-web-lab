@@ -2,7 +2,7 @@
 
 use std::io;
 
-use actix_web::{get, http::StatusCode, App, HttpServer, Responder};
+use actix_web::{App, HttpServer, Responder, get, http::StatusCode};
 use actix_web_lab::respond::{MessagePack, MessagePackNamed};
 use serde::Serialize;
 use tracing::info;

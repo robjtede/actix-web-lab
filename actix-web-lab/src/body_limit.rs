@@ -4,14 +4,13 @@
 
 use std::{
     fmt,
-    future::Future,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
 use actix_web::{
-    dev::{self, Payload},
     FromRequest, HttpMessage as _, HttpRequest, ResponseError,
+    dev::{self, Payload},
 };
 use derive_more::Display;
 use futures_core::Stream as _;
@@ -25,7 +24,7 @@ pub const DEFAULT_BODY_LIMIT: usize = 2_097_152;
 ///
 /// # Examples
 /// ```no_run
-/// use actix_web::{get, web::Bytes, Responder};
+/// use actix_web::{Responder, get, web::Bytes};
 /// use actix_web_lab::extract::BodyLimit;
 ///
 /// const BODY_LIMIT: usize = 1_048_576; // 1MB

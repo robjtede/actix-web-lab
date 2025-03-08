@@ -1,24 +1,22 @@
 //! For middleware documentation, see [`NormalizePath`].
 
 use std::{
-    future::Future,
     marker::PhantomData,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
 use actix_service::{Service, Transform};
-use actix_utils::future::{ready, Ready};
+use actix_utils::future::{Ready, ready};
 use actix_web::{
+    Error, HttpResponse,
     body::EitherBody,
     dev::{ServiceRequest, ServiceResponse},
     http::{
-        header,
+        StatusCode, header,
         uri::{PathAndQuery, Uri},
-        StatusCode,
     },
     middleware::TrailingSlash,
-    Error, HttpResponse,
 };
 use bytes::Bytes;
 use pin_project_lite::pin_project;
@@ -40,7 +38,7 @@ use regex::Regex;
 ///
 /// # Examples
 /// ```
-/// use actix_web::{middleware, web, App};
+/// use actix_web::{App, middleware, web};
 ///
 /// # actix_web::rt::System::new().block_on(async {
 /// let app = App::new()
@@ -50,7 +48,7 @@ use regex::Regex;
 ///
 /// use actix_web::{
 ///     http::StatusCode,
-///     test::{call_service, init_service, TestRequest},
+///     test::{TestRequest, call_service, init_service},
 /// };
 ///
 /// let app = init_service(app).await;
@@ -304,10 +302,11 @@ where
 mod tests {
     use actix_service::IntoService;
     use actix_web::{
+        App, HttpRequest, HttpResponse,
         dev::ServiceRequest,
         guard::fn_guard,
-        test::{self, call_service, init_service, TestRequest},
-        web, App, HttpRequest, HttpResponse,
+        test::{self, TestRequest, call_service, init_service},
+        web,
     };
 
     use super::*;

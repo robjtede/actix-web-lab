@@ -3,10 +3,10 @@
 use std::io;
 
 use bytestring::ByteString;
-use futures_util::{stream::BoxStream, StreamExt as _, TryStreamExt as _};
+use futures_util::{StreamExt as _, TryStreamExt as _, stream::BoxStream};
 use reqwest_0_12::{Client, Request, Response};
 use tokio::{
-    sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
+    sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     task::JoinHandle,
 };
 use tokio_util::{codec::FramedRead, io::StreamReader};

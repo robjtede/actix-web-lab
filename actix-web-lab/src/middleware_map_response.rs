@@ -1,16 +1,16 @@
 use std::{
-    future::{ready, Future, Ready},
+    future::{Future, Ready, ready},
     marker::PhantomData,
     pin::Pin,
     rc::Rc,
     task::{Context, Poll},
 };
 
-use actix_service::{forward_ready, Service, Transform};
+use actix_service::{Service, Transform, forward_ready};
 use actix_web::{
+    Error,
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
-    Error,
 };
 use futures_core::ready;
 use pin_project_lite::pin_project;
@@ -157,9 +157,10 @@ where
 #[cfg(test)]
 mod tests {
     use actix_web::{
+        App, HttpResponse,
         http::header::{self, HeaderValue},
         middleware::{Compat, Logger},
-        test, web, App, HttpResponse,
+        test, web,
     };
 
     use super::*;

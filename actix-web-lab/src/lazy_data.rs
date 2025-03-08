@@ -1,11 +1,11 @@
 use std::{
     cell::Cell,
     fmt,
-    future::{ready, Future, Ready},
+    future::{Future, Ready, ready},
     rc::Rc,
 };
 
-use actix_web::{dev, error, Error, FromRequest, HttpRequest};
+use actix_web::{Error, FromRequest, HttpRequest, dev, error};
 use futures_core::future::LocalBoxFuture;
 use tokio::sync::OnceCell;
 use tracing::debug;
@@ -100,9 +100,10 @@ mod tests {
     use std::time::Duration;
 
     use actix_web::{
+        App, HttpResponse,
         http::StatusCode,
-        test::{call_service, init_service, TestRequest},
-        web, App, HttpResponse,
+        test::{TestRequest, call_service, init_service},
+        web,
     };
 
     use super::*;

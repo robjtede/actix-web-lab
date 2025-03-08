@@ -1,9 +1,9 @@
 use actix_utils::future::ok;
 use actix_web::{
-    body::BoxBody,
-    dev::{fn_service, Service, ServiceRequest, ServiceResponse},
-    http::StatusCode,
     Error, HttpResponseBuilder,
+    body::BoxBody,
+    dev::{Service, ServiceRequest, ServiceResponse, fn_service},
+    http::StatusCode,
 };
 
 /// Creates service that always responds with given status code and echoes request path as response

@@ -3,9 +3,9 @@
 use std::io;
 
 use actix_web::{
+    App, Error, FromRequest, HttpRequest, HttpServer,
     middleware::Logger,
     web::{self, Bytes, Data},
-    App, Error, FromRequest, HttpRequest, HttpServer,
 };
 use actix_web_lab::extract::{RequestSignature, RequestSignatureScheme};
 use digest::{CtOutput, Mac};

@@ -2,12 +2,12 @@
 //!
 //! See [`XForwardedPrefix`] docs.
 
-use std::future::{ready, Ready};
+use std::future::{Ready, ready};
 
 use actix_http::{
+    HttpMessage,
     error::ParseError,
     header::{Header, HeaderName, HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
-    HttpMessage,
 };
 use actix_web::FromRequest;
 use derive_more::Display;

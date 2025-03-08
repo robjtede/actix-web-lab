@@ -9,16 +9,15 @@
 use std::io::{self, Write as _};
 
 use actix_web::{
-    get,
+    App, HttpResponse, HttpServer, Responder, get,
     web::{self, BufMut as _, BytesMut},
-    App, HttpResponse, HttpServer, Responder,
 };
 use actix_web_lab::respond::NdJson;
 use futures_core::Stream;
-use futures_util::{stream, StreamExt as _};
+use futures_util::{StreamExt as _, stream};
 use rand::{
-    distr::{Alphanumeric, SampleString as _},
     Rng as _,
+    distr::{Alphanumeric, SampleString as _},
 };
 use serde::Deserialize;
 use serde_json::json;

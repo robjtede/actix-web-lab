@@ -5,7 +5,7 @@ use std::{hint::black_box, io, pin::pin};
 use bytes::Bytes;
 use divan::{AllocProfiler, Bencher};
 use futures_test::stream::StreamTestExt as _;
-use futures_util::{stream, StreamExt as _};
+use futures_util::{StreamExt as _, stream};
 use tokio_util::{codec::FramedRead, io::StreamReader};
 
 #[global_allocator]

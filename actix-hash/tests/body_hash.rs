@@ -3,14 +3,13 @@
 use actix_hash::{BodyHash, BodySha256};
 use actix_http::BoxedPayloadStream;
 use actix_web::{
-    dev,
+    App, dev,
     http::StatusCode,
     test,
     web::{self, Bytes},
-    App,
 };
 use actix_web_lab::extract::Json;
-use futures_util::{stream, StreamExt as _};
+use futures_util::{StreamExt as _, stream};
 use hex_literal::hex;
 use sha2::{Sha256, Sha512};
 

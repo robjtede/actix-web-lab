@@ -3,12 +3,11 @@
 //! See docs for [`Bytes`].
 
 use std::{
-    future::Future,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
-use actix_web::{dev, http::StatusCode, web, FromRequest, HttpMessage, HttpRequest, ResponseError};
+use actix_web::{FromRequest, HttpMessage, HttpRequest, ResponseError, dev, http::StatusCode, web};
 use derive_more::{Display, Error};
 use futures_core::Stream as _;
 use tracing::debug;
@@ -31,7 +30,7 @@ pub const DEFAULT_BYTES_LIMIT: usize = 4_194_304;
 ///
 /// # Examples
 /// ```
-/// use actix_web::{post, App};
+/// use actix_web::{App, post};
 /// use actix_web_lab::extract::{Bytes, DEFAULT_BYTES_LIMIT};
 ///
 /// /// Deserialize `Info` from request's body.

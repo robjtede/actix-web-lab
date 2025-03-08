@@ -1,15 +1,14 @@
 //! URL-encoded form extractor with const-generic payload size limit.
 
 use std::{
-    future::Future,
     marker::PhantomData,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
 use actix_web::{
-    dev::Payload, error::UrlencodedError, http::header, web, Error, FromRequest, HttpMessage,
-    HttpRequest,
+    Error, FromRequest, HttpMessage, HttpRequest, dev::Payload, error::UrlencodedError,
+    http::header, web,
 };
 use futures_core::Stream as _;
 use serde::de::DeserializeOwned;
@@ -30,8 +29,8 @@ pub const DEFAULT_URL_ENCODED_FORM_LIMIT: usize = 2_097_152;
 /// that is exported (`DEFAULT_LIMIT`) is 2MiB.
 ///
 /// ```
-/// use actix_web::{post, App};
-/// use actix_web_lab::extract::{UrlEncodedForm, DEFAULT_URL_ENCODED_FORM_LIMIT};
+/// use actix_web::{App, post};
+/// use actix_web_lab::extract::{DEFAULT_URL_ENCODED_FORM_LIMIT, UrlEncodedForm};
 /// use serde::Deserialize;
 ///
 /// #[derive(Deserialize)]

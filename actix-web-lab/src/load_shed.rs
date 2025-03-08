@@ -7,13 +7,12 @@ use std::{
     cell::Cell,
     error::Error as StdError,
     fmt,
-    future::Future,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
 use actix_service::{Service, Transform};
-use actix_utils::future::{ok, Ready};
+use actix_utils::future::{Ready, ok};
 use actix_web::ResponseError;
 use pin_project_lite::pin_project;
 

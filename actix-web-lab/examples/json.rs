@@ -1,9 +1,10 @@
 //! Demonstrates use of alternative JSON extractor with const-generic size limits.
 
 use actix_web::{
-    error::{InternalError, JsonPayloadError},
+    App, HttpRequest, HttpResponse, HttpServer, Responder,
+    error::InternalError,
     middleware::{Logger, NormalizePath},
-    web, App, HttpRequest, HttpResponse, HttpServer, Responder,
+    web,
 };
 use actix_web_lab::extract::{Json, JsonPayloadError};
 use serde::{Deserialize, Serialize};
@@ -95,7 +96,7 @@ async fn main() -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{body::to_bytes, dev::Service, http, test, web, App};
+    use actix_web::{App, body::to_bytes, dev::Service, http, test, web};
 
     use super::*;
 

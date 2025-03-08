@@ -3,8 +3,8 @@
 use std::io;
 
 use actix_web::{
-    body::MessageBody, dev::ServiceResponse, http::header, middleware::Logger, web, App, Error,
-    HttpRequest, HttpResponse, HttpServer,
+    App, Error, HttpRequest, HttpResponse, HttpServer, body::MessageBody, dev::ServiceResponse,
+    http::header, middleware::Logger, web,
 };
 use actix_web_lab::middleware::{map_response, map_response_body};
 use tracing::info;

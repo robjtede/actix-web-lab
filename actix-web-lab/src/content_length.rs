@@ -5,11 +5,11 @@
 use std::{convert::Infallible, str};
 
 use actix_web::{
+    HttpMessage,
     error::ParseError,
     http::header::{
-        from_one_raw_str, Header, HeaderName, HeaderValue, TryIntoHeaderValue, CONTENT_LENGTH,
+        CONTENT_LENGTH, Header, HeaderName, HeaderValue, TryIntoHeaderValue, from_one_raw_str,
     },
-    HttpMessage,
 };
 
 /// The `Content-Length` header, defined in [RFC 9110 §8.6].

@@ -1,9 +1,8 @@
 use std::{convert::Infallible, net::IpAddr};
 
 use actix_web::{
-    error,
+    HttpMessage, error,
     http::header::{self, Header, HeaderName, HeaderValue, TryIntoHeaderValue},
-    HttpMessage,
 };
 
 /// Cloudflare's `cf-connecting-ipv6` header name.

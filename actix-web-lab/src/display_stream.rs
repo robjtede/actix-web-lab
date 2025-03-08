@@ -1,8 +1,8 @@
 use std::{error::Error as StdError, fmt, io::Write as _};
 
 use actix_web::{
-    body::{BodyStream, MessageBody},
     HttpResponse, Responder,
+    body::{BodyStream, MessageBody},
 };
 use bytes::{Bytes, BytesMut};
 use futures_core::Stream;

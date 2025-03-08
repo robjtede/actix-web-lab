@@ -27,7 +27,7 @@
 //! ```no_run
 //! # async {
 //! # use actix_web::{App, get, HttpServer};
-//! use actix_client_ip_cloudflare::{fetch_trusted_cf_ips, TrustedClientIp};
+//! use actix_client_ip_cloudflare::{TrustedClientIp, fetch_trusted_cf_ips};
 //!
 //! let cloudflare_ips = fetch_trusted_cf_ips()
 //!     # // rustfmt ignore
@@ -69,7 +69,7 @@ mod header_v6;
 pub use self::fetch_cf_ips::fetch_trusted_cf_ips;
 pub use self::{
     extract::TrustedClientIp,
-    fetch_cf_ips::{TrustedIps, CF_URL_IPS},
-    header_v4::{CfConnectingIp, CF_CONNECTING_IP},
-    header_v6::{CfConnectingIpv6, CF_CONNECTING_IPV6},
+    fetch_cf_ips::{CF_URL_IPS, TrustedIps},
+    header_v4::{CF_CONNECTING_IP, CfConnectingIp},
+    header_v6::{CF_CONNECTING_IPV6, CfConnectingIpv6},
 };

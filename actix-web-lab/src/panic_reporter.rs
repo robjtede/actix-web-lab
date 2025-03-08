@@ -4,12 +4,12 @@
 
 use std::{
     any::Any,
-    future::{ready, Ready},
+    future::{Ready, ready},
     panic::{self, AssertUnwindSafe},
     rc::Rc,
 };
 
-use actix_web::dev::{forward_ready, Service, Transform};
+use actix_web::dev::{Service, Transform, forward_ready};
 use futures_core::future::LocalBoxFuture;
 use futures_util::FutureExt as _;
 
@@ -118,15 +118,15 @@ where
 #[cfg(test)]
 mod tests {
     use std::sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     };
 
     use actix_web::{
+        App,
         dev::Service as _,
         test,
         web::{self, ServiceConfig},
-        App,
     };
 
     use super::*;
@@ -162,10 +162,12 @@ mod tests {
         assert!(!triggered.load(Ordering::SeqCst));
 
         let req = test::TestRequest::with_uri("/disco").to_request();
-        assert!(AssertUnwindSafe(app.call(req))
-            .catch_unwind()
-            .await
-            .is_err());
+        assert!(
+            AssertUnwindSafe(app.call(req))
+                .catch_unwind()
+                .await
+                .is_err()
+        );
         assert!(triggered.load(Ordering::SeqCst));
     }
 }

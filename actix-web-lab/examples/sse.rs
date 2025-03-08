@@ -2,7 +2,7 @@
 
 use std::{convert::Infallible, io, time::Duration};
 
-use actix_web::{get, middleware::Logger, web::Html, App, HttpRequest, HttpServer, Responder};
+use actix_web::{App, HttpRequest, HttpServer, Responder, get, middleware::Logger, web::Html};
 use actix_web_lab::{extract::Path, sse};
 use futures_util::stream;
 use time::format_description::well_known::Rfc3339;

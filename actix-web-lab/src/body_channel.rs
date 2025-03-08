@@ -5,7 +5,7 @@ use std::{
 
 use actix_web::body::{BodySize, MessageBody};
 use bytes::Bytes;
-use tokio::sync::mpsc::{error::SendError, UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, error::SendError};
 
 use crate::BoxError;
 

@@ -1,14 +1,14 @@
 use std::{
-    future::{ready, Ready},
+    future::{Ready, ready},
     rc::Rc,
 };
 
 use actix_web::{
+    HttpResponse, Responder as _,
     body::EitherBody,
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
+    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
     http::header::TryIntoHeaderPair,
     web::Redirect,
-    HttpResponse, Responder as _,
 };
 use futures_core::future::LocalBoxFuture;
 
@@ -164,13 +164,14 @@ fn apply_hsts<B>(res: &mut HttpResponse<B>, hsts: Option<StrictTransportSecurity
 #[cfg(test)]
 mod tests {
     use actix_web::{
+        App, Error, HttpResponse,
         body::MessageBody,
         dev::ServiceFactory,
         http::{
-            header::{self, Header as _},
             StatusCode,
+            header::{self, Header as _},
         },
-        test, web, App, Error, HttpResponse,
+        test, web,
     };
 
     use super::*;

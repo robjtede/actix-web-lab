@@ -2,18 +2,17 @@
 
 use std::{
     fmt,
-    future::Future,
     pin::Pin,
     rc::Rc,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
 use actix_service::{Service, Transform};
 use actix_web::{
+    Error, Result,
     body::EitherBody,
     dev::{ServiceRequest, ServiceResponse},
     http::StatusCode,
-    Error, Result,
 };
 use ahash::AHashMap;
 use futures_core::future::LocalBoxFuture;
@@ -31,10 +30,11 @@ type Handlers<B> = Rc<AHashMap<StatusCode, Box<ErrorHandler<B>>>>;
 /// # Examples
 /// ```
 /// use actix_web::{
+///     App, HttpResponse, Result,
 ///     body::EitherBody,
 ///     dev::ServiceResponse,
-///     http::{header, StatusCode},
-///     web, App, HttpResponse, Result,
+///     http::{StatusCode, header},
+///     web,
 /// };
 /// use actix_web_lab::middleware::ErrorHandlers;
 ///
@@ -194,8 +194,8 @@ mod tests {
     use actix_web::{
         body,
         http::{
-            header::{HeaderValue, CONTENT_TYPE},
             StatusCode,
+            header::{CONTENT_TYPE, HeaderValue},
         },
         test::{self, TestRequest},
     };

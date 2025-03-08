@@ -9,7 +9,7 @@ use bytes::BytesMut;
 use bytestring::ByteString;
 use memchr::memmem;
 
-use crate::{event::Event, message::Message, unix_lines::UnixLines, Error, NEWLINE, SSE_DELIMITER};
+use crate::{Error, NEWLINE, SSE_DELIMITER, event::Event, message::Message, unix_lines::UnixLines};
 
 /// SSE decoder.
 #[derive(Debug, Clone)]
@@ -165,7 +165,7 @@ mod tests {
 
     use bytes::Bytes;
     use futures_test::stream::StreamTestExt as _;
-    use futures_util::{stream, StreamExt as _};
+    use futures_util::{StreamExt as _, stream};
     use tokio_util::{codec::FramedRead, io::StreamReader};
 
     use super::*;

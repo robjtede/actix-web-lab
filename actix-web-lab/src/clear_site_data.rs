@@ -9,9 +9,9 @@ use std::{
 };
 
 use actix_http::{
+    HttpMessage,
     error::ParseError,
     header::{Header, HeaderName, HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
-    HttpMessage,
 };
 
 use crate::header::{fmt_comma_delimited_quoted_strings, from_comma_delimited_quoted_strings};

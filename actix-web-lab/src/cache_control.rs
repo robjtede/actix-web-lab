@@ -5,12 +5,12 @@
 use std::{fmt, str};
 
 use actix_http::{
+    HttpMessage,
     error::ParseError,
     header::{
-        self, fmt_comma_delimited, from_comma_delimited, Header, HeaderName, HeaderValue,
-        InvalidHeaderValue, TryIntoHeaderValue,
+        self, Header, HeaderName, HeaderValue, InvalidHeaderValue, TryIntoHeaderValue,
+        fmt_comma_delimited, from_comma_delimited,
     },
-    HttpMessage,
 };
 
 /// The `Cache-Control` header, defined in [RFC 7234 §5.2].
@@ -38,8 +38,8 @@ use actix_http::{
 /// # Examples
 /// ```
 /// use actix_web::{
-///     http::header::{CacheControl, CacheDirective},
 ///     HttpResponse,
+///     http::header::{CacheControl, CacheDirective},
 /// };
 ///
 /// let mut builder = HttpResponse::Ok();
@@ -48,8 +48,8 @@ use actix_http::{
 ///
 /// ```
 /// use actix_web::{
-///     http::header::{CacheControl, CacheDirective},
 ///     HttpResponse,
+///     http::header::{CacheControl, CacheDirective},
 /// };
 ///
 /// let mut builder = HttpResponse::Ok();

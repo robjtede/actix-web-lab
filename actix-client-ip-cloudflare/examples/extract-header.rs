@@ -1,7 +1,7 @@
 //! Demonstrates use of the client IP header extractor.
 
-use actix_client_ip_cloudflare::{fetch_trusted_cf_ips, CfConnectingIp, TrustedClientIp};
-use actix_web::{get, web::Header, App, HttpServer, Responder};
+use actix_client_ip_cloudflare::{CfConnectingIp, TrustedClientIp, fetch_trusted_cf_ips};
+use actix_web::{App, HttpServer, Responder, get, web::Header};
 
 #[get("/raw-header")]
 async fn header(Header(client_ip): Header<CfConnectingIp>) -> impl Responder {

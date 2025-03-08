@@ -1,13 +1,12 @@
 use std::{
-    future::Future,
     mem,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
-use actix_web::{dev, FromRequest, HttpRequest};
+use actix_web::{FromRequest, HttpRequest, dev};
 use actix_web_lab::util::fork_request_payload;
-use digest::{generic_array::GenericArray, Digest};
+use digest::{Digest, generic_array::GenericArray};
 use futures_core::Stream as _;
 use pin_project_lite::pin_project;
 use tracing::trace;
@@ -42,7 +41,7 @@ pub struct BodyHashParts<T> {
 /// # Example
 /// ```
 /// use actix_hash::BodyHash;
-/// use actix_web::{web, Responder};
+/// use actix_web::{Responder, web};
 /// use sha2::Sha256;
 ///
 /// # type T = u64;

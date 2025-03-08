@@ -1,16 +1,16 @@
 use std::{
-    future::{ready, Future, Ready},
+    future::{Future, Ready, ready},
     marker::PhantomData,
     pin::Pin,
     rc::Rc,
     task::{Context, Poll},
 };
 
-use actix_service::{forward_ready, Service, Transform};
+use actix_service::{Service, Transform, forward_ready};
 use actix_web::{
+    Error, HttpRequest, HttpResponse,
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
-    Error, HttpRequest, HttpResponse,
 };
 use futures_core::ready;
 use pin_project_lite::pin_project;
@@ -22,7 +22,7 @@ use pin_project_lite::pin_project;
 /// Completely replaces the body:
 /// ```
 /// # use actix_web_lab::middleware::map_response_body;
-/// use actix_web::{body::MessageBody, HttpRequest};
+/// use actix_web::{HttpRequest, body::MessageBody};
 ///
 /// async fn replace_body(
 ///     _req: HttpRequest,
@@ -37,9 +37,9 @@ use pin_project_lite::pin_project;
 /// ```
 /// # use actix_web_lab::middleware::map_response_body;
 /// use actix_web::{
+///     HttpRequest,
 ///     body::{self, MessageBody},
 ///     web::{BufMut as _, BytesMut},
-///     HttpRequest,
 /// };
 ///
 /// async fn append_bytes(
@@ -190,8 +190,9 @@ where
 #[cfg(test)]
 mod tests {
     use actix_web::{
+        App, HttpResponse,
         middleware::{Compat, Logger},
-        test, web, App, HttpResponse,
+        test, web,
     };
 
     use super::*;

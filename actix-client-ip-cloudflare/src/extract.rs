@@ -1,13 +1,13 @@
 use std::net::IpAddr;
 
-use actix_utils::future::{err, ok, Ready};
+use actix_utils::future::{Ready, err, ok};
 use actix_web::{
+    FromRequest, HttpRequest,
     dev::{self, PeerAddr},
     http::header::Header as _,
-    FromRequest, HttpRequest,
 };
 
-use crate::{fetch_cf_ips::TrustedIps, CfConnectingIp, CfConnectingIpv6};
+use crate::{CfConnectingIp, CfConnectingIpv6, fetch_cf_ips::TrustedIps};
 
 fn bad_req(err: impl Into<String>) -> actix_web::error::Error {
     actix_web::error::ErrorBadRequest(format!("TrustedClientIp error: {}", err.into()))

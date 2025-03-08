@@ -1,14 +1,13 @@
 //! JSON extractor with const-generic payload size limit.
 
 use std::{
-    future::Future,
     marker::PhantomData,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
 use actix_web::{
-    dev::Payload, http::header, web, FromRequest, HttpMessage, HttpRequest, ResponseError,
+    FromRequest, HttpMessage, HttpRequest, ResponseError, dev::Payload, http::header, web,
 };
 use derive_more::{Display, Error};
 use futures_core::Stream as _;
@@ -303,6 +302,7 @@ pub enum JsonPayloadError {
     /// Payload error.
     #[display("Error that occur during reading payload")]
     Payload {
+        /// Payload error.
         source: actix_web::error::PayloadError,
     },
 }

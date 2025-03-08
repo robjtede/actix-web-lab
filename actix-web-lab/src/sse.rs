@@ -4,7 +4,7 @@
 //! ```no_run
 //! use std::{convert::Infallible, time::Duration};
 //!
-//! use actix_web::{get, Responder};
+//! use actix_web::{Responder, get};
 //! use actix_web_lab::sse;
 //!
 //! #[get("/from-channel")]
@@ -46,9 +46,9 @@ use std::{
 };
 
 use actix_web::{
+    HttpRequest, HttpResponse, Responder,
     body::{BodySize, BoxBody, MessageBody},
     http::header::ContentEncoding,
-    HttpRequest, HttpResponse, Responder,
 };
 use bytes::{BufMut as _, Bytes, BytesMut};
 use bytestring::ByteString;
@@ -57,14 +57,14 @@ use pin_project_lite::pin_project;
 use serde::Serialize;
 use tokio::{
     sync::mpsc,
-    time::{interval, Interval},
+    time::{Interval, interval},
 };
 use tokio_stream::wrappers::ReceiverStream;
 
 use crate::{
+    BoxError,
     header::{CacheControl, CacheDirective},
     util::InfallibleStream,
-    BoxError,
 };
 
 /// Server-sent events data message containing a `data` field and optional `id` and `event` fields.
@@ -384,7 +384,7 @@ where
             };
         }
 
-        if let Some(ref mut keep_alive) = this.keep_alive {
+        if let Some(keep_alive) = this.keep_alive {
             if keep_alive.poll_tick(cx).is_ready() {
                 return Poll::Ready(Some(Ok(Event::keep_alive_bytes())));
             }
@@ -399,7 +399,7 @@ mod tests {
     use std::convert::Infallible;
 
     use actix_web::{body, test::TestRequest};
-    use futures_util::{future::poll_fn, stream, task::noop_waker, FutureExt as _, StreamExt as _};
+    use futures_util::{FutureExt as _, StreamExt as _, future::poll_fn, stream, task::noop_waker};
     use tokio::time::sleep;
 
     use super::*;
@@ -533,9 +533,11 @@ mod tests {
         let (sender, receiver) = tokio::sync::mpsc::channel(2);
         let mut sse = Sse::from_infallible_receiver(receiver);
 
-        assert!(poll_fn(|cx| Pin::new(&mut sse).poll_next(cx))
-            .now_or_never()
-            .is_none());
+        assert!(
+            poll_fn(|cx| Pin::new(&mut sse).poll_next(cx))
+                .now_or_never()
+                .is_none()
+        );
 
         sender
             .send(Data::new("bar").event("foo").into())

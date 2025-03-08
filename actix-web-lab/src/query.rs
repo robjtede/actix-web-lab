@@ -2,10 +2,10 @@
 
 use std::{
     fmt,
-    future::{ready, Ready},
+    future::{Ready, ready},
 };
 
-use actix_web::{dev::Payload, http::StatusCode, FromRequest, HttpRequest, ResponseError};
+use actix_web::{FromRequest, HttpRequest, ResponseError, dev::Payload, http::StatusCode};
 use derive_more::Error;
 use serde::de::DeserializeOwned;
 
@@ -27,7 +27,7 @@ use serde::de::DeserializeOwned;
 ///
 /// # Examples
 /// ```
-/// use actix_web::{get, Responder};
+/// use actix_web::{Responder, get};
 /// use actix_web_lab::extract::Query;
 /// use serde::Deserialize;
 ///

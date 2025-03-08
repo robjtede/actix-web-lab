@@ -7,7 +7,7 @@
 
 use std::io;
 
-use actix_web::{get, http::header::ContentType, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{App, HttpResponse, HttpServer, Responder, get, http::header::ContentType, web};
 use actix_web_lab::body;
 use tracing::info;
 

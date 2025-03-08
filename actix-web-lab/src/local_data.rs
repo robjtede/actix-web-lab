@@ -1,7 +1,7 @@
 use std::{any::type_name, ops::Deref, rc::Rc};
 
-use actix_utils::future::{err, ok, Ready};
-use actix_web::{dev::Payload, error, Error, FromRequest, HttpRequest};
+use actix_utils::future::{Ready, err, ok};
+use actix_web::{Error, FromRequest, HttpRequest, dev::Payload, error};
 use tracing::debug;
 
 /// A thread-local equivalent to [`SharedData`](crate::extract::SharedData).
@@ -64,10 +64,11 @@ impl<T: ?Sized + 'static> FromRequest for LocalData<T> {
 #[cfg(test)]
 mod tests {
     use actix_web::{
+        App, HttpResponse,
         dev::Service,
         http::StatusCode,
-        test::{init_service, TestRequest},
-        web, App, HttpResponse,
+        test::{TestRequest, init_service},
+        web,
     };
 
     use super::*;

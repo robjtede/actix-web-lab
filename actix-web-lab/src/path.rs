@@ -1,11 +1,11 @@
 //! For path segment extractor documentation, see [`Path`].
 
 use actix_router::PathDeserializer;
-use actix_utils::future::{ready, Ready};
+use actix_utils::future::{Ready, ready};
 use actix_web::{
+    FromRequest, HttpRequest,
     dev::Payload,
     error::{Error, ErrorNotFound},
-    FromRequest, HttpRequest,
 };
 use derive_more::Display;
 use serde::de;

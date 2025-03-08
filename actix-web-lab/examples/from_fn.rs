@@ -3,12 +3,12 @@
 use std::{collections::HashMap, io, rc::Rc, time::Duration};
 
 use actix_web::{
+    App, Error, HttpResponse, HttpServer,
     body::MessageBody,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     http::header::{self, HeaderValue, Range},
-    middleware::{from_fn, Logger, Next},
+    middleware::{Logger, Next, from_fn},
     web::{self, Header, Query},
-    App, Error, HttpResponse, HttpServer,
 };
 use tracing::info;
 
@@ -65,11 +65,11 @@ async fn timeout_10secs(
 struct MyMw(bool);
 
 impl MyMw {
-    async fn mw_cb(
+    async fn mw_cb<B: MessageBody + 'static>(
         &self,
         req: ServiceRequest,
-        next: Next<impl MessageBody + 'static>,
-    ) -> Result<ServiceResponse<impl MessageBody>, Error> {
+        next: Next<B>,
+    ) -> Result<ServiceResponse<impl MessageBody + use<B>>, Error> {
         let mut res = match self.0 {
             true => req.into_response("short-circuited").map_into_right_body(),
             false => next.call(req).await?.map_into_left_body(),

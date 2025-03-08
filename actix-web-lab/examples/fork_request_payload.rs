@@ -9,9 +9,9 @@
 
 use std::io;
 
-use actix_web::{dev, middleware, web, App, FromRequest, HttpRequest, HttpServer};
+use actix_web::{App, FromRequest, HttpRequest, HttpServer, dev, middleware, web};
 use actix_web_lab::util::fork_request_payload;
-use futures_util::{future::LocalBoxFuture, TryFutureExt as _};
+use futures_util::{TryFutureExt as _, future::LocalBoxFuture};
 use tokio::try_join;
 use tracing::info;
 

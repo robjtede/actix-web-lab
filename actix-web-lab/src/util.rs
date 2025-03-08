@@ -7,10 +7,10 @@ use std::{
     convert::Infallible,
     io,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
 
-use actix_http::{error::PayloadError, BoxedPayloadStream};
+use actix_http::{BoxedPayloadStream, error::PayloadError};
 use actix_web::{dev, web::BufMut};
 use futures_core::Stream;
 use futures_util::StreamExt as _;

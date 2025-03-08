@@ -2,7 +2,7 @@
 
 use std::io;
 
-use actix_web::{middleware::Logger, web, App, HttpServer};
+use actix_web::{App, HttpServer, middleware::Logger, web};
 use actix_web_lab::web::spa;
 use tracing::info;
 

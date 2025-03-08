@@ -9,7 +9,7 @@
 use std::io;
 
 use actix_hash::BodySha256;
-use actix_web::{middleware::Logger, web, App, HttpServer};
+use actix_web::{App, HttpServer, middleware::Logger, web};
 use tracing::info;
 
 #[actix_web::main]

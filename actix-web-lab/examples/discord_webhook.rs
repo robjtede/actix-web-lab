@@ -3,17 +3,16 @@
 use std::{fs::File, io, sync::LazyLock};
 
 use actix_web::{
-    error,
+    App, Error, HttpRequest, HttpServer, error,
     http::header::{HeaderName, HeaderValue},
     middleware::Logger,
     web::{self, Bytes},
-    App, Error, HttpRequest, HttpServer,
 };
 use actix_web_lab::extract::{Json, RequestSignature, RequestSignatureScheme};
 use bytes::{BufMut as _, BytesMut};
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use hex_literal::hex;
-use rustls::{pki_types::PrivateKeyDer, ServerConfig};
+use rustls::{ServerConfig, pki_types::PrivateKeyDer};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use tracing::info;
 

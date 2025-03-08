@@ -5,9 +5,9 @@
 use std::{convert::Infallible, str};
 
 use actix_web::{
+    HttpMessage,
     error::ParseError,
     http::header::{self, Header, HeaderName, HeaderValue, TryIntoHeaderValue},
-    HttpMessage,
 };
 use itertools::Itertools as _;
 

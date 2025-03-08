@@ -3,9 +3,9 @@
 use std::io;
 
 use actix_web::{
+    App, HttpResponse, HttpServer, Resource, Responder,
     error::ErrorBadRequest,
     middleware::{Logger, NormalizePath},
-    App, HttpResponse, HttpServer, Resource, Responder,
 };
 use actix_web_lab::extract::{Query, QueryDeserializeError};
 use serde::{Deserialize, Serialize};
@@ -73,7 +73,7 @@ async fn main() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{body::to_bytes, dev::Service, http::StatusCode, test, web, App};
+    use actix_web::{App, body::to_bytes, dev::Service, http::StatusCode, test, web};
 
     use super::*;
 

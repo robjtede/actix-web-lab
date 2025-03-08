@@ -1,7 +1,7 @@
-use std::{fmt, future::Future};
+use std::fmt;
 
 use actix_http::BoxedPayloadStream;
-use actix_web::{dev, web::Bytes, Error, FromRequest, HttpRequest};
+use actix_web::{Error, FromRequest, HttpRequest, dev, web::Bytes};
 use derive_more::Display;
 use futures_core::future::LocalBoxFuture;
 use futures_util::{FutureExt as _, StreamExt as _, TryFutureExt as _};
@@ -42,9 +42,9 @@ use tracing::trace;
 /// This example implementation does a simple HMAC calculation on the body using a static key.
 /// It does not implement verification.
 /// ```
-/// use actix_web::{web::Bytes, Error, HttpRequest};
+/// use actix_web::{Error, HttpRequest, web::Bytes};
 /// use actix_web_lab::extract::RequestSignatureScheme;
-/// use hmac::{digest::CtOutput, Mac, SimpleHmac};
+/// use hmac::{Mac, SimpleHmac, digest::CtOutput};
 /// use sha2::Sha256;
 ///
 /// struct AbcApi {
@@ -172,7 +172,6 @@ pub enum RequestSignatureError<T, S>
 where
     T: FromRequest,
     T::Error: fmt::Debug + fmt::Display,
-
     S: RequestSignatureScheme,
     S::Error: fmt::Debug + fmt::Display,
 {
@@ -189,7 +188,6 @@ impl<T, S> fmt::Debug for RequestSignatureError<T, S>
 where
     T: FromRequest,
     T::Error: fmt::Debug + fmt::Display,
-
     S: RequestSignatureScheme,
     S::Error: fmt::Debug + fmt::Display,
 {
@@ -212,7 +210,6 @@ impl<T, S> From<RequestSignatureError<T, S>> for actix_web::Error
 where
     T: FromRequest,
     T::Error: fmt::Debug + fmt::Display,
-
     S: RequestSignatureScheme,
     S::Error: fmt::Debug + fmt::Display,
 {
@@ -228,7 +225,6 @@ impl<T, S> FromRequest for RequestSignature<T, S>
 where
     T: FromRequest + 'static,
     T::Error: fmt::Debug + fmt::Display,
-
     S: RequestSignatureScheme + 'static,
     S::Error: fmt::Debug + fmt::Display,
 {
@@ -298,10 +294,10 @@ mod tests {
     use std::convert::Infallible;
 
     use actix_web::{
+        App,
         http::StatusCode,
         test,
         web::{self, Bytes},
-        App,
     };
     use digest::{CtOutput, Digest as _};
     use hex_literal::hex;

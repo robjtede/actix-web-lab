@@ -3,11 +3,10 @@
 use std::io;
 
 use actix_web::{
-    error,
+    App, Error, HttpRequest, HttpServer, error,
     http::header::HeaderValue,
     middleware::Logger,
     web::{self, Bytes},
-    App, Error, HttpRequest, HttpServer,
 };
 use actix_web_lab::extract::{RequestSignature, RequestSignatureScheme};
 use base64::prelude::*;

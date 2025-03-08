@@ -5,12 +5,12 @@
 use std::{convert::Infallible, str, time::Duration};
 
 use actix_web::{
+    HttpMessage,
     error::ParseError,
     http::header::{
-        from_one_raw_str, Header, HeaderName, HeaderValue, TryIntoHeaderValue,
-        STRICT_TRANSPORT_SECURITY,
+        Header, HeaderName, HeaderValue, STRICT_TRANSPORT_SECURITY, TryIntoHeaderValue,
+        from_one_raw_str,
     },
-    HttpMessage,
 };
 
 const SECS_IN_YEAR: u64 = 3600 * 24 * 365;

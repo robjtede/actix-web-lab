@@ -89,7 +89,7 @@ pub use assert_response_matches;
 #[cfg(test)]
 mod tests {
     use actix_web::{
-        dev::ServiceResponse, http::header::ContentType, test::TestRequest, HttpResponse,
+        HttpResponse, dev::ServiceResponse, http::header::ContentType, test::TestRequest,
     };
 
     use super::*;

@@ -1,8 +1,9 @@
 #![allow(missing_docs)]
 
 use actix_web::{
+    App, HttpResponse, Responder,
     http::{Method, StatusCode},
-    web, App, HttpResponse, Responder,
+    web,
 };
 use actix_web_lab_derive::FromRequest;
 

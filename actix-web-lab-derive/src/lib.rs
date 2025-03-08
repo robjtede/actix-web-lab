@@ -4,7 +4,7 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, Ident};
+use syn::{DeriveInput, Ident, parse_macro_input, punctuated::Punctuated, token::Comma};
 
 /// Derive a `FromRequest` implementation for an aggregate struct extractor.
 ///
@@ -13,7 +13,7 @@ use syn::{parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, 
 ///
 /// # Examples
 /// ```
-/// use actix_web::{get, http, web, Responder};
+/// use actix_web::{Responder, get, http, web};
 /// use actix_web_lab::FromRequest;
 ///
 /// #[derive(Debug, FromRequest)]
