@@ -119,7 +119,11 @@ where
                 let host = conn_info.host();
 
                 // construct equivalent https path
-                let (hostname, _port) = host.split_once(':').unwrap_or((host, ""));
+                let parsed_url = url::Url::parse(&format!("http://{host}"));
+                let hostname = match &parsed_url {
+                    Ok(url) => url.host_str().unwrap_or(""),
+                    Err(_) => host.split_once(':').map_or("", |(host, _port)| host),
+                };
 
                 let path = req.uri().path();
                 let uri = match port {
