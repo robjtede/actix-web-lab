@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix `RedirectHttps` middleware when used with IPv6 addresses.
+
 ## 0.24.0
 
 - Re-work `Json` extractor error handling.

@@ -119,7 +119,11 @@ where
                 let host = conn_info.host();
 
                 // construct equivalent https path
-                let (hostname, _port) = host.split_once(':').unwrap_or((host, ""));
+                let parsed_url = url::Url::parse(&format!("http://{host}"));
+                let hostname = match &parsed_url {
+                    Ok(url) => url.host_str().unwrap_or(""),
+                    Err(_) => host.split_once(':').map_or("", |(host, _port)| host),
+                };
 
                 let path = req.uri().path();
                 let uri = match port {
@@ -265,6 +269,18 @@ mod tests {
         let req = test_request!(GET "http://localhost/").to_srv_request();
         let res = test::call_service(&app, req).await;
         assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
+    }
+
+    #[actix_web::test]
+    async fn to_ipv6() {
+        let app = RedirectHttps::default()
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        let req = test_request!(GET "http://[fe80::1234:1234:1234:1234]/").to_srv_request();
+        let res = test::call_service(&app, req).await;
+        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://[fe80::1234:1234:1234:1234]/");
     }
 
     #[actix_web::test]
