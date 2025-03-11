@@ -272,6 +272,18 @@ mod tests {
     }
 
     #[actix_web::test]
+    async fn to_ipv6() {
+        let app = RedirectHttps::default()
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        let req = test_request!(GET "http://[fe80::1234:1234:1234:1234]/").to_srv_request();
+        let res = test::call_service(&app, req).await;
+        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://[fe80::1234:1234:1234:1234]/");
+    }
+
+    #[actix_web::test]
     async fn to_custom_port_when_port_in_host() {
         let app = RedirectHttps::default()
             .to_port(8443)
