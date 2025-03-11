@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.24.1
+
 - Fix `RedirectHttps` middleware when used with IPv6 addresses.
 
 ## 0.24.0
