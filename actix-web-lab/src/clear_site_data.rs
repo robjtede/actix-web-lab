@@ -11,7 +11,9 @@ use std::{
 use actix_http::{
     HttpMessage,
     error::ParseError,
-    header::{Header, HeaderName, HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
+    header::{
+        CLEAR_SITE_DATA, Header, HeaderName, HeaderValue, InvalidHeaderValue, TryIntoHeaderValue,
+    },
 };
 
 use crate::header::{fmt_comma_delimited_quoted_strings, from_comma_delimited_quoted_strings};
@@ -80,8 +82,7 @@ impl TryIntoHeaderValue for ClearSiteData {
 
 impl Header for ClearSiteData {
     fn name() -> HeaderName {
-        // TODO: use actix-http's constant after its next release
-        HeaderName::from_static("clear-site-data")
+        CLEAR_SITE_DATA
     }
 
     fn parse<M: HttpMessage>(msg: &M) -> Result<Self, ParseError> {

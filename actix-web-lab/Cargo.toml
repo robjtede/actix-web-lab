@@ -48,7 +48,7 @@ spa = ["actix-files"]
 [dependencies]
 actix-web-lab-derive = { version = "0.24", optional = true }
 
-actix-http = "3"
+actix-http = "3.10"
 actix-router = "0.5"
 actix-service = "2"
 actix-utils = "3"
