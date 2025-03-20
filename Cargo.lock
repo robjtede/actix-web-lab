@@ -349,7 +349,7 @@ dependencies = [
  "hex",
  "hex-literal",
  "hmac",
- "http 0.2.12",
+ "http 1.2.0",
  "impl-more",
  "itertools 0.14.0",
  "local-channel",
