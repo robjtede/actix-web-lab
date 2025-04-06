@@ -1,0 +1,15 @@
+[package]
+name = "collectools"
+version = "0.1.0"
+description = "Collection traits and implementations for common crates"
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+arrayvec = "0.7"
+tinyvec = "1"
+
+[lints]
+workspace = true

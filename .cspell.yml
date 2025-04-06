@@ -2,6 +2,7 @@ version: "0.2"
 words:
   - actix
   - ahash
+  - arrayvec
   - bytestring
   - cbor
   - clippy
@@ -42,5 +43,6 @@ words:
   - splitn
   - struct
   - taplo
+  - tinyvec
   - trybuild
   - vals

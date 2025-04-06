@@ -5,7 +5,7 @@ members = [
   "./actix-hash",
   "./actix-web-lab-derive",
   "./actix-web-lab",
-  "./russe",
+  "./russe", "collections",
 ]
 
 [workspace.package]
