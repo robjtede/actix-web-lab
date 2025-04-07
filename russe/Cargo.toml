@@ -36,7 +36,7 @@ divan = "0.1"
 eyre = "0.6"
 futures-test = "0.3"
 indoc = "2"
-tokio = { version = "1.44.1", features = ["macros", "rt"] }
+tokio = { version = "1.44.2", features = ["macros", "rt"] }
 tokio-stream = "0.1"
 tokio-test = "0.4"
 tokio-util = { version = "0.7", features = ["codec", "io", "rt"] }
