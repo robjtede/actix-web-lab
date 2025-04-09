@@ -73,7 +73,7 @@ serde = "1"
 serde_html_form = "0.2"
 serde_json = "1"
 serde_path_to_error = "0.1"
-tokio = { version = "1.44.2", features = ["sync", "macros"] }
+tokio = { version = "1.38.2", features = ["sync", "macros"] }
 tokio-stream = "0.1.17"
 tracing = { version = "0.1.41", features = ["log"] }
 url = "2.1"
@@ -108,7 +108,7 @@ serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
 static_assertions = "1.1"
 time = { version = "0.3", features = ["formatting"] }
-tokio = { version = "1.44.2", features = ["full"] }
+tokio = { version = "1.38.2", features = ["full"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 
 [[example]]
