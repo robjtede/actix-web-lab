@@ -851,6 +851,7 @@ name = "collectools"
 version = "0.1.0"
 dependencies = [
  "arrayvec",
+ "smallvec",
  "tinyvec",
 ]
 

@@ -3,6 +3,7 @@
 #![allow(missing_docs)]
 
 mod arrayvec;
+mod smallvec;
 mod tinyvec;
 mod vec;
 

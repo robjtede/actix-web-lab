@@ -1,24 +1,23 @@
-use arrayvec::ArrayVec;
+use smallvec::{Array, SmallVec};
 
-use super::List;
-use super::MutableList;
+use super::{List, MutableList};
 
-impl<T, const CAP: usize> List<T> for ArrayVec<T, CAP> {
+impl<A: Array> List<A::Item> for SmallVec<A> {
     fn len(&self) -> usize {
-        ArrayVec::len(self)
+        SmallVec::len(self)
     }
 
-    fn get(&self, idx: usize) -> Option<&T> {
+    fn get(&self, idx: usize) -> Option<&A::Item> {
         <[_]>::get(self, idx)
     }
 }
 
-impl<T, const CAP: usize> MutableList<T> for ArrayVec<T, CAP> {
-    fn append(&mut self, element: T) {
+impl<A: Array> MutableList<A::Item> for SmallVec<A> {
+    fn append(&mut self, element: A::Item) {
         self.push(element);
     }
 
-    fn get_mut(&mut self, idx: usize) -> Option<&mut T> {
+    fn get_mut(&mut self, idx: usize) -> Option<&mut A::Item> {
         <[_]>::get_mut(self, idx)
     }
 }
@@ -29,7 +28,7 @@ pub(crate) mod tests {
 
     #[test]
     fn it_works() {
-        let mut vec = ArrayVec::<_, 8>::new();
+        let mut vec = SmallVec::<[_; 8]>::new();
 
         assert_eq!(0, List::len(&vec));
         assert!(List::is_empty(&vec));

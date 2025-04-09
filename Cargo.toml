@@ -1,11 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
-  "./actix-client-ip-cloudflare",
-  "./actix-hash",
-  "./actix-web-lab-derive",
-  "./actix-web-lab",
-  "./russe", "collections",
+  "actix-client-ip-cloudflare",
+  "actix-hash",
+  "actix-web-lab-derive",
+  "actix-web-lab",
+  "collectools",
+  "russe",
 ]
 
 [workspace.package]

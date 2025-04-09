@@ -1,9 +1,10 @@
-use super::List;
-use super::MutableList;
+use arrayvec::ArrayVec;
 
-impl<T> List<T> for Vec<T> {
+use super::{List, MutableList};
+
+impl<T, const CAP: usize> List<T> for ArrayVec<T, CAP> {
     fn len(&self) -> usize {
-        Vec::len(self)
+        ArrayVec::len(self)
     }
 
     fn get(&self, idx: usize) -> Option<&T> {
@@ -11,7 +12,7 @@ impl<T> List<T> for Vec<T> {
     }
 }
 
-impl<T> MutableList<T> for Vec<T> {
+impl<T, const CAP: usize> MutableList<T> for ArrayVec<T, CAP> {
     fn append(&mut self, element: T) {
         self.push(element);
     }
@@ -27,7 +28,7 @@ pub(crate) mod tests {
 
     #[test]
     fn it_works() {
-        let mut vec = vec![];
+        let mut vec = ArrayVec::<_, 8>::new();
 
         assert_eq!(0, List::len(&vec));
         assert!(List::is_empty(&vec));
