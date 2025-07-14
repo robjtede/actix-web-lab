@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.24.2
+
 - Add `LazyDataShared` extractor.
 
 ## 0.24.1
