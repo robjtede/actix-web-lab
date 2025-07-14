@@ -9,6 +9,7 @@ pub use crate::{
     host::Host,
     json::{DEFAULT_JSON_LIMIT, Json, JsonDeserializeError, JsonPayloadError},
     lazy_data::LazyData,
+    lazy_data_shared::LazyDataShared,
     local_data::LocalData,
     path::Path,
     query::{Query, QueryDeserializeError},

@@ -46,7 +46,7 @@ impl AsyncWrite for Writer {
     ) -> Poll<Result<usize, io::Error>> {
         self.tx
             .send(Bytes::copy_from_slice(buf))
-            .map_err(|_| io::Error::new(io::ErrorKind::Other, "TODO"))?;
+            .map_err(io::Error::other)?;
 
         Poll::Ready(Ok(buf.len()))
     }

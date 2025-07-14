@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `LazyDataShared` extractor.
+
 ## 0.24.1
 
 - Fix `RedirectHttps` middleware when used with IPv6 addresses.

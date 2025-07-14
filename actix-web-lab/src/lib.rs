@@ -40,6 +40,7 @@ mod host;
 mod infallible_body_stream;
 mod json;
 mod lazy_data;
+mod lazy_data_shared;
 mod load_shed;
 mod local_data;
 mod middleware_map_response;
