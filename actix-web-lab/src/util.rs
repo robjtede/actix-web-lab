@@ -41,10 +41,9 @@ pub fn fork_request_payload(orig_payload: &mut dev::Payload) -> dev::Payload {
             }
 
             Err(err) => tx
-                .send(Err(PayloadError::Io(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("error from original stream: {err}"),
-                ))))
+                .send(Err(PayloadError::Io(io::Error::other(format!(
+                    "error from original stream: {err}"
+                )))))
                 .unwrap(),
         }
     }));

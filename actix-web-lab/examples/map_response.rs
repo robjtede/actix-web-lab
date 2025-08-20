@@ -6,7 +6,7 @@ use actix_web::{
     App, Error, HttpRequest, HttpResponse, HttpServer, body::MessageBody, dev::ServiceResponse,
     http::header, middleware::Logger, web,
 };
-use actix_web_lab::middleware::{map_response, map_response_body};
+use actix_web_lab::middleware::{ConditionOption, map_response, map_response_body};
 use tracing::info;
 
 async fn add_res_header(
@@ -33,6 +33,10 @@ async fn main() -> io::Result<()> {
     info!("staring server at http://{}:{}", &bind.0, &bind.1);
 
     HttpServer::new(|| {
+        let mutator_enabled = false;
+        let mutate_body_type_mw =
+            ConditionOption::from(mutator_enabled.then(|| map_response_body(mutate_body_type)));
+
         App::new()
             .service(
                 web::resource("/foo")
@@ -43,7 +47,7 @@ async fn main() -> io::Result<()> {
             .service(
                 web::resource("/bar")
                     .default_service(web::to(HttpResponse::Ok))
-                    .wrap(map_response_body(mutate_body_type))
+                    .wrap(mutate_body_type_mw)
                     .wrap(Logger::default()),
             )
             .default_service(web::to(HttpResponse::Ok))

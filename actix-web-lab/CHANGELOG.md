@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `ConditionOption` middleware.
+
 ## 0.24.2
 
 - Add `LazyDataShared` extractor.

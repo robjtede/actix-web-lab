@@ -135,15 +135,16 @@ mod tests {
                     actix_web::rt::time::sleep(Duration::from_millis(40)).await;
                     10_usize
                 }))
-                .service(
-                    web::resource("/").to(|lazy_num: LazyDataShared<usize>| async move {
+                .service(web::resource("/").to(
+                    #[expect(clippy::async_yields_async)]
+                    |lazy_num: LazyDataShared<usize>| async move {
                         if *lazy_num.get().await == 10 {
                             HttpResponse::Ok()
                         } else {
                             HttpResponse::InternalServerError()
                         }
-                    }),
-                ),
+                    },
+                )),
         )
         .await;
         let req = TestRequest::default().to_request();

@@ -18,7 +18,7 @@ use tokio::{
 use tokio_util::compat::TokioAsyncWriteCompatExt as _;
 
 fn zip_to_io_err(err: async_zip::error::ZipError) -> io::Error {
-    io::Error::new(io::ErrorKind::Other, err)
+    io::Error::other(err)
 }
 
 async fn read_dir<W>(zipper: &mut ZipFileWriter<W>) -> io::Result<()>
