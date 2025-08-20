@@ -15,8 +15,6 @@ use pin_project_lite::pin_project;
 
 /// Middleware for conditionally enabling other middleware in an [`Option`].
 ///
-/// Uses [`Condition`](crate::middleware::condition::Condition) under the hood.
-///
 /// # Example
 /// ```
 /// use actix_web::{App, middleware::Logger};
