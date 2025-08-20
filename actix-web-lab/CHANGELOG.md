@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.24.3
+
 - Add `ConditionOption` middleware.
 
 ## 0.24.2
