@@ -36,6 +36,7 @@
 - `RedirectHttps`: middleware to redirect traffic to HTTPS if connection is insecure with optional HSTS [(docs)](https://docs.rs/actix-web-lab/0.24.2/actix_web_lab/middleware/struct.RedirectHttps.html)
 - `redirect_to_www`: function middleware to redirect traffic to `www.` if not already there [(docs)](https://docs.rs/actix-web-lab/0.24.2/actix_web_lab/middleware/fn.redirect_to_www.html)
 - `redirect_to_non_www`: function middleware to redirect traffic to `www.` if not already there [(docs)](https://docs.rs/actix-web-lab/0.24.2/actix_web_lab/middleware/fn.redirect_to_non_www.html)
+- `ConditionOption`: conditional middleware helper [(docs)](https://docs.rs/actix-web-lab/0.24.2/actix_web_lab/middleware/struct.ConditionOption.html)
 - `ErrorHandlers`: alternative error handler middleware with simpler interface [(docs)](https://docs.rs/actix-web-lab/0.24.2/actix_web_lab/middleware/struct.ErrorHandlers.html)
 - `NormalizePath`: alternative path normalizing middleware with redirect option [(docs)](https://docs.rs/actix-web-lab/0.24.2/actix_web_lab/middleware/struct.NormalizePath.html)
 - `CatchPanic`: catch panics in wrapped handlers and middleware, returning empty 500 responses [(docs)](https://docs.rs/actix-web-lab/0.24.2/actix_web_lab/middleware/struct.CatchPanic.html)
