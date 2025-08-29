@@ -5,7 +5,7 @@
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-web-lab?label=latest)](https://crates.io/crates/actix-web-lab)
-[![Documentation](https://docs.rs/actix-web-lab/badge.svg)](https://docs.rs/actix-web-lab/0.24.3)
+[![Documentation](https://docs.rs/actix-web-lab/badge.svg?version=0.24.3)](https://docs.rs/actix-web-lab/0.24.3)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/actix-web-lab.svg)
 <br />
 [![dependency status](https://deps.rs/crate/actix-web-lab/0.24.3/status.svg)](https://deps.rs/crate/actix-web-lab/0.24.3)

@@ -5,6 +5,7 @@ members = [
   "actix-hash",
   "actix-web-lab-derive",
   "actix-web-lab",
+  "actix-proxy-protocol",
   "collectools",
   "russe",
 ]
