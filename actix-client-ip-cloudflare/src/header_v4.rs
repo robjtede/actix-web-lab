@@ -29,11 +29,11 @@ impl CfConnectingIp {
     }
 }
 
-impl_more::impl_display_enum!(
-    CfConnectingIp,
+impl_more::impl_display_enum! {
+    CfConnectingIp:
     Trusted(ip) => "{ip}",
     Untrusted(ip) => "{ip}",
-);
+}
 
 impl TryIntoHeaderValue for CfConnectingIp {
     type Error = Infallible;

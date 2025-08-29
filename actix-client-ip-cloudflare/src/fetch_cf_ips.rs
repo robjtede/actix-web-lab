@@ -12,7 +12,10 @@ pub enum CfIpsFetchErr {
     Fetch,
 }
 
-impl_more::impl_display_enum!(CfIpsFetchErr, Fetch => "failed to fetch");
+impl_more::impl_display_enum! {
+    CfIpsFetchErr:
+    Fetch => "Failed to fetch",
+}
 
 impl std::error::Error for CfIpsFetchErr {}
 
