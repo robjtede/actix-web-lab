@@ -1,9 +1,12 @@
+mod service;
+
 use std::{fmt, io, net::SocketAddr};
 
 use arrayvec::ArrayVec;
 use nom::{IResult, Parser as _};
 use tokio::io::{AsyncWrite, AsyncWriteExt as _};
 
+pub use self::service::{Acceptor, AcceptorService, TlsError, TlsStream};
 use crate::AddressFamily;
 
 pub const SIGNATURE: &str = "PROXY";
