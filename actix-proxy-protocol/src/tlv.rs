@@ -32,7 +32,7 @@ pub trait Tlv: Sized {
 /// Application-Layer Protocol Negotiation (ALPN). It is a byte sequence defining
 /// the upper layer protocol in use over the connection. The most common use case
 /// will be to pass the exact copy of the ALPN extension of the Transport Layer
-/// Security (TLS) protocol as defined by RFC7301 [9].
+/// Security (TLS) protocol as defined by RFC 7301.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Alpn {
     alpn: Vec<u8>,
@@ -68,7 +68,7 @@ impl Tlv for Alpn {
 
 /// Contains the host name value passed by the client, as an UTF8-encoded string.
 /// In case of TLS being used on the client connection, this is the exact copy of
-/// the "server_name" extension as defined by RFC3546 [10], section 3.1, often
+/// the "server_name" extension as defined by RFC 3546, section 3.1, often
 /// referred to as "SNI". There are probably other situations where an authority
 /// can be mentioned on a connection without TLS being involved at all.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -220,7 +220,7 @@ bitflags::bitflags! {
 /// Very broken atm.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ssl {
-    /// The <client> field is made of a bit field indicating which element is present.
+    /// The client field is made of a bit field indicating which element is present.
     ///
     /// Note, that each of these elements may lead to extra data being appended to
     /// this TLV using a second level of TLV encapsulation. It is thus possible to
@@ -228,7 +228,7 @@ pub struct Ssl {
     /// TLV will reflect this.
     client: SslClientFlags,
 
-    /// The <verify> field will be zero if the client presented a certificate
+    /// The verify field will be zero if the client presented a certificate
     /// and it was successfully verified, and non-zero otherwise.
     verify: bool,
 

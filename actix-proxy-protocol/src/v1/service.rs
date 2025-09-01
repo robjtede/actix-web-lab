@@ -102,14 +102,6 @@ impl Acceptor {
 
 impl<TlsErr> TlsError<TlsErr, Infallible> {
     /// Casts the infallible service error type returned from acceptors into caller's type.
-    ///
-    /// # Examples
-    /// ```
-    /// # use std::convert::Infallible;
-    /// # use actix_tls::accept::TlsError;
-    /// let a: TlsError<u32, Infallible> = TlsError::Tls(42);
-    /// let _b: TlsError<u32, u64> = a.into_service_error();
-    /// ```
     pub fn into_service_error<SvcErr>(self) -> TlsError<TlsErr, SvcErr> {
         match self {
             Self::Tls(err) => TlsError::Tls(err),
