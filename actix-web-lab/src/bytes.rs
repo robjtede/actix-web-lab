@@ -277,8 +277,6 @@ mod tests {
     #[actix_web::test]
     async fn extract() {
         let (req, mut pl) = TestRequest::default()
-            .insert_header(header::ContentType::json())
-            .insert_header(crate::header::ContentLength::from(3))
             .set_payload(web::Bytes::from_static(b"foo"))
             .to_http_parts();
 
@@ -288,8 +286,6 @@ mod tests {
         assert_eq!(s.as_ref(), "foo");
 
         let (req, mut pl) = TestRequest::default()
-            .insert_header(header::ContentType::json())
-            .insert_header(crate::header::ContentLength::from(16))
             .set_payload(web::Bytes::from_static(b"foo foo foo foo"))
             .to_http_parts();
 
@@ -297,7 +293,7 @@ mod tests {
         let err_str = s.unwrap_err().to_string();
         assert_eq!(
             err_str,
-            "Payload (16 bytes) is larger than allowed (limit: 10 bytes).",
+            "Payload (15 bytes) is larger than allowed (limit: 10 bytes).",
         );
 
         let (req, mut pl) = TestRequest::default()
@@ -351,12 +347,13 @@ mod tests {
 
         assert_eq!(
             bytes.unwrap_err(),
-            BytesPayloadError::Overflow { limit: 100 }
+            BytesPayloadError::OverflowKnownLength {
+                length: 1000,
+                limit: 100
+            },
         );
 
         let (req, mut pl) = TestRequest::default()
-            .insert_header(header::ContentType::json())
-            .insert_header(crate::header::ContentLength::from(16))
             .set_payload(web::Bytes::from_static(b"foo foo foo foo"))
             .to_http_parts();
 
