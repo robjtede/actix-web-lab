@@ -1,4 +1,4 @@
-//! Clone of the unstable [`err_report::Report`] type.
+//! Clone of the unstable [`std::error::Report`] type.
 //!
 //! Backtrace support is omitted due to nightly requirement.
 //!
