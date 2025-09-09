@@ -22,6 +22,7 @@ fmt: update-readmes
 [group("lint")]
 update-readmes:
     cd ./russe && cargo rdme --force
+    cd ./err-report && cargo rdme --force
 
 msrv := ```
     cargo metadata --format-version=1 \
