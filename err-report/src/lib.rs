@@ -1,8 +1,39 @@
-//! Clone of the unstable [`std::error::Report`] type.
+//! Clone of the unstable [`err_report::Report`] type.
 //!
 //! Backtrace support is omitted due to nightly requirement.
 //!
 //! Copied on 2025-09-09.
+//!
+//! # Examples
+//!
+//! ```
+//! use std::ffi::CString;
+//! use err_report::Report;
+//!
+//! let invalid_utf8 = vec![b'f', 0xff, b'o', b'o'];
+//! let cstring = CString::new(invalid_utf8).unwrap();
+//! let err = cstring.into_string().err().unwrap();
+//!
+//! // without Report
+//! assert_eq!(
+//!     "invalid utf-8 sequence of 1 bytes from index 1",
+//!     err.utf8_error().to_string(),
+//! );
+//! assert_eq!(
+//!     "C string contained non-utf8 bytes",
+//!     err.to_string(),
+//! );
+//!
+//! // with Report
+//! assert_eq!(
+//!     "invalid utf-8 sequence of 1 bytes from index 1",
+//!     Report::new(err.utf8_error()).to_string(),
+//! );
+//! assert_eq!(
+//!     "C string contained non-utf8 bytes: invalid utf-8 sequence of 1 bytes from index 1",
+//!     Report::new(err).to_string(),
+//! );
+//! ```
 
 pub use core::error::Error;
 // pub use core::error::{Request, request_ref, request_value};
@@ -21,11 +52,9 @@ use std::fmt::{self, Write as _};
 /// # Examples
 ///
 /// ```rust
-/// #![feature(error_reporter)]
-/// use std::{
-///     error::{Error, Report},
-///     fmt,
-/// };
+/// use std::{error::Error, fmt};
+///
+/// use err_report::Report;
 ///
 /// #[derive(Debug)]
 /// struct SuperError {
@@ -81,8 +110,7 @@ use std::fmt::{self, Write as _};
 /// [`Result::unwrap`]/[`Result::expect`] which print their `Err` variant via `Debug`:
 ///
 /// ```should_panic
-/// #![feature(error_reporter)]
-/// use std::error::Report;
+/// use err_report::Report;
 /// # use std::error::Error;
 /// # use std::fmt;
 /// # #[derive(Debug)]
@@ -129,8 +157,7 @@ use std::fmt::{self, Write as _};
 /// from `main`.
 ///
 /// ```should_panic
-/// #![feature(error_reporter)]
-/// use std::error::Report;
+/// use err_report::Report;
 /// # use std::error::Error;
 /// # use std::fmt;
 /// # #[derive(Debug)]
@@ -176,8 +203,7 @@ use std::fmt::{self, Write as _};
 /// you will need to manually convert and enable those flags.
 ///
 /// ```should_panic
-/// #![feature(error_reporter)]
-/// use std::error::Report;
+/// use err_report::Report;
 /// # use std::error::Error;
 /// # use std::fmt;
 /// # #[derive(Debug)]
@@ -209,7 +235,7 @@ use std::fmt::{self, Write as _};
 /// fn main() -> Result<(), Report<SuperError>> {
 ///     get_super_error()
 ///         .map_err(Report::from)
-///         .map_err(|r| r.pretty(true).show_backtrace(true))?;
+///         .map_err(|r| r.pretty(true))?;
 ///     Ok(())
 /// }
 /// ```
@@ -247,8 +273,7 @@ impl<E> Report<E> {
     /// # Examples
     ///
     /// ```rust
-    /// #![feature(error_reporter)]
-    /// use std::error::Report;
+    /// use err_report::Report;
     /// # use std::error::Error;
     /// # use std::fmt;
     /// # #[derive(Debug)]
@@ -294,8 +319,7 @@ impl<E> Report<E> {
     /// starting from the outermost error.
     ///
     /// ```rust
-    /// #![feature(error_reporter)]
-    /// use std::error::Report;
+    /// use err_report::Report;
     /// # use std::error::Error;
     /// # use std::fmt;
     /// # #[derive(Debug)]
@@ -365,12 +389,11 @@ impl<E> Report<E> {
     // /// sources, `SuperErrorSideKick`.
     // ///
     // /// ```rust
-    // /// #![feature(error_reporter)]
     // /// #![feature(error_generic_member_access)]
     // /// # use std::error::Error;
     // /// # use std::fmt;
     // /// use std::error::Request;
-    // /// use std::error::Report;
+    // /// use err_report::Report;
     // /// use std::backtrace::Backtrace;
     // ///
     // /// # #[derive(Debug)]
@@ -486,7 +509,7 @@ where
 
             let multiple = cause.source().is_some();
 
-            for (error, ind) in Source::new(cause).enumerate() {
+            for (ind, error) in Source::new(cause).enumerate() {
                 writeln!(f)?;
                 let mut indented = Indented { inner: f };
                 if multiple {

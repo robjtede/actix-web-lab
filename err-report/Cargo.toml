@@ -1,6 +1,6 @@
 [package]
 name = "err-report"
-version = "0.0.1"
+version = "0.0.2"
 description = "Clone of the unstable `std::error::Report` type"
 repository.workspace = true
 license.workspace = true
@@ -8,6 +8,9 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+
+[dev-dependencies]
+indoc = "2"
 
 [lints]
 workspace = true
