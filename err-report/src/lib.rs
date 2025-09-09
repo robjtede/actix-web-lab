@@ -11,21 +11,18 @@
 //!
 //! use err_report::Report;
 //!
-//! let invalid_utf8 = vec![b'f', 0xff, b'o', b'o'];
-//! let cstring = CString::new(invalid_utf8).unwrap();
-//! let err = cstring.into_string().err().unwrap();
+//! let invalid_utf8 = [b'f', 0xff, b'o', b'o'];
+//! let c_string = CString::new(invalid_utf8).unwrap();
+//! let err = c_string.into_string().unwrap_err();
 //!
-//! assert_eq!(
-//!     "invalid utf-8 sequence of 1 bytes from index 1",
-//!     Report::new(err.utf8_error()).to_string(),
-//! );
+//! // without Report, the source/root error is not printed
+//! assert_eq!("C string contained non-utf8 bytes", err.to_string());
+//!
+//! // with Report, all details in error chain are printed
 //! assert_eq!(
 //!     "C string contained non-utf8 bytes: invalid utf-8 sequence of 1 bytes from index 1",
 //!     Report::new(err).to_string(),
 //! );
-//!
-//! // without Report, the source/root error is not printed
-//! assert_eq!("C string contained non-utf8 bytes", err.to_string());
 //! ```
 
 pub use core::error::Error;

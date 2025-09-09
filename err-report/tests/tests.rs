@@ -94,7 +94,7 @@ fn wrapped_error_pretty() {
             Wrapped
 
             Caused by:
-                  Passed non-utf8 string"},
+                  Root error"},
         Report::new(WrappedError(io::Error::other("Root error")))
             .pretty(true)
             .to_string(),
@@ -106,7 +106,7 @@ fn wrapped_error_pretty() {
 
             Caused by:
                0: Wrapped
-               1: Passed non-utf8 string"},
+               1: Root error"},
         Report::new(WrappedError(WrappedError(io::Error::other("Root error"))))
             .pretty(true)
             .to_string(),
