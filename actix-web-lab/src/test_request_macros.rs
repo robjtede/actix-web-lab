@@ -54,8 +54,6 @@ pub use test_request;
 mod tests {
     use actix_web::test::TestRequest;
 
-    use super::*;
-
     #[test]
     fn request_builder() {
         let _req: TestRequest = test_request! {

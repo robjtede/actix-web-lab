@@ -92,8 +92,6 @@ mod tests {
         HttpResponse, dev::ServiceResponse, http::header::ContentType, test::TestRequest,
     };
 
-    use super::*;
-
     #[actix_web::test]
     async fn response_matching() {
         let res = ServiceResponse::new(
