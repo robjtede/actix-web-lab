@@ -6,6 +6,7 @@
 
 - Update `serde_cbor_2` dependency to `0.13`.
 - Update `serde_html_form` dependency to `0.4`.
+- Minimum supported Rust version (MSRV) is now 1.88.
 
 ## 0.24.3
 

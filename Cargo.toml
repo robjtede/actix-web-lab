@@ -15,7 +15,7 @@ members = [
 repository = "https://github.com/robjtede/actix-web-lab"
 license = "MIT OR Apache-2.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 
 [workspace.lints.rust]
 rust_2018_idioms = { level = "deny", priority = 10 }

@@ -4,7 +4,7 @@
 
 - Add `reqwest-0_13` crate feature (off-by-default).
 - Upgrade to edition 2024.
-- Minimum supported Rust version (MSRV) is now 1.85.
+- Minimum supported Rust version (MSRV) is now 1.88.
 
 ## 0.0.5
 
