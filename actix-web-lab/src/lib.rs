@@ -20,7 +20,7 @@
 //!
 //! [examples]: https://github.com/robjtede/actix-web-lab/tree/HEAD/actix-web-lab/examples
 
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod body_async_write;
 mod body_channel;
