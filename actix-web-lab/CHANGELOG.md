@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.25.0
+
 - Update `serde_cbor_2` dependency to `0.13`.
 - Update `serde_html_form` dependency to `0.4`.
 
