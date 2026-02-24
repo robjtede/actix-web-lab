@@ -16,7 +16,7 @@ use actix_web_lab::respond::NdJson;
 use futures_core::Stream;
 use futures_util::{StreamExt as _, stream};
 use rand::{
-    Rng as _,
+    RngExt as _,
     distr::{Alphanumeric, SampleString as _},
 };
 use serde::Deserialize;

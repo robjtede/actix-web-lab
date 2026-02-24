@@ -32,7 +32,7 @@ actix-codec = "0.5"
 actix-rt = "2.6"
 actix-server = "2"
 bytes = "1"
-const-str = "0.6"
+const-str = "1"
 futures-util = { version = "0.3.7", default-features = false, features = ["sink", "async-await-macro"] }
 hex = "0.4"
 once_cell = "1"
