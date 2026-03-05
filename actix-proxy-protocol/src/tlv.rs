@@ -184,7 +184,7 @@ impl UniqueId {
 
         assert!(!value.is_empty(), "UniqueId TLV `value` cannot be empty");
         assert!(
-            value.len() < 128,
+            value.len() <= 128,
             "UniqueId TLV `value` cannot be larger than 128 bytes"
         );
 
