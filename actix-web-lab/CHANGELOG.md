@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `middleware::HostAllowlist` and `RedirectHttps::allow_hosts()` to harden redirect middleware against host header poisoning when configured.
+- Convert `RedirectToWww` and `RedirectToNonWww` to struct-based middleware with explicit `allow_hosts()` setters.
+
 ## 0.25.0
 
 - Update `serde_cbor_2` dependency to `0.13`.
