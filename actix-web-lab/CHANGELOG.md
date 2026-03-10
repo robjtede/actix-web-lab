@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.26.0
+
 - Add `middleware::HostAllowlist` and `RedirectHttps::allow_hosts()` to harden redirect middleware against host header poisoning when configured.
 - Convert `RedirectToWww` and `RedirectToNonWww` to struct-based middleware with explicit `allow_hosts()` setters.
 
