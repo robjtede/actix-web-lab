@@ -26,10 +26,10 @@ async fn main() -> eyre::Result<()> {
     while let Some(Ok(ev)) = event_stream.next().await {
         println!("{ev:?}");
 
-        if let russe::Event::Message(msg) = ev {
-            if let Some(id) = msg.id {
-                manager.commit_id(id);
-            }
+        if let russe::Event::Message(msg) = ev
+            && let Some(id) = msg.id
+        {
+            manager.commit_id(id);
         }
     }
 

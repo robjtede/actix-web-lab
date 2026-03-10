@@ -201,13 +201,13 @@ impl<T: DeserializeOwned, const LIMIT: usize> JsonBody<T, LIMIT> {
 
         let payload = payload.take();
 
-        if let Some(len) = length {
-            if len > LIMIT {
-                return JsonBody::Error(Some(JsonPayloadError::Overflow {
-                    limit: LIMIT,
-                    length: Some(len),
-                }));
-            }
+        if let Some(len) = length
+            && len > LIMIT
+        {
+            return JsonBody::Error(Some(JsonPayloadError::Overflow {
+                limit: LIMIT,
+                length: Some(len),
+            }));
         }
 
         JsonBody::Body {

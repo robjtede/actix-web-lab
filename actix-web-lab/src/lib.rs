@@ -53,6 +53,7 @@ mod normalize_path;
 mod panic_reporter;
 mod path;
 mod query;
+mod redirect_host;
 mod redirect_to_https;
 mod redirect_to_non_www;
 mod redirect_to_www;

@@ -11,7 +11,8 @@ pub use crate::{
     middleware_map_response_body::{MapResBodyMiddleware, map_response_body},
     normalize_path::NormalizePath,
     panic_reporter::PanicReporter,
+    redirect_host::HostAllowlist,
     redirect_to_https::RedirectHttps,
-    redirect_to_non_www::redirect_to_non_www,
-    redirect_to_www::redirect_to_www,
+    redirect_to_non_www::RedirectToNonWww,
+    redirect_to_www::RedirectToWww,
 };

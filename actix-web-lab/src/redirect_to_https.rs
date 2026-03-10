@@ -12,9 +12,22 @@ use actix_web::{
 };
 use futures_core::future::LocalBoxFuture;
 
-use crate::header::StrictTransportSecurity;
+use crate::{
+    header::StrictTransportSecurity,
+    redirect_host::{HostAllowlist, reject_untrusted_host},
+};
 
 /// Middleware to redirect traffic to HTTPS if connection is insecure.
+///
+/// # Security
+///
+/// This middleware constructs absolute redirect URLs from request-derived host information. If
+/// your deployment accepts unvalidated `Host` or forwarding headers, an attacker can influence the
+/// `Location` header in redirect responses.
+///
+/// To harden this middleware, configure [`RedirectHttps::allow_hosts`]. The same pattern is used
+/// by [`crate::middleware::RedirectToWww`] and [`crate::middleware::RedirectToNonWww`]. Without an
+/// allowlist, you should validate hosts upstream before requests reach the application.
 ///
 /// # HSTS
 ///
@@ -33,6 +46,7 @@ use crate::header::StrictTransportSecurity;
 ///
 /// let mw = RedirectHttps::default();
 /// let mw = RedirectHttps::default().to_port(8443);
+/// let mw = RedirectHttps::default().allow_hosts(["example.com", "www.example.com"]);
 /// let mw = RedirectHttps::with_hsts(StrictTransportSecurity::default());
 /// let mw = RedirectHttps::with_hsts(StrictTransportSecurity::new(Duration::from_secs(60 * 60)));
 /// let mw = RedirectHttps::with_hsts(StrictTransportSecurity::recommended());
@@ -46,6 +60,7 @@ use crate::header::StrictTransportSecurity;
 pub struct RedirectHttps {
     hsts: Option<StrictTransportSecurity>,
     port: Option<u16>,
+    allowed_hosts: Option<HostAllowlist>,
 }
 
 impl RedirectHttps {
@@ -62,6 +77,19 @@ impl RedirectHttps {
     /// By default, no port is set explicitly so the standard HTTPS port (443) is used.
     pub fn to_port(mut self, port: u16) -> Self {
         self.port = Some(port);
+        self
+    }
+
+    /// Restricts redirect behavior to requests whose host matches an allowlist entry.
+    ///
+    /// Requests with non-allowlisted hosts receive a `400 Bad Request` response instead of a
+    /// redirect.
+    pub fn allow_hosts<I, S>(mut self, hosts: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.allowed_hosts = Some(HostAllowlist::new(hosts));
         self
     }
 }
@@ -81,6 +109,7 @@ where
             service: Rc::new(service),
             hsts: self.hsts,
             port: self.port,
+            allowed_hosts: self.allowed_hosts.clone(),
         }))
     }
 }
@@ -92,6 +121,7 @@ pub struct RedirectHttpsMiddleware<S> {
     service: Rc<S>,
     hsts: Option<StrictTransportSecurity>,
     port: Option<u16>,
+    allowed_hosts: Option<HostAllowlist>,
 }
 
 impl<S, B> Service<ServiceRequest> for RedirectHttpsMiddleware<S>
@@ -110,6 +140,7 @@ where
         let service = Rc::clone(&self.service);
         let hsts = self.hsts;
         let port = self.port;
+        let allowed_hosts = self.allowed_hosts.clone();
 
         Box::pin(async move {
             let (req, pl) = req.into_parts();
@@ -117,6 +148,11 @@ where
 
             if conn_info.scheme() != "https" {
                 let host = conn_info.host();
+
+                if let Some(res) = reject_untrusted_host(allowed_hosts.as_ref(), host) {
+                    drop(conn_info);
+                    return Ok(ServiceResponse::new(req, res.map_into_right_body()));
+                }
 
                 // construct equivalent https path
                 let parsed_url = url::Url::parse(&format!("http://{host}"));
@@ -294,5 +330,34 @@ mod tests {
         let req = test_request!(GET "http://localhost:8080/").to_srv_request();
         let res = test::call_service(&app, req).await;
         assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://localhost:8443/");
+    }
+
+    #[actix_web::test]
+    async fn allow_hosts_rejects_unknown_host() {
+        let app = RedirectHttps::default()
+            .allow_hosts(["example.com"])
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        let req = test_request!(GET "http://attacker.example/").to_srv_request();
+        let res = test::call_service(&app, req).await;
+
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+        assert!(res.headers().get(header::LOCATION).is_none());
+    }
+
+    #[actix_web::test]
+    async fn allow_hosts_redirects_known_host() {
+        let app = RedirectHttps::default()
+            .allow_hosts(["example.com"])
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        let req = test_request!(GET "http://example.com/test").to_srv_request();
+        let res = test::call_service(&app, req).await;
+
+        assert_response_matches!(res, TEMPORARY_REDIRECT; "location" => "https://example.com/test");
     }
 }

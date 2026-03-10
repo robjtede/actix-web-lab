@@ -384,10 +384,10 @@ where
             };
         }
 
-        if let Some(keep_alive) = this.keep_alive {
-            if keep_alive.poll_tick(cx).is_ready() {
-                return Poll::Ready(Some(Ok(Event::keep_alive_bytes())));
-            }
+        if let Some(keep_alive) = this.keep_alive
+            && keep_alive.poll_tick(cx).is_ready()
+        {
+            return Poll::Ready(Some(Ok(Event::keep_alive_bytes())));
         }
 
         Poll::Pending

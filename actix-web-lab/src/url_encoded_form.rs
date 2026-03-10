@@ -187,13 +187,13 @@ impl<T: DeserializeOwned, const LIMIT: usize> UrlEncodedFormBody<T, LIMIT> {
 
         let payload = payload.take();
 
-        if let Some(len) = length {
-            if len > LIMIT {
-                return UrlEncodedFormBody::Error(Some(UrlEncodedFormError::Overflow {
-                    size: len,
-                    limit: LIMIT,
-                }));
-            }
+        if let Some(len) = length
+            && len > LIMIT
+        {
+            return UrlEncodedFormBody::Error(Some(UrlEncodedFormError::Overflow {
+                size: len,
+                limit: LIMIT,
+            }));
         }
 
         UrlEncodedFormBody::Body {

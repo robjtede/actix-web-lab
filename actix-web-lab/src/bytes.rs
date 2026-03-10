@@ -164,13 +164,13 @@ impl<const LIMIT: usize> BytesBody<LIMIT> {
         // call BytesBody::limit after BytesBody::new and limit check to return an error variant of
         // BytesBody happens there.
 
-        if let Some(len) = length {
-            if len > LIMIT {
-                return BytesBody::Error(Some(BytesPayloadError::OverflowKnownLength {
-                    length: len,
-                    limit: LIMIT,
-                }));
-            }
+        if let Some(len) = length
+            && len > LIMIT
+        {
+            return BytesBody::Error(Some(BytesPayloadError::OverflowKnownLength {
+                length: len,
+                limit: LIMIT,
+            }));
         }
 
         BytesBody::Body {
