@@ -63,7 +63,7 @@ where
     }
 }
 
-/// TODO
+/// Middleware service used by [`ConditionOption`] to dispatch to the enabled or disabled branch.
 #[derive(Debug)]
 pub enum ConditionMiddleware<E, D> {
     Enable(E),

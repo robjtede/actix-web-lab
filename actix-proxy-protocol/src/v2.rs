@@ -122,8 +122,7 @@ impl Header {
     }
 
     fn to_vec(&self) -> Vec<u8> {
-        // TODO: figure out cap
-        let mut buf = Vec::with_capacity(64);
+        let mut buf = Vec::with_capacity(16 + self.v2_len() as usize);
         self.write_to(&mut buf).unwrap();
         buf
     }
