@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Require `blake3` version `<1.8.4` which upgraded `digest` to `0.11` in a breaking way.
 - Upgrade to edition 2024.
 - Minimum supported Rust version (MSRV) is now 1.88.
 

@@ -14,6 +14,7 @@
           packages = [
             config.formatter
             pkgs.cargo-rdme
+            pkgs.cargo-nextest
             pkgs.cargo-outdated
             pkgs.fd
             pkgs.just

@@ -52,6 +52,7 @@ test toolchain="":
     cargo {{ toolchain }} nextest run --no-default-features
     cargo {{ toolchain }} nextest run
     cargo {{ toolchain }} nextest run --all-features
+    cargo {{ toolchain }} test --doc
 
 # Run tests on all crates in workspace and produce coverage file (Codecov format).
 test-coverage-codecov toolchain="":
