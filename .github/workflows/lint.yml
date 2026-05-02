@@ -51,3 +51,6 @@ jobs:
           clippy_flags: >-
             --workspace --all-features --tests --examples --bins --
             -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+
+      - name: Check workspace lints inherited
+        uses: ./check-workspace-lints-inherited

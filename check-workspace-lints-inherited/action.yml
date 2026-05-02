@@ -1,0 +1,16 @@
+name: Check Workspace Lints Inherited
+description: Checks that Rust workspace crates inherit lints from the workspace manifest.
+
+inputs:
+  working-directory:
+    description: Directory containing the workspace Cargo.toml.
+    default: "."
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Check workspace lints inherited
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: '"${GITHUB_ACTION_PATH}/check-workspace-lints.sh"'
