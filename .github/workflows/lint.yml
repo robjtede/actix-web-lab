@@ -3,6 +3,8 @@ name: Lint
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -44,6 +46,7 @@ jobs:
           components: clippy
 
       - name: Check with Clippy
+        if: github.event_name == 'pull_request'
         uses: giraffate/clippy-action@13b9d32482f25d29ead141b79e7e04e7900281e0 # v1.0.1
         with:
           reporter: github-pr-check
@@ -51,6 +54,12 @@ jobs:
           clippy_flags: >-
             --workspace --all-features --tests --examples --bins --
             -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+
+      - name: Check with Clippy
+        if: github.event_name != 'pull_request'
+        run: >-
+          cargo clippy --workspace --all-features --tests --examples --bins --
+          -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
       - name: Check workspace lints inherited
         uses: ./check-workspace-lints-inherited
