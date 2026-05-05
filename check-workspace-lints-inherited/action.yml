@@ -13,4 +13,4 @@ runs:
     - name: Check workspace lints inherited
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: '"${GITHUB_ACTION_PATH}/check-workspace-lints.sh"'
+      run: '"${GITHUB_ACTION_PATH}/check-workspace-lints-inherited.sh"'
