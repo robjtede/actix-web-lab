@@ -1,3 +1,5 @@
+//! Type-length-value helpers for PROXY protocol v2 headers.
+
 use std::{borrow::Cow, convert::TryFrom, str};
 
 const PP2_TYPE_ALPN: u8 = 0x01; //           done
@@ -13,13 +15,18 @@ const PP2_SUBTYPE_SSL_SIG_ALG: u8 = 0x24;
 const PP2_SUBTYPE_SSL_KEY_ALG: u8 = 0x25;
 const PP2_TYPE_NETNS: u8 = 0x30;
 
+/// PROXY protocol v2 type-length-value extension.
 pub trait Tlv: Sized {
+    /// Numeric TLV type identifier.
     const TYPE: u8;
 
+    /// Attempts to decode a TLV value payload.
     fn try_from_value(value: &[u8]) -> Option<Self>;
 
+    /// Serializes this TLV's value payload.
     fn value_bytes(&self) -> Cow<'_, [u8]>;
 
+    /// Attempts to decode a TLV from its type identifier and value payload.
     fn try_from_parts(typ: u8, value: &[u8]) -> Option<Self> {
         if typ != Self::TYPE {
             return None;

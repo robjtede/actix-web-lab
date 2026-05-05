@@ -1,3 +1,5 @@
+//! PROXY protocol v2 header support.
+
 use std::{
     io,
     net::{IpAddr, SocketAddr},
@@ -11,10 +13,12 @@ use crate::{
     tlv::{Crc32c, Tlv},
 };
 
+/// PROXY protocol v2 signature.
 pub const SIGNATURE: [u8; 12] = [
     0x0D, 0x0A, 0x0D, 0x0A, 0x00, 0x0D, 0x0A, 0x51, 0x55, 0x49, 0x54, 0x0A,
 ];
 
+/// PROXY protocol v2 header.
 #[derive(Debug, Clone)]
 pub struct Header {
     command: Command,
@@ -26,6 +30,7 @@ pub struct Header {
 }
 
 impl Header {
+    /// Constructs a new PROXY protocol v2 header.
     pub fn new(
         command: Command,
         transport_protocol: TransportProtocol,
@@ -43,6 +48,7 @@ impl Header {
         }
     }
 
+    /// Constructs a new TCP/IPv4 PROXY command header.
     pub fn new_tcp_ipv4_proxy(src: impl Into<SocketAddr>, dst: impl Into<SocketAddr>) -> Self {
         Self::new(
             Command::Proxy,
@@ -53,10 +59,12 @@ impl Header {
         )
     }
 
+    /// Adds a raw TLV entry.
     pub fn add_tlv(&mut self, typ: u8, value: impl AsRef<[u8]>) {
         self.tlvs.push((typ, SmallVec::from_slice(value.as_ref())));
     }
 
+    /// Adds a typed TLV entry.
     pub fn add_typed_tlv<T: Tlv>(&mut self, tlv: T) {
         self.add_tlv(T::TYPE, tlv.value_bytes());
     }
@@ -76,6 +84,7 @@ impl Header {
                 .sum::<u16>()
     }
 
+    /// Writes this header to an I/O writer.
     pub fn write_to(&self, wrt: &mut impl io::Write) -> io::Result<()> {
         // PROXY v2 signature
         wrt.write_all(&SIGNATURE)?;
@@ -116,6 +125,7 @@ impl Header {
         Ok(())
     }
 
+    /// Writes this header to a Tokio async writer.
     pub async fn write_to_tokio(&self, wrt: &mut (impl AsyncWrite + Unpin)) -> io::Result<()> {
         let buf = self.to_vec();
         wrt.write_all(&buf).await
@@ -127,6 +137,7 @@ impl Header {
         buf
     }
 
+    /// Returns true when this header contains a TLV with type `T`.
     pub fn has_tlv<T: Tlv>(&self) -> bool {
         self.tlvs.iter().any(|&(typ, _)| typ == T::TYPE)
     }
@@ -164,6 +175,7 @@ impl Header {
         tracing::debug!("checksum is {}", crc_calc);
     }
 
+    /// Validates the CRC32c TLV, returning `None` when no CRC32c TLV is present.
     pub fn validate_crc32c_tlv(&self) -> Option<bool> {
         // extract crc32c TLV or exit early if none is present
         let crc_sent = self

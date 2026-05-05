@@ -37,6 +37,7 @@ pub enum TlsError<TlsErr, SvcErr> {
 }
 
 /// Wraps a `rustls` based async TLS stream in order to implement [`ActixStream`].
+#[derive(Debug)]
 pub struct TlsStream<IO>(pub BufReader<IO>);
 
 impl<IO: ActixStream> AsyncRead for TlsStream<IO> {
@@ -126,6 +127,7 @@ impl<IO: ActixStream + Any + 'static> ServiceFactory<IO> for Acceptor {
 }
 
 /// Rustls based acceptor service.
+#[derive(Debug)]
 pub struct AcceptorService {}
 
 impl<IO: ActixStream + Any + 'static> Service<IO> for AcceptorService {

@@ -1,3 +1,5 @@
+//! PROXY protocol v1 header support.
+
 mod service;
 
 use std::{fmt, io, net::SocketAddr};
@@ -9,9 +11,12 @@ use tokio::io::{AsyncWrite, AsyncWriteExt as _};
 pub use self::service::{Acceptor, AcceptorService, TlsError, TlsStream};
 use crate::AddressFamily;
 
+/// PROXY protocol v1 signature.
 pub const SIGNATURE: &str = "PROXY";
+/// Maximum serialized PROXY protocol v1 header length.
 pub const MAX_HEADER_SIZE: usize = 107;
 
+/// PROXY protocol v1 header.
 #[derive(Debug, Clone)]
 pub struct Header {
     /// Address family.
@@ -25,22 +30,27 @@ pub struct Header {
 }
 
 impl Header {
+    /// Constructs a new PROXY protocol v1 header.
     pub const fn new(af: AddressFamily, src: SocketAddr, dst: SocketAddr) -> Self {
         Self { af, src, dst }
     }
 
+    /// Constructs a new IPv4 PROXY protocol v1 header.
     pub const fn new_inet(src: SocketAddr, dst: SocketAddr) -> Self {
         Self::new(AddressFamily::Inet, src, dst)
     }
 
+    /// Constructs a new IPv6 PROXY protocol v1 header.
     pub const fn new_inet6(src: SocketAddr, dst: SocketAddr) -> Self {
         Self::new(AddressFamily::Inet6, src, dst)
     }
 
+    /// Writes this header to an I/O writer.
     pub fn write_to(&self, wrt: &mut impl io::Write) -> io::Result<()> {
         write!(wrt, "{self}")
     }
 
+    /// Writes this header to a Tokio async writer.
     pub async fn write_to_tokio(&self, wrt: &mut (impl AsyncWrite + Unpin)) -> io::Result<()> {
         // max length of a V1 header is 107 bytes
         let mut buf = ArrayVec::<_, MAX_HEADER_SIZE>::new();
@@ -48,6 +58,7 @@ impl Header {
         wrt.write_all(&buf).await
     }
 
+    /// Attempts to parse a PROXY protocol v1 header from bytes.
     pub fn try_from_bytes(slice: &[u8]) -> IResult<&[u8], Self> {
         parsing::parse(slice)
     }
