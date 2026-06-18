@@ -73,43 +73,8 @@ impl Tlv for Alpn {
     }
 }
 
-/// Contains the host name value passed by the client, as an UTF8-encoded string.
-/// In case of TLS being used on the client connection, this is the exact copy of
-/// the "server_name" extension as defined by RFC 3546, section 3.1, often
-/// referred to as "SNI". There are probably other situations where an authority
-/// can be mentioned on a connection without TLS being involved at all.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Authority {
-    authority: String,
-}
-
-impl Authority {
-    /// A UTF-8
-    ///
-    /// # Panics
-    /// Panics if `authority` is an empty string.
-    pub fn new(authority: impl Into<String>) -> Self {
-        let authority = authority.into();
-
-        assert!(!authority.is_empty(), "Authority TLV value cannot be empty");
-
-        Self { authority }
-    }
-}
-
-impl Tlv for Authority {
-    const TYPE: u8 = PP2_TYPE_AUTHORITY;
-
-    fn try_from_value(value: &[u8]) -> Option<Self> {
-        Some(Self {
-            authority: str::from_utf8(value).ok()?.to_owned(),
-        })
-    }
-
-    fn value_bytes(&self) -> Cow<'_, [u8]> {
-        Cow::Borrowed(self.authority.as_bytes())
-    }
-}
+mod authority;
+pub use self::authority::Authority;
 
 /// The value of the type PP2_TYPE_CRC32C is a 32-bit number storing the CRC32c
 /// checksum of the PROXY protocol header.
