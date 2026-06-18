@@ -112,6 +112,9 @@ impl Tlv for Ssl {
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct SslTlv {}
 
+mod netns;
+pub use self::netns::NetNamespace;
+
 #[cfg(test)]
 mod tests {
     use super::*;
