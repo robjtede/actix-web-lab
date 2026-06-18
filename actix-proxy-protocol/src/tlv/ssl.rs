@@ -1,4 +1,4 @@
-use std::{borrow::Cow, convert::TryFrom, str};
+use std::{borrow::Cow, str};
 
 use super::Tlv;
 

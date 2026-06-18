@@ -1,4 +1,4 @@
-use std::{borrow::Cow, convert::TryFrom};
+use std::borrow::Cow;
 
 use super::{PP2_TYPE_CRC32C, Tlv};
 

@@ -1,6 +1,6 @@
 //! Type-length-value helpers for PROXY protocol v2 headers.
 
-use std::{borrow::Cow, str};
+use std::borrow::Cow;
 
 const PP2_TYPE_ALPN: u8 = 0x01; //           done
 const PP2_TYPE_AUTHORITY: u8 = 0x02; //      done
