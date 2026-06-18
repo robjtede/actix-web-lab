@@ -88,7 +88,7 @@ impl RequestSignatureScheme for ExampleApi {
     }
 
     async fn finalize(self, _req: &HttpRequest) -> Result<Self::Signature, Self::Error> {
-        println!("using key: {:X?}", &self.key);
+        println!("using key: {:X?}", self.key);
 
         let mut hmac = <SimpleHmac<Sha512>>::new_from_slice(&self.key).unwrap();
 

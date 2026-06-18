@@ -319,7 +319,7 @@ impl fmt::Display for UrlEncodedFormDeserializeError {
         f.write_str("URL-encoded form deserialization failed")?;
 
         if self.path.iter().len() > 0 {
-            write!(f, " at path: {}", &self.path)?;
+            write!(f, " at path: {}", self.path)?;
         }
 
         Ok(())

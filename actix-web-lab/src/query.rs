@@ -147,7 +147,7 @@ impl fmt::Display for QueryDeserializeError {
         f.write_str("Query deserialization failed")?;
 
         if self.path.iter().len() > 0 {
-            write!(f, " at path: {}", &self.path)?;
+            write!(f, " at path: {}", self.path)?;
         }
 
         Ok(())

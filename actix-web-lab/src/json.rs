@@ -329,7 +329,7 @@ impl fmt::Display for JsonDeserializeError {
         f.write_str("JSON deserialization failed")?;
 
         if self.path.iter().len() > 0 {
-            write!(f, " at path: {}", &self.path)?;
+            write!(f, " at path: {}", self.path)?;
         }
 
         Ok(())
