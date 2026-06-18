@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0
+
 - Implement `IntoIterator` for `TrustedIps`.
 - Update `ipnetwork` dependency to `0.21`.
 - Upgrade to edition 2024.
