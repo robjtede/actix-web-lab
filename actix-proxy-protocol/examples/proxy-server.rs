@@ -1,152 +1,98 @@
-//! Adds PROXY protocol v1 prelude to connections.
-
-#![allow(unused)]
+//! Minimal TCP proxy that can add or consume PROXY protocol headers.
+//!
+//! Start any TCP/HTTP service on `127.0.0.1:8080`, then run this example:
+//!
+//! - `127.0.0.1:8081` forwards with a PROXY protocol v1 header.
+//! - `127.0.0.1:8082` forwards with a PROXY protocol v2 header.
+//! - `127.0.0.1:8083` consumes an incoming PROXY protocol header before forwarding.
 
 use std::{
-    io, mem,
-    net::{IpAddr, Ipv4Addr, SocketAddr},
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
+    io,
+    net::{Ipv6Addr, SocketAddr},
 };
 
-use actix_proxy_protocol::{AddressFamily, Command, TransportProtocol, tlv, v1, v2};
+use actix_proxy_protocol::{Header, ProxyStream, tlv, v1, v2};
 use actix_rt::net::TcpStream;
 use actix_server::Server;
 use actix_service::{ServiceFactoryExt as _, fn_service};
-use arrayvec::ArrayVec;
-use bytes::BytesMut;
-use const_str::concat_bytes;
-use once_cell::sync::Lazy;
-use tokio::io::{
-    AsyncBufReadExt as _, AsyncReadExt as _, AsyncWriteExt as _, BufReader, copy_bidirectional,
-};
+use tokio::io::{AsyncWriteExt as _, copy_bidirectional};
 
-static UPSTREAM: Lazy<SocketAddr> = Lazy::new(|| SocketAddr::from(([127, 0, 0, 1], 8080)));
-
-/*
-NOTES:
-108 byte buffer on receiver side is enough for any PROXY header
-after PROXY, receive until CRLF, *then* decode parts
-TLV = type-length-value
-
-TO DO:
-handle UNKNOWN transport
-v2 UNSPEC mode
-AF_UNIX socket
-*/
-
-fn extend_with_ip_bytes(buf: &mut Vec<u8>, ip: IpAddr) {
-    match ip {
-        IpAddr::V4(ip) => buf.extend_from_slice(&ip.octets()),
-        IpAddr::V6(ip) => buf.extend_from_slice(&ip.octets()),
-    }
+fn upstream_addr() -> SocketAddr {
+    SocketAddr::from(([127, 0, 0, 1], 8080))
 }
 
-async fn wrap_with_proxy_protocol_v1(mut stream: TcpStream) -> io::Result<()> {
-    let mut upstream = TcpStream::connect(("127.0.0.1", 8080)).await?;
+async fn wrap_with_proxy_protocol_v1(mut downstream: TcpStream) -> io::Result<()> {
+    let upstream_addr = upstream_addr();
+    let mut upstream = TcpStream::connect(upstream_addr).await?;
+    let source_addr = downstream.peer_addr()?;
 
-    tracing::info!(
-        "PROXYv1 {} -> {}",
-        stream.peer_addr().unwrap(),
-        UPSTREAM.to_string(),
-    );
+    tracing::info!("forwarding {source_addr} to {upstream_addr} with PROXY v1");
 
-    let proxy_header = v1::Header::new(
-        AddressFamily::Inet,
-        SocketAddr::from(([127, 0, 0, 1], 8081)),
-        *UPSTREAM,
-    );
+    v1::Header::new_inet(source_addr, upstream_addr)
+        .write_to_tokio(&mut upstream)
+        .await?;
 
-    proxy_header.write_to_tokio(&mut upstream).await?;
-
-    let (_bytes_read, _bytes_written) = copy_bidirectional(&mut stream, &mut upstream).await?;
+    copy_bidirectional(&mut downstream, &mut upstream).await?;
 
     Ok(())
 }
 
-async fn wrap_with_proxy_protocol_v2(mut stream: TcpStream) -> io::Result<()> {
-    let mut upstream = TcpStream::connect(("127.0.0.1", 8080)).await?;
+async fn wrap_with_proxy_protocol_v2(mut downstream: TcpStream) -> io::Result<()> {
+    let upstream_addr = upstream_addr();
+    let mut upstream = TcpStream::connect(upstream_addr).await?;
+    let source_addr = downstream.peer_addr()?;
 
-    tracing::info!(
-        "PROXYv2 {} -> {}",
-        stream.peer_addr().unwrap(),
-        UPSTREAM.to_string(),
-    );
+    tracing::info!("forwarding {source_addr} to {upstream_addr} with PROXY v2");
 
-    let mut proxy_header = v2::Header::new_tcp_ipv4_proxy(([127, 0, 0, 1], 8082), *UPSTREAM);
-
-    proxy_header.add_typed_tlv(tlv::UniqueId::new("4269")); // UNIQUE_ID
-    proxy_header.add_typed_tlv(tlv::Noop::new("NOOP m8")); // NOOP
-    proxy_header.add_typed_tlv(tlv::Authority::new("localhost")); // NOOP
-    proxy_header.add_typed_tlv(tlv::Alpn::new("http/1.1")); // NOOP
-    proxy_header.add_crc32c_checksum();
-
-    proxy_header.write_to_tokio(&mut upstream).await?;
-
-    let (_bytes_read, _bytes_written) = copy_bidirectional(&mut stream, &mut upstream).await?;
-
-    Ok(())
-}
-
-#[expect(clippy::todo)]
-async fn unwrap_proxy_protocol(mut stream: TcpStream) -> io::Result<()> {
-    let mut upstream = TcpStream::connect(("127.0.0.1", 8080)).await?;
-
-    tracing::info!(
-        "PROXY unwrap {} -> {}",
-        stream.peer_addr().unwrap(),
-        UPSTREAM.to_string(),
-    );
-
-    let mut header = [0; 12];
-    stream.peek(&mut header).await?;
-
-    eprintln!("header: {}", String::from_utf8_lossy(&header));
-
-    if &header[..v1::SIGNATURE.len()] == v1::SIGNATURE.as_bytes() {
-        tracing::info!("v1");
-
-        let mut stream = BufReader::new(stream);
-        let mut buf = Vec::with_capacity(v1::MAX_HEADER_SIZE);
-        let _len = stream.read_until(b'\n', &mut buf).await?;
-
-        eprintln!("{}", String::from_utf8_lossy(&buf));
-
-        let (rest, header) = match v1::Header::try_from_bytes(&buf) {
-            Ok((rest, header)) => (rest, header),
-            Err(err) => {
-                match err {
-                    nom::Err::Incomplete(needed) => todo!(),
-                    nom::Err::Error(err) => {
-                        eprintln!(
-                            "err {:?}, input: {}",
-                            err.code,
-                            String::from_utf8_lossy(err.input)
-                        )
-                    }
-
-                    nom::Err::Failure(_) => todo!(),
-                }
-                return Ok(());
-            }
-        };
-        eprintln!("{:02X?} - {:?}", rest, header);
-
-        let (_bytes_read, _bytes_written) = copy_bidirectional(&mut stream, &mut upstream).await?;
-    } else if header == v2::SIGNATURE {
-        tracing::info!("v2");
-        let (_bytes_read, _bytes_written) = copy_bidirectional(&mut stream, &mut upstream).await?;
+    let mut header = if source_addr.is_ipv4() {
+        v2::Header::new_tcp_ipv4_proxy(source_addr, upstream_addr)
     } else {
-        tracing::warn!("No proxy header; closing");
+        v2::Header::new_tcp_ipv6_proxy(source_addr, SocketAddr::from((Ipv6Addr::LOCALHOST, 8080)))
+    };
+
+    header.add_typed_tlv(tlv::UniqueId::new(format!("conn-{source_addr}")));
+    header.add_typed_tlv(tlv::Authority::new("localhost"));
+    header.add_typed_tlv(tlv::Alpn::new("http/1.1"));
+    header.add_crc32c_checksum();
+    header.write_to_tokio(&mut upstream).await?;
+
+    copy_bidirectional(&mut downstream, &mut upstream).await?;
+
+    Ok(())
+}
+
+async fn unwrap_proxy_protocol(downstream: TcpStream) -> io::Result<()> {
+    let mut downstream = ProxyStream::accept(downstream)
+        .await
+        .map_err(io::Error::other)?;
+    let upstream_addr = upstream_addr();
+    let mut upstream = TcpStream::connect(upstream_addr).await?;
+
+    match downstream.header() {
+        Some(Header::V1(header)) => {
+            tracing::info!(
+                "accepted PROXY v1 connection from {:?}",
+                header.source_addr()
+            );
+        }
+        Some(Header::V2(header)) => {
+            tracing::info!(
+                "accepted PROXY v2 connection from {:?}; crc32c valid: {:?}",
+                header.source_addr(),
+                header.validate_crc32c_tlv()
+            );
+        }
+        None => unreachable!("required acceptor always returns a header"),
     }
+
+    copy_bidirectional(&mut downstream, &mut upstream).await?;
+    upstream.shutdown().await?;
 
     Ok(())
 }
 
 fn start_server() -> io::Result<Server> {
-    tracing::info!("proxying to 127.0.0.1:8080");
+    tracing::info!("proxying to {}", upstream_addr());
 
     Ok(Server::build()
         .bind("proxy-protocol-v1", ("127.0.0.1", 8081), move || {
@@ -169,7 +115,5 @@ fn start_server() -> io::Result<Server> {
 async fn main() -> io::Result<()> {
     tracing_subscriber::fmt::fmt().without_time().init();
 
-    start_server()?.await?;
-
-    Ok(())
+    start_server()?.await
 }
