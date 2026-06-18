@@ -36,42 +36,8 @@ pub trait Tlv: Sized {
     }
 }
 
-/// Application-Layer Protocol Negotiation (ALPN). It is a byte sequence defining
-/// the upper layer protocol in use over the connection. The most common use case
-/// will be to pass the exact copy of the ALPN extension of the Transport Layer
-/// Security (TLS) protocol as defined by RFC 7301.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Alpn {
-    alpn: Vec<u8>,
-}
-
-impl Alpn {
-    ///
-    ///
-    /// # Panics
-    /// Panics if `alpn` is empty (i.e., has length of 0).
-    pub fn new(alpn: impl Into<Vec<u8>>) -> Self {
-        let alpn = alpn.into();
-
-        assert!(!alpn.is_empty(), "ALPN TLV value cannot be empty");
-
-        Self { alpn }
-    }
-}
-
-impl Tlv for Alpn {
-    const TYPE: u8 = PP2_TYPE_ALPN;
-
-    fn try_from_value(value: &[u8]) -> Option<Self> {
-        Some(Self {
-            alpn: value.to_owned(),
-        })
-    }
-
-    fn value_bytes(&self) -> Cow<'_, [u8]> {
-        Cow::Borrowed(&self.alpn)
-    }
-}
+mod alpn;
+pub use self::alpn::Alpn;
 
 mod authority;
 pub use self::authority::Authority;
@@ -149,12 +115,6 @@ struct SslTlv {}
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // #[test]
-    // #[should_panic]
-    // fn tlv_zero_len() {
-    //     Tlv::new(0x00, vec![]);
-    // }
 
     #[test]
     fn tlv_as_crc32c() {
