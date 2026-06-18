@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Implement `IntoIterator` for `TrustedIps`.
 - Update `ipnetwork` dependency to `0.21`.
 - Upgrade to edition 2024.
 - Minimum supported Rust version (MSRV) is now 1.88.

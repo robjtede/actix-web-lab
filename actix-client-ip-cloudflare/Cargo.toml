@@ -9,9 +9,9 @@ repository.workspace = true
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+autoexamples = false
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [package.metadata.cargo_check_external_types]
@@ -20,29 +20,30 @@ allowed_external_types = ["actix_http::*", "actix_utils::*", "actix_web::*", "ht
 [features]
 default = ["fetch-ips"]
 fetch-ips = ["fetch-ips-rustls"]
-fetch-ips-rustls = ["awc", "awc/rustls-0_23"]
-fetch-ips-openssl = ["awc", "awc/openssl"]
+fetch-ips-rustls = ["dep:reqwest", "reqwest/rustls"]
+fetch-ips-openssl = ["dep:reqwest", "reqwest/native-tls"]
 
 [dependencies]
 actix-utils = "3"
 actix-web = { version = "4", default-features = false }
-awc = { version = "3.5", optional = true }
 impl-more = "0.3"
 ipnetwork = { version = "0.21", features = ["serde"] }
+reqwest = { version = "0.13", optional = true, default-features = false, features = ["json"] }
 serde = { version = "1", features = ["derive"] }
-tracing = { version = "0.1.41", features = ["log"] }
+tracing = "0.1.41"
 
 [dev-dependencies]
 actix-web = "4"
-env_logger = "0.11"
+rustls = "0.23"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [[example]]
 name = "fetch-ips"
-required-features = ["fetch-ips"]
+required-features = ["fetch-ips-rustls"]
 
 [[example]]
 name = "extract-header"
-required-features = ["fetch-ips"]
+required-features = ["fetch-ips-rustls"]
 
 [lints]
 workspace = true

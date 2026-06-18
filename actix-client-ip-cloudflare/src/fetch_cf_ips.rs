@@ -1,4 +1,7 @@
-use std::net::{IpAddr, Ipv4Addr};
+use std::{
+    net::{IpAddr, Ipv4Addr},
+    vec,
+};
 
 use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
 use serde::Deserialize;
@@ -119,13 +122,26 @@ impl TrustedIps {
     }
 }
 
+impl IntoIterator for TrustedIps {
+    type Item = IpNetwork;
+    type IntoIter = vec::IntoIter<IpNetwork>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.cidr_ranges.into_iter()
+    }
+}
+
 /// Fetched trusted Cloudflare IP addresses from their API.
-#[cfg(feature = "fetch-ips")]
+#[cfg(any(
+    feature = "fetch-ips",
+    feature = "fetch-ips-openssl",
+    feature = "fetch-ips-rustls",
+))]
 pub async fn fetch_trusted_cf_ips() -> Result<TrustedIps, CfIpsFetchErr> {
-    let client = awc::Client::new();
+    let client = reqwest::Client::new();
 
     tracing::debug!("fetching cloudflare IPs");
-    let mut res = client.get(CF_URL_IPS).send().await.map_err(|err| {
+    let res = client.get(CF_URL_IPS).send().await.map_err(|err| {
         tracing::error!("{err}");
         CfIpsFetchErr::Fetch
     })?;

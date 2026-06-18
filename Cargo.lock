@@ -8,12 +8,13 @@ version = "0.2.0"
 dependencies = [
  "actix-utils",
  "actix-web",
- "awc",
- "env_logger",
  "impl-more 0.3.1",
  "ipnetwork",
+ "reqwest 0.13.2",
+ "rustls",
  "serde",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -273,11 +274,9 @@ dependencies = [
  "http 0.2.12",
  "http 1.4.0",
  "impl-more 0.1.9",
- "openssl",
  "pin-project-lite",
  "rustls-pki-types",
  "tokio",
- "tokio-openssl",
  "tokio-rustls",
  "tokio-util",
  "tracing",
@@ -611,11 +610,9 @@ dependencies = [
  "itoa",
  "log",
  "mime",
- "openssl",
  "percent-encoding",
  "pin-project-lite",
  "rand 0.9.4",
- "rustls",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -2125,6 +2122,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 
 [[package]]
+name = "matchers"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1525a2a28c7f4fa0fc98bb91ae755d1e2d1505079e05539e35bc876b5d65ae9"
+dependencies = [
+ "regex-automata",
+]
+
+[[package]]
 name = "md-5"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2688,18 +2694,23 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-rustls",
+ "hyper-tls",
  "hyper-util",
  "js-sys",
  "log",
  "mime",
+ "native-tls",
  "percent-encoding",
  "pin-project-lite",
  "quinn",
  "rustls",
  "rustls-pki-types",
  "rustls-platform-verifier",
+ "serde",
+ "serde_json",
  "sync_wrapper",
  "tokio",
+ "tokio-native-tls",
  "tokio-rustls",
  "tokio-util",
  "tower",
@@ -3427,17 +3438,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tokio-openssl"
-version = "0.6.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59df6849caa43bb7567f9a36f863c447d95a11d5903c9cc334ba32576a27eadd"
-dependencies = [
- "openssl",
- "openssl-sys",
- "tokio",
-]
-
-[[package]]
 name = "tokio-rustls"
 version = "0.26.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3628,10 +3628,14 @@ version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319"
 dependencies = [
+ "matchers",
  "nu-ansi-term",
+ "once_cell",
+ "regex-automata",
  "sharded-slab",
  "smallvec",
  "thread_local",
+ "tracing",
  "tracing-core",
  "tracing-log",
 ]

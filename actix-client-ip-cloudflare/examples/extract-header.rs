@@ -1,5 +1,7 @@
 //! Demonstrates use of the client IP header extractor.
 
+mod util;
+
 use actix_client_ip_cloudflare::{CfConnectingIp, TrustedClientIp, fetch_trusted_cf_ips};
 use actix_web::{App, HttpServer, Responder, get, web::Header};
 
@@ -18,7 +20,8 @@ async fn trusted_client_ip(client_ip: TrustedClientIp) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    util::init_standard_logger();
+    util::init_rustls_provider();
 
     let cloudflare_ips = fetch_trusted_cf_ips()
         .await

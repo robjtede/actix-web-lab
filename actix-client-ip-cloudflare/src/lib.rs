@@ -51,9 +51,9 @@
 //!
 //! # Crate Features
 //!
-//! `fetch-ips` (default): Enables functionality to (asynchronously) fetch Cloudflare's trusted IP list from
-//! their API. This feature includes `rustls` but if you prefer OpenSSL you can use it by disabling
-//! default crate features and enabling `fetch-ips-openssl` instead.
+//! `fetch-ips` (default): Enables functionality to (asynchronously) fetch Cloudflare's trusted IP
+//! list from their API. This feature includes `rustls` but if you prefer native TLS you can use it
+//! by disabling default crate features and enabling `fetch-ips-openssl` instead.
 //!
 //! [Cloudflare documentation]: https://developers.cloudflare.com/fundamentals/reference/http-request-headers
 
@@ -65,7 +65,11 @@ mod fetch_cf_ips;
 mod header_v4;
 mod header_v6;
 
-#[cfg(feature = "fetch-ips")]
+#[cfg(any(
+    feature = "fetch-ips",
+    feature = "fetch-ips-openssl",
+    feature = "fetch-ips-rustls",
+))]
 pub use self::fetch_cf_ips::fetch_trusted_cf_ips;
 pub use self::{
     extract::TrustedClientIp,
