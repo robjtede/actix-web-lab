@@ -1,6 +1,6 @@
 //! Type-length-value helpers for PROXY protocol v2 headers.
 
-use std::{borrow::Cow, convert::TryFrom, str};
+use std::{borrow::Cow, str};
 
 const PP2_TYPE_ALPN: u8 = 0x01; //           done
 const PP2_TYPE_AUTHORITY: u8 = 0x02; //      done
@@ -111,28 +111,8 @@ impl Tlv for Authority {
     }
 }
 
-/// The value of the type PP2_TYPE_CRC32C is a 32-bit number storing the CRC32c
-/// checksum of the PROXY protocol header.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Crc32c {
-    pub(crate) checksum: u32,
-}
-
-impl Tlv for Crc32c {
-    const TYPE: u8 = PP2_TYPE_CRC32C;
-
-    fn try_from_value(value: &[u8]) -> Option<Self> {
-        let checksum_bytes = <[u8; 4]>::try_from(value).ok()?;
-
-        Some(Self {
-            checksum: u32::from_be_bytes(checksum_bytes),
-        })
-    }
-
-    fn value_bytes(&self) -> Cow<'_, [u8]> {
-        Cow::Owned(self.checksum.to_be_bytes().to_vec())
-    }
-}
+mod crc32c;
+pub use self::crc32c::Crc32c;
 
 mod noop;
 pub use self::noop::Noop;
