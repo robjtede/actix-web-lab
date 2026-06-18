@@ -10,6 +10,7 @@ use arrayvec::ArrayVec;
 use nom::{Err as NomErr, IResult, Needed, error::ErrorKind};
 use tokio::io::{AsyncWrite, AsyncWriteExt as _};
 
+pub use crate::{Acceptor, AcceptorService, HeaderPolicy, ProxyProtocolError, ProxyStream};
 use crate::{AddressFamily, ParseError};
 
 /// PROXY protocol v1 signature.

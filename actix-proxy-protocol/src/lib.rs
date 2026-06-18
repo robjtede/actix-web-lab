@@ -3,11 +3,14 @@
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 
-use std::{fmt, io};
+use std::{fmt, io, net::SocketAddr};
 
+mod service;
 pub mod tlv;
 pub mod v1;
 pub mod v2;
+
+pub use self::service::{Acceptor, AcceptorService, HeaderPolicy, ProxyProtocolError, ProxyStream};
 
 /// PROXY Protocol Version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -166,6 +169,42 @@ impl TransportProtocol {
             TransportProtocol::Unspecified => 0x0,
             TransportProtocol::Stream => 0x1,
             TransportProtocol::Datagram => 0x2,
+        }
+    }
+}
+
+/// Parsed PROXY protocol header.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Header {
+    /// Version 1 header.
+    V1(v1::Header),
+
+    /// Version 2 header.
+    V2(v2::Header),
+}
+
+impl Header {
+    /// Returns the PROXY protocol version used by this header.
+    pub const fn version(&self) -> Version {
+        match self {
+            Self::V1(_) => Version::V1,
+            Self::V2(_) => Version::V2,
+        }
+    }
+
+    /// Returns the source socket address when the header carries TCP/UDP IP addresses.
+    pub fn source_addr(&self) -> Option<SocketAddr> {
+        match self {
+            Self::V1(header) => header.source_addr(),
+            Self::V2(header) => header.source_addr(),
+        }
+    }
+
+    /// Returns the destination socket address when the header carries TCP/UDP IP addresses.
+    pub fn destination_addr(&self) -> Option<SocketAddr> {
+        match self {
+            Self::V1(header) => header.destination_addr(),
+            Self::V2(header) => header.destination_addr(),
         }
     }
 }
