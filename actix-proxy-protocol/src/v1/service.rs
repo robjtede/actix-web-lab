@@ -137,6 +137,7 @@ impl<IO: ActixStream + Any + 'static> Service<IO> for AcceptorService {
 
     actix_service::always_ready!();
 
+    #[expect(clippy::todo)]
     fn call(&self, io: IO) -> Self::Future {
         Box::pin(async move {
             // TODO: gross
@@ -170,7 +171,9 @@ impl<IO: ActixStream + Any + 'static> Service<IO> for AcceptorService {
                             }
                             nom::Err::Failure(_) => todo!(),
                         }
+
                         todo!();
+
                         // return Err(todo!());
                     }
                 };

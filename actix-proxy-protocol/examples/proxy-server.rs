@@ -90,6 +90,7 @@ async fn wrap_with_proxy_protocol_v2(mut stream: TcpStream) -> io::Result<()> {
     Ok(())
 }
 
+#[expect(clippy::todo)]
 async fn unwrap_proxy_protocol(mut stream: TcpStream) -> io::Result<()> {
     let mut upstream = TcpStream::connect(("127.0.0.1", 8080)).await?;
 
@@ -125,6 +126,7 @@ async fn unwrap_proxy_protocol(mut stream: TcpStream) -> io::Result<()> {
                             String::from_utf8_lossy(err.input)
                         )
                     }
+
                     nom::Err::Failure(_) => todo!(),
                 }
                 return Ok(());

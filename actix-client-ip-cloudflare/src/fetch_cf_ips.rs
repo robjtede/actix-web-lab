@@ -137,6 +137,7 @@ impl IntoIterator for TrustedIps {
     feature = "fetch-ips-openssl",
     feature = "fetch-ips-rustls",
 ))]
+#[tracing::instrument(skip_all)]
 pub async fn fetch_trusted_cf_ips() -> Result<TrustedIps, CfIpsFetchErr> {
     let client = reqwest::Client::new();
 
