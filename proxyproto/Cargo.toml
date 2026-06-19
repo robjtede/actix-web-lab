@@ -1,9 +1,9 @@
 [package]
 name = "proxyproto"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "PROXY protocol parsing and serialization"
-keywords = ["proxy", "protocol", "network", "haproxy", "tcp"]
+keywords = ["proxy", "protocol", "network", "haproxy"]
 categories = ["network-programming"]
 repository.workspace = true
 license.workspace = true
@@ -11,7 +11,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [package.metadata.cargo_check_external_types]
-allowed_external_types = ["bitflags::*", "nom::*", "tokio::*"]
+allowed_external_types = ["bitflags::*", "tokio::*", "winnow::*"]
 
 [features]
 default = []
@@ -22,7 +22,6 @@ arrayvec = { version = "0.7", optional = true }
 bitflags = "2"
 crc32fast = "1"
 itoa = "1"
-nom = "8"
 smallvec = "1"
 tokio = { version = "1.13.1", optional = true, features = ["io-util"] }
 winnow = "1"

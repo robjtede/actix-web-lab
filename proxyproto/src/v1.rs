@@ -8,11 +8,17 @@ use std::{
 
 #[cfg(feature = "tokio")]
 use arrayvec::ArrayVec;
-use nom::{Err as NomErr, IResult, Needed, error::ErrorKind};
 #[cfg(feature = "tokio")]
 use tokio::io::{AsyncWrite, AsyncWriteExt as _};
+use winnow::{
+    ascii::{crlf, dec_uint},
+    combinator::{alt, preceded, terminated},
+    prelude::*,
+    stream::Partial,
+    token::{take_till, take_until, take_while},
+};
 
-use crate::{AddressFamily, ParseError};
+use crate::AddressFamily;
 
 /// PROXY protocol v1 signature.
 pub const SIGNATURE: &str = "PROXY";
@@ -123,40 +129,78 @@ impl Header {
     }
 
     /// Attempts to parse a PROXY protocol v1 header from bytes.
-    pub fn try_from_bytes(slice: &[u8]) -> IResult<&[u8], Self> {
-        let Some(line_end) = slice.windows(2).position(|window| window == b"\r\n") else {
-            return Err(NomErr::Incomplete(Needed::Unknown));
-        };
+    pub fn try_from_bytes(slice: &[u8]) -> ModalResult<(&[u8], Self)> {
+        let mut input = Partial::new(slice);
+        let header = parse_header(&mut input)?;
 
-        if line_end + 2 > MAX_HEADER_SIZE {
-            return Err(nom_error(slice, ErrorKind::TooLarge));
-        }
-
-        let line = &slice[..line_end];
-        let rest = &slice[line_end + 2..];
-
-        let header = Self::parse_line(line).map_err(|_| nom_error(slice, ErrorKind::Verify))?;
-
-        Ok((rest, header))
+        Ok((input.into_inner(), header))
     }
+}
 
-    pub(crate) fn parse_line(line: &[u8]) -> Result<Self, ParseError> {
-        let line =
-            str::from_utf8(line).map_err(|_| ParseError::invalid("v1 header is not UTF-8"))?;
+fn parse_header(input: &mut Partial<&[u8]>) -> ModalResult<Header> {
+    terminated(parse_line, crlf)
+        .with_taken()
+        .verify(|(_, bytes): &(Header, &[u8])| bytes.len() <= MAX_HEADER_SIZE)
+        .map(|(header, _)| header)
+        .parse_next(input)
+}
 
-        let mut parts = line.split_ascii_whitespace();
+fn parse_line(input: &mut Partial<&[u8]>) -> ModalResult<Header> {
+    preceded(
+        (ascii_whitespace0, SIGNATURE, ascii_whitespace1),
+        alt((
+            ("UNKNOWN", take_until(0.., "\r\n")).value(Header::unknown()),
+            terminated(parse_tcp_header, ascii_whitespace0),
+        )),
+    )
+    .parse_next(input)
+}
 
-        if parts.next() != Some(SIGNATURE) {
-            return Err(ParseError::invalid("missing PROXY v1 signature"));
-        }
+fn parse_tcp_header(input: &mut Partial<&[u8]>) -> ModalResult<Header> {
+    (
+        alt((
+            "TCP4".value(AddressFamily::Inet),
+            "TCP6".value(AddressFamily::Inet6),
+        )),
+        preceded(ascii_whitespace1, ip_addr),
+        preceded(ascii_whitespace1, ip_addr),
+        preceded(ascii_whitespace1, dec_uint::<_, u16, _>),
+        preceded(ascii_whitespace1, dec_uint::<_, u16, _>),
+    )
+        .verify_map(|(address_family, src_ip, dst_ip, src_port, dst_port)| {
+            let (source, destination) = match (address_family, src_ip, dst_ip) {
+                (AddressFamily::Inet, IpAddr::V4(src_ip), IpAddr::V4(dst_ip)) => (
+                    SocketAddr::from((src_ip, src_port)),
+                    SocketAddr::from((dst_ip, dst_port)),
+                ),
+                (AddressFamily::Inet6, IpAddr::V6(src_ip), IpAddr::V6(dst_ip)) => (
+                    SocketAddr::from((src_ip, src_port)),
+                    SocketAddr::from((dst_ip, dst_port)),
+                ),
+                _ => return None,
+            };
 
-        match parts.next() {
-            Some("UNKNOWN") => Ok(Self::unknown()),
-            Some("TCP4") => parse_tcp_header(AddressFamily::Inet, parts),
-            Some("TCP6") => parse_tcp_header(AddressFamily::Inet6, parts),
-            _ => Err(ParseError::invalid("invalid PROXY v1 address family")),
-        }
-    }
+            Some(Header::new(address_family, source, destination))
+        })
+        .parse_next(input)
+}
+
+fn ip_addr(input: &mut Partial<&[u8]>) -> ModalResult<IpAddr> {
+    take_till(1.., is_field_whitespace)
+        .verify_map(|bytes| str::from_utf8(bytes).ok()?.parse().ok())
+        .parse_next(input)
+}
+
+fn ascii_whitespace0<'a>(input: &mut Partial<&'a [u8]>) -> ModalResult<&'a [u8]> {
+    take_while(0.., is_field_whitespace).parse_next(input)
+}
+
+fn ascii_whitespace1<'a>(input: &mut Partial<&'a [u8]>) -> ModalResult<&'a [u8]> {
+    take_while(1.., is_field_whitespace).parse_next(input)
+}
+
+const fn is_field_whitespace(byte: u8) -> bool {
+    byte.is_ascii_whitespace() && !matches!(byte, b'\r' | b'\n')
 }
 
 impl fmt::Display for Header {
@@ -178,63 +222,10 @@ impl fmt::Display for Header {
     }
 }
 
-fn parse_tcp_header<'a>(
-    address_family: AddressFamily,
-    mut parts: impl Iterator<Item = &'a str>,
-) -> Result<Header, ParseError> {
-    let src_ip = parts
-        .next()
-        .ok_or_else(|| ParseError::invalid("missing source IP address"))?
-        .parse::<IpAddr>()
-        .map_err(|_| ParseError::invalid("invalid source IP address"))?;
-
-    let dst_ip = parts
-        .next()
-        .ok_or_else(|| ParseError::invalid("missing destination IP address"))?
-        .parse::<IpAddr>()
-        .map_err(|_| ParseError::invalid("invalid destination IP address"))?;
-
-    let src_port = parts
-        .next()
-        .ok_or_else(|| ParseError::invalid("missing source port"))?
-        .parse::<u16>()
-        .map_err(|_| ParseError::invalid("invalid source port"))?;
-
-    let dst_port = parts
-        .next()
-        .ok_or_else(|| ParseError::invalid("missing destination port"))?
-        .parse::<u16>()
-        .map_err(|_| ParseError::invalid("invalid destination port"))?;
-
-    if parts.next().is_some() {
-        return Err(ParseError::invalid("too many PROXY v1 header fields"));
-    }
-
-    let (source, destination) = match (address_family, src_ip, dst_ip) {
-        (AddressFamily::Inet, IpAddr::V4(src_ip), IpAddr::V4(dst_ip)) => (
-            SocketAddr::from((src_ip, src_port)),
-            SocketAddr::from((dst_ip, dst_port)),
-        ),
-        (AddressFamily::Inet6, IpAddr::V6(src_ip), IpAddr::V6(dst_ip)) => (
-            SocketAddr::from((src_ip, src_port)),
-            SocketAddr::from((dst_ip, dst_port)),
-        ),
-        _ => {
-            return Err(ParseError::invalid(
-                "address family does not match IP version",
-            ));
-        }
-    };
-
-    Ok(Header::new(address_family, source, destination))
-}
-
-fn nom_error(input: &[u8], kind: ErrorKind) -> NomErr<nom::error::Error<&[u8]>> {
-    NomErr::Error(nom::error::Error::new(input, kind))
-}
-
 #[cfg(test)]
 mod tests {
+    use winnow::error::ErrMode;
+
     use super::*;
 
     #[test]
@@ -274,5 +265,52 @@ mod tests {
         assert_eq!(rest, b"hello");
         assert_eq!(header.source_addr(), None);
         assert_eq!(header.to_string(), "PROXY UNKNOWN\r\n");
+    }
+
+    #[test]
+    fn parse_v1_streaming_mode() {
+        assert!(matches!(
+            parse_header(&mut Partial::new(&b"PROXY UNKNOWN\r"[..])),
+            Err(ErrMode::Incomplete(_))
+        ));
+
+        let mut input = Partial::new(&b"PROXY UNKNOWN\r\npayload"[..]);
+        let header = parse_header(&mut input).unwrap();
+
+        assert_eq!(header, Header::unknown());
+        assert_eq!(input.into_inner(), b"payload");
+    }
+
+    #[test]
+    fn parse_v1_returns_plain_remaining_bytes() {
+        let (remaining, header) =
+            Header::try_from_bytes(b"PROXY UNKNOWN\r\nHTTP/1.1 payload").unwrap();
+        let remaining: &[u8] = remaining;
+
+        assert_eq!(header, Header::unknown());
+        assert_eq!(remaining, b"HTTP/1.1 payload");
+    }
+
+    #[test]
+    fn parse_v1_rejects_oversized_header() {
+        let mut bytes = b"PROXY UNKNOWN ".to_vec();
+        bytes.resize(MAX_HEADER_SIZE - 1, b'x');
+        bytes.extend_from_slice(b"\r\n");
+
+        assert!(Header::try_from_bytes(&bytes).is_err());
+    }
+
+    #[test]
+    fn parse_v1_rejects_source_port_out_of_u16_bounds() {
+        assert!(
+            Header::try_from_bytes(b"PROXY TCP4 192.0.2.1 198.51.100.2 65536 443\r\n").is_err()
+        );
+    }
+
+    #[test]
+    fn parse_v1_rejects_destination_port_out_of_u16_bounds() {
+        assert!(
+            Header::try_from_bytes(b"PROXY TCP4 192.0.2.1 198.51.100.2 12345 65536\r\n").is_err()
+        );
     }
 }
