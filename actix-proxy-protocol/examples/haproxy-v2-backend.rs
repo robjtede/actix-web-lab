@@ -1,4 +1,4 @@
-//! HTTP/1 backend that accepts connections carrying PROXY protocol v2 headers.
+//! HTTP/1 backend that accepts connections carrying PROXY protocol headers.
 //!
 //! From the workspace root, start the backend:
 //!
@@ -10,14 +10,17 @@
 //!
 //! ```console
 //! docker run --rm --name actix-proxy-protocol-haproxy \
+//!   -p 18080:8080 \
 //!   -p 18081:8081 \
 //!   -v "$PWD/actix-proxy-protocol/examples/haproxy-v2.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" \
 //!   haproxy:2.9-alpine
 //! ```
 //!
-//! Send a request through HAProxy:
+//! Send requests through the PROXY v1 and v2 frontends:
 //!
 //! ```console
+//! curl --haproxy-protocol --haproxy-clientip 203.0.113.42 \
+//!   --include http://127.0.0.1:18080/
 //! curl --include http://127.0.0.1:18081/
 //! ```
 
@@ -33,7 +36,7 @@ use actix_http::{
     error::DispatchError,
     header::{HeaderName, HeaderValue},
 };
-use actix_proxy_protocol::{Acceptor, Header, ProxyProtocolError, ProxyStream, Version};
+use actix_proxy_protocol::{Acceptor, Header, ProxyStream, Version};
 use actix_rt::net::TcpStream;
 use actix_server::Server;
 use actix_service::{ServiceFactoryExt as _, fn_service};
@@ -55,7 +58,7 @@ async fn main() -> io::Result<()> {
 
     Server::build()
         .bind("proxy-protocol-http", BACKEND_ADDR, || {
-            let accept_proxy_header = Acceptor::new().map_err(proxy_io_error);
+            let accept_proxy_header = Acceptor::new().map_err(io::Error::other);
 
             let prepare_http = fn_service(|stream: ProxyStream<TcpStream>| async move {
                 let proxy_client_addr = stream.header().and_then(Header::source_addr);
@@ -131,10 +134,6 @@ fn insert_addr_header(res: &mut actix_http::ResponseBuilder, name: &'static str,
         HeaderName::from_static(name),
         HeaderValue::from_str(&addr.to_string()).unwrap(),
     ));
-}
-
-fn proxy_io_error(err: ProxyProtocolError<Infallible>) -> io::Error {
-    io::Error::other(err)
 }
 
 fn dispatch_io_error(err: DispatchError) -> io::Error {

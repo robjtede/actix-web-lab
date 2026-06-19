@@ -1,103 +1,14 @@
-//! Transparent Actix stream wrapper for PROXY protocol headers.
-
 use std::{
-    convert::Infallible,
-    fmt, io,
+    io,
     pin::Pin,
     task::{Context, Poll},
 };
 
 use actix_rt::net::{ActixStream, Ready};
-use actix_service::{Service, ServiceFactory};
-use actix_utils::future::{Ready as FutReady, ready};
-use futures_core::future::LocalBoxFuture;
 use proxyproto::{Header, ParseError, v1, v2};
 use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, ReadBuf};
 
-/// Controls whether incoming streams must start with a PROXY protocol header.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum HeaderPolicy {
-    /// Reject streams that do not start with a PROXY protocol header.
-    #[default]
-    Required,
-
-    /// Accept streams without a PROXY protocol header and replay any bytes read during detection.
-    Optional,
-}
-
-impl HeaderPolicy {
-    const fn is_required(self) -> bool {
-        matches!(self, Self::Required)
-    }
-}
-
-/// PROXY protocol acceptor or stream parsing error.
-#[derive(Debug)]
-pub enum ProxyProtocolError<SvcErr = Infallible> {
-    /// An I/O error occurred while reading the header prelude.
-    Io(io::Error),
-
-    /// The stream did not start with a PROXY protocol header.
-    MissingHeader,
-
-    /// The stream started with a PROXY protocol header, but it was invalid.
-    Parse(ParseError),
-
-    /// Wraps service errors.
-    Service(SvcErr),
-}
-
-impl<SvcErr> fmt::Display for ProxyProtocolError<SvcErr>
-where
-    SvcErr: fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Io(err) => write!(f, "I/O error while reading PROXY protocol header: {err}"),
-            Self::MissingHeader => f.write_str("missing PROXY protocol header"),
-            Self::Parse(err) => write!(f, "invalid PROXY protocol header: {err}"),
-            Self::Service(err) => fmt::Display::fmt(err, f),
-        }
-    }
-}
-
-impl<SvcErr> std::error::Error for ProxyProtocolError<SvcErr>
-where
-    SvcErr: std::error::Error + 'static,
-{
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Io(err) => Some(err),
-            Self::MissingHeader => None,
-            Self::Parse(err) => Some(err),
-            Self::Service(err) => Some(err),
-        }
-    }
-}
-
-impl ProxyProtocolError<Infallible> {
-    /// Casts the infallible service error type returned from acceptors into caller's type.
-    pub fn into_service_error<SvcErr>(self) -> ProxyProtocolError<SvcErr> {
-        match self {
-            Self::Io(err) => ProxyProtocolError::Io(err),
-            Self::MissingHeader => ProxyProtocolError::MissingHeader,
-            Self::Parse(err) => ProxyProtocolError::Parse(err),
-            Self::Service(err) => match err {},
-        }
-    }
-}
-
-impl<SvcErr> From<io::Error> for ProxyProtocolError<SvcErr> {
-    fn from(err: io::Error) -> Self {
-        Self::Io(err)
-    }
-}
-
-impl<SvcErr> From<ParseError> for ProxyProtocolError<SvcErr> {
-    fn from(err: ParseError) -> Self {
-        Self::Parse(err)
-    }
-}
+use super::{HeaderPolicy, ProxyProtocolError};
 
 pin_project_lite::pin_project! {
     /// Stream wrapper that consumes a leading PROXY protocol header and then behaves like `IO`.
@@ -290,74 +201,6 @@ where
     }
 }
 
-/// Actix service factory that wraps accepted streams in [`ProxyStream`].
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Acceptor {
-    policy: HeaderPolicy,
-}
-
-impl Acceptor {
-    /// Constructs an acceptor that requires a PROXY protocol header.
-    pub const fn new() -> Self {
-        Self {
-            policy: HeaderPolicy::Required,
-        }
-    }
-
-    /// Constructs an acceptor using `policy`.
-    pub const fn with_policy(policy: HeaderPolicy) -> Self {
-        Self { policy }
-    }
-
-    /// Constructs an acceptor that allows streams without a PROXY protocol header.
-    pub const fn optional() -> Self {
-        Self {
-            policy: HeaderPolicy::Optional,
-        }
-    }
-}
-
-impl<IO> ServiceFactory<IO> for Acceptor
-where
-    IO: ActixStream + 'static,
-{
-    type Response = ProxyStream<IO>;
-    type Error = ProxyProtocolError<Infallible>;
-    type Config = ();
-    type Service = AcceptorService;
-    type InitError = ();
-    type Future = FutReady<Result<Self::Service, Self::InitError>>;
-
-    fn new_service(&self, _: ()) -> Self::Future {
-        ready(Ok(AcceptorService {
-            policy: self.policy,
-        }))
-    }
-}
-
-/// Actix service that wraps streams in [`ProxyStream`].
-#[derive(Debug, Clone, Copy)]
-pub struct AcceptorService {
-    policy: HeaderPolicy,
-}
-
-impl<IO> Service<IO> for AcceptorService
-where
-    IO: ActixStream + 'static,
-{
-    type Response = ProxyStream<IO>;
-    type Error = ProxyProtocolError<Infallible>;
-    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
-
-    actix_service::always_ready!();
-
-    fn call(&self, io: IO) -> Self::Future {
-        let policy = self.policy;
-
-        Box::pin(async move { ProxyStream::accept_with_policy(io, policy).await })
-    }
-}
-
 async fn read_v1_header<IO>(io: &mut IO, mut bytes: Vec<u8>) -> Result<v1::Header, ParseError>
 where
     IO: AsyncRead + Unpin,
@@ -414,7 +257,6 @@ where
 mod tests {
     use std::net::SocketAddr;
 
-    use actix_service::Service as _;
     use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _, duplex};
 
     use super::*;
@@ -496,37 +338,5 @@ mod tests {
         let mut body = String::new();
         stream.read_to_string(&mut body).await.unwrap();
         assert_eq!(body, "GET / HTTP/1.1\r\n\r\n");
-    }
-
-    #[actix_rt::test]
-    async fn acceptor_service_wraps_streams() {
-        let listener = actix_rt::net::TcpListener::bind(("127.0.0.1", 0))
-            .await
-            .unwrap();
-        let local_addr = listener.local_addr().unwrap();
-        let factory = Acceptor::new();
-        let acceptor =
-            <Acceptor as ServiceFactory<actix_rt::net::TcpStream>>::new_service(&factory, ())
-                .await
-                .unwrap();
-
-        actix_rt::spawn(async move {
-            let mut client = actix_rt::net::TcpStream::connect(local_addr).await.unwrap();
-            v1::Header::unknown()
-                .write_to_tokio(&mut client)
-                .await
-                .unwrap();
-            client.write_all(b"hello").await.unwrap();
-            client.shutdown().await.unwrap();
-        });
-
-        let (server, _) = listener.accept().await.unwrap();
-        let mut stream = acceptor.call(server).await.unwrap();
-
-        assert_eq!(stream.header().unwrap().version(), crate::Version::V1);
-
-        let mut body = String::new();
-        stream.read_to_string(&mut body).await.unwrap();
-        assert_eq!(body, "hello");
     }
 }
