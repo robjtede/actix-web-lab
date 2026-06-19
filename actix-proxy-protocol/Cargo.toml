@@ -1,6 +1,6 @@
 [package]
 name = "actix-proxy-protocol"
-version = "0.0.2"
+version = "0.1.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Actix integration for the PROXY protocol"
 keywords = ["proxy", "protocol", "network", "haproxy", "tcp"]
