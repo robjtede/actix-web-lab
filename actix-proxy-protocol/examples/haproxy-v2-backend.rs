@@ -52,7 +52,7 @@ struct ProxyConnectionInfo {
 
 #[actix_rt::main]
 async fn main() -> io::Result<()> {
-    tracing_subscriber::fmt::fmt().without_time().init();
+    init_standard_logger();
 
     tracing::info!("HTTP backend listening on {BACKEND_ADDR}");
 
@@ -64,6 +64,13 @@ async fn main() -> io::Result<()> {
                 let proxy_client_addr = stream.header().and_then(Header::source_addr);
                 let transport_peer_addr = stream.get_ref().peer_addr().ok();
                 let actix_peer_addr = proxy_client_addr.or(transport_peer_addr);
+
+                if let Some(Header::V2(header)) = stream.header() {
+                    tracing::debug!(
+                        crc32c_valid = ?header.validate_crc32c_tlv(),
+                        "verified PROXY v2 CRC32C checksum",
+                    );
+                }
 
                 tracing::info!(
                     ?transport_peer_addr,
@@ -138,4 +145,18 @@ fn insert_addr_header(res: &mut actix_http::ResponseBuilder, name: &'static str,
 
 fn dispatch_io_error(err: DispatchError) -> io::Error {
     io::Error::other(err.to_string())
+}
+
+/// Initializes standard tracing subscriber.
+pub fn init_standard_logger() {
+    use tracing_subscriber::prelude::*;
+
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::builder()
+                .with_default_directive(tracing::level_filters::LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .with(tracing_subscriber::fmt::layer().without_time())
+        .init();
 }

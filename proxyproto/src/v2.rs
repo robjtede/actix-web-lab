@@ -340,7 +340,7 @@ impl Header {
         self.write_to(&mut buf).unwrap();
 
         // Calculate CRC on buffer and update CRC TLV.
-        let crc_calc = crc32fast::hash(&buf);
+        let crc_calc = crc32c::crc32c(&buf);
         self.tlvs.last_mut().unwrap().1 = crc_calc.to_be_bytes().to_smallvec();
     }
 
@@ -367,7 +367,7 @@ impl Header {
 
         let mut buf = Vec::new();
         this.write_to(&mut buf).unwrap();
-        let crc_calc = crc32fast::hash(&buf);
+        let crc_calc = crc32c::crc32c(&buf);
 
         Some(crc_sent.checksum == crc_calc)
     }
@@ -641,14 +641,14 @@ mod tests {
         exp.extend_from_slice(&[0x00, 80, 0x00, 80]);
         exp.extend_from_slice(&[0x03, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00]);
 
-        // Correct checksum calculated manually.
+        // Correct CRC-32C (Castagnoli) checksum.
         assert_eq!(
-            crc32fast::hash(&exp),
-            u32::from_be_bytes([0x08, 0x70, 0x17, 0x7b]),
+            crc32c::crc32c(&exp),
+            u32::from_be_bytes([0x9e, 0xf4, 0x4d, 0xe4]),
         );
 
         // Re-assign actual checksum to last 4 bytes of expected byte array.
-        exp[31..35].copy_from_slice(&[0x08, 0x70, 0x17, 0x7b]);
+        exp[31..35].copy_from_slice(&[0x9e, 0xf4, 0x4d, 0xe4]);
 
         let mut header = Header::new(
             Command::Proxy,

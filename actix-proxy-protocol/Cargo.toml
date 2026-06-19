@@ -31,7 +31,7 @@ bytes = "1"
 futures-util = { version = "0.3.7", default-features = false, features = ["sink", "async-await-macro"] }
 tokio = { version = "1.38.2", features = ["io-util", "rt-multi-thread", "macros", "fs"] }
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [lints]
 workspace = true
