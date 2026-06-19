@@ -1,6 +1,6 @@
 [package]
 name = "proxyproto"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "PROXY protocol parsing and serialization"
 keywords = ["proxy", "protocol", "network", "haproxy"]
