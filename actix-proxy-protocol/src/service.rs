@@ -11,9 +11,8 @@ use actix_rt::net::{ActixStream, Ready};
 use actix_service::{Service, ServiceFactory};
 use actix_utils::future::{Ready as FutReady, ready};
 use futures_core::future::LocalBoxFuture;
+use proxyproto::{Header, ParseError, v1, v2};
 use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWrite, ReadBuf};
-
-use crate::{Header, ParseError, v1, v2};
 
 /// Controls whether incoming streams must start with a PROXY protocol header.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

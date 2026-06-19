@@ -1,6 +1,8 @@
 # actix-proxy-protocol
 
-> Implementation of the [PROXY protocol].
+> Actix networking integration for the [PROXY protocol].
+
+Protocol parsing, serialization, and TLV types are provided by [`proxyproto`] and re-exported here for compatibility.
 
 <!-- prettier-ignore-start -->
 
@@ -19,3 +21,4 @@
 - [Examples](./examples)
 
 [proxy protocol]: https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt
+[`proxyproto`]: https://crates.io/crates/proxyproto

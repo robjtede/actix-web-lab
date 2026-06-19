@@ -161,25 +161,16 @@ name = "actix-proxy-protocol"
 version = "0.0.2"
 dependencies = [
  "actix-codec",
+ "actix-http",
  "actix-rt",
  "actix-server",
  "actix-service",
  "actix-utils",
- "arrayvec",
- "bitflags",
  "bytes",
- "const-str",
- "crc32fast",
  "futures-core",
  "futures-util",
- "hex",
- "impl-more 0.3.1",
- "itoa",
- "nom",
- "once_cell",
  "pin-project-lite",
- "pretty_assertions",
- "smallvec",
+ "proxyproto",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -2397,6 +2388,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "proxyproto"
+version = "0.1.0"
+dependencies = [
+ "arrayvec",
+ "bitflags",
+ "const-str",
+ "crc32fast",
+ "itoa",
+ "nom",
+ "pretty_assertions",
+ "smallvec",
+ "tokio",
 ]
 
 [[package]]

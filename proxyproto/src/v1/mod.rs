@@ -6,11 +6,12 @@ use std::{
     str,
 };
 
+#[cfg(feature = "tokio")]
 use arrayvec::ArrayVec;
 use nom::{Err as NomErr, IResult, Needed, error::ErrorKind};
+#[cfg(feature = "tokio")]
 use tokio::io::{AsyncWrite, AsyncWriteExt as _};
 
-pub use crate::{Acceptor, AcceptorService, HeaderPolicy, ProxyProtocolError, ProxyStream};
 use crate::{AddressFamily, ParseError};
 
 /// PROXY protocol v1 signature.
@@ -114,6 +115,7 @@ impl Header {
     }
 
     /// Writes this header to a Tokio async writer.
+    #[cfg(feature = "tokio")]
     pub async fn write_to_tokio(&self, wrt: &mut (impl AsyncWrite + Unpin)) -> io::Result<()> {
         let mut buf = ArrayVec::<_, MAX_HEADER_SIZE>::new();
         self.write_to(&mut buf)?;

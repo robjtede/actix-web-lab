@@ -1,0 +1,31 @@
+[package]
+name = "proxyproto"
+version = "0.1.0"
+authors = ["Rob Ede <robjtede@icloud.com>"]
+description = "PROXY protocol parsing and serialization"
+keywords = ["proxy", "protocol", "network", "haproxy", "tcp"]
+categories = ["network-programming"]
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+tokio = ["dep:arrayvec", "dep:tokio"]
+
+[dependencies]
+arrayvec = { version = "0.7", optional = true }
+bitflags = "2"
+crc32fast = "1"
+itoa = "1"
+nom = "8"
+smallvec = "1"
+tokio = { version = "1.13.1", optional = true, features = ["io-util"] }
+
+[dev-dependencies]
+const-str = "1"
+pretty_assertions = "1"
+
+[lints]
+workspace = true

@@ -1,4 +1,4 @@
-//! PROXY protocol v2 header support.
+//! PROXY protocol v2 header parsing and serialization.
 
 use std::{
     io,
@@ -6,6 +6,7 @@ use std::{
 };
 
 use smallvec::{SmallVec, ToSmallVec as _};
+#[cfg(feature = "tokio")]
 use tokio::io::{AsyncWrite, AsyncWriteExt as _};
 
 use crate::{
@@ -289,6 +290,7 @@ impl Header {
     }
 
     /// Writes this header to a Tokio async writer.
+    #[cfg(feature = "tokio")]
     pub async fn write_to_tokio(&self, wrt: &mut (impl AsyncWrite + Unpin)) -> io::Result<()> {
         let buf = self.to_vec();
         wrt.write_all(&buf).await

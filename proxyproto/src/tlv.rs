@@ -1,4 +1,4 @@
-//! Type-length-value helpers for PROXY protocol v2 headers.
+//! Type-length-value support for PROXY protocol v2 headers.
 
 use std::borrow::Cow;
 

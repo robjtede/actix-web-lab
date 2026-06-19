@@ -8,6 +8,7 @@ members = [
   "actix-proxy-protocol",
   "collectools",
   "err-report",
+  "proxyproto",
   "russe",
 ]
 
