@@ -24,7 +24,7 @@ bitflags::bitflags! {
     }
 }
 
-/// TLS (SSL).
+/// TLS (SSL) details.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ssl {
     client: SslClientFlags,

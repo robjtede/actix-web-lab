@@ -1,12 +1,15 @@
 use std::{borrow::Cow, str};
 
-use super::{PP2_TYPE_AUTHORITY, Tlv};
+use super::Tlv;
 
-/// Contains the host name value passed by the client, as an UTF8-encoded string.
-/// In case of TLS being used on the client connection, this is the exact copy of
-/// the "server_name" extension as defined by RFC 3546, section 3.1, often
-/// referred to as "SNI". There are probably other situations where an authority
-/// can be mentioned on a connection without TLS being involved at all.
+const PP2_TYPE_AUTHORITY: u8 = 0x02;
+
+/// The host name value passed by the client, as a UTF-8-encoded string.
+///
+/// In case of TLS being used on the client connection, this is the exact copy of the "server_name"
+/// extension as defined by RFC 3546, section 3.1, often referred to as "SNI". There are probably
+/// other situations where an authority can be mentioned on a connection without TLS being involved
+/// at all.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Authority {
     authority: String,

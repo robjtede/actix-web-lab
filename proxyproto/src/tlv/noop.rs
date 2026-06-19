@@ -1,9 +1,12 @@
 use std::borrow::Cow;
 
-use super::{PP2_TYPE_NOOP, Tlv};
+use super::Tlv;
 
-/// The TLV of this type should be ignored when parsed. The value is zero or more bytes. Can be used
-/// for data padding or alignment.
+const PP2_TYPE_NOOP: u8 = 0x04;
+
+/// A no-op TLV.
+///
+/// The value is zero or more bytes. Can be used for data padding or alignment.
 ///
 /// Note that it can be used to align only by 3 or more bytes because any TLV on-the-wire can not be
 /// smaller than that.

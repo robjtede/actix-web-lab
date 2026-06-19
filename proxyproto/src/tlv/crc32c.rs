@@ -1,9 +1,10 @@
 use std::borrow::Cow;
 
-use super::{PP2_TYPE_CRC32C, Tlv};
+use super::Tlv;
 
-/// The value of the type PP2_TYPE_CRC32C is a 32-bit number storing the CRC32c
-/// checksum of the PROXY protocol header.
+const PP2_TYPE_CRC32C: u8 = 0x03;
+
+/// A 32-bit number storing the CRC32c checksum of the PROXY protocol header.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Crc32c {
     pub(crate) checksum: u32,
@@ -35,6 +36,19 @@ impl Tlv for Crc32c {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tlv_as_crc32c() {
+        // noop
+        assert_eq!(Crc32c::try_from_parts(0x04, &[0x00]), None);
+
+        assert_eq!(
+            Crc32c::try_from_parts(0x03, &[0x08, 0x70, 0x17, 0x7b]),
+            Some(Crc32c {
+                checksum: 141563771
+            })
+        );
+    }
 
     #[test]
     fn crc32c_tlv_round_trip() {

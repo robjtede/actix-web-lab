@@ -1,10 +1,10 @@
 //! Framework-independent PROXY protocol parsing and serialization.
 
-use std::{fmt, io, net::SocketAddr};
-
 pub mod tlv;
 pub mod v1;
 pub mod v2;
+
+use std::{fmt, io, net::SocketAddr};
 
 /// PROXY Protocol Version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

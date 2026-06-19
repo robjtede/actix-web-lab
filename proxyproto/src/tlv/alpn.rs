@@ -1,10 +1,13 @@
 use std::borrow::Cow;
 
-use super::{PP2_TYPE_ALPN, Tlv};
+use super::Tlv;
 
-/// Application-Layer Protocol Negotiation (ALPN). It is a byte sequence defining
-/// the upper layer protocol in use over the connection. The most common use case
-/// will be to pass the exact copy of the ALPN extension of the Transport Layer
+const PP2_TYPE_ALPN: u8 = 0x01;
+
+/// Application-Layer Protocol Negotiation (ALPN).
+///
+/// It is a byte sequence defining the upper layer protocol in use over the connection. The most
+/// common use case will be to pass the exact copy of the ALPN extension of the Transport Layer
 /// Security (TLS) protocol as defined by RFC 7301.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Alpn {

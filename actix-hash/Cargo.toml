@@ -16,14 +16,10 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [package.metadata.cargo_check_external_types]
 allowed_external_types = [
-  "actix_http::*",
-  "actix_utils::*",
   "actix_web::*",
   "blake2::*",
   "blake3::*",
-  "crypto_common::*",
   "digest::*",
-  "generic_array::*",
   "md4::*",
   "md5::*",
   "sha1::*",

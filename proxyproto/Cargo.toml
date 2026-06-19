@@ -10,6 +10,9 @@ license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
+[package.metadata.cargo_check_external_types]
+allowed_external_types = ["bitflags::*", "nom::*", "tokio::*"]
+
 [features]
 default = []
 tokio = ["dep:arrayvec", "dep:tokio"]
@@ -22,6 +25,7 @@ itoa = "1"
 nom = "8"
 smallvec = "1"
 tokio = { version = "1.13.1", optional = true, features = ["io-util"] }
+winnow = "1"
 
 [dev-dependencies]
 const-str = "1"

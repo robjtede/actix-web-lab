@@ -1,6 +1,8 @@
 use std::{borrow::Cow, str};
 
-use super::{PP2_TYPE_NETNS, Tlv};
+use super::Tlv;
+
+const PP2_TYPE_NETNS: u8 = 0x30;
 
 /// Network namespace name.
 #[derive(Debug, Clone, PartialEq, Eq)]

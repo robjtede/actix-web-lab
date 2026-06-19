@@ -32,8 +32,8 @@ allowed_external_types = [
   "futures_core::*",
   "http::*",
   "mime::*",
+  "serde_core::*",
   "serde_json::*",
-  "serde::*",
   "tokio::*",
 ]
 

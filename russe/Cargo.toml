@@ -13,6 +13,9 @@ rust-version.workspace = true
 rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
+[package.metadata.cargo_check_external_types]
+allowed_external_types = ["bytestring::*", "tokio_util::*"]
+
 [features]
 awc-3 = []
 mime = ["dep:mime"]
