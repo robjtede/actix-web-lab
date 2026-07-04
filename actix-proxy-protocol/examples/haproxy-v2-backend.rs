@@ -36,7 +36,10 @@ use actix_http::{
     error::DispatchError,
     header::{HeaderName, HeaderValue},
 };
-use actix_proxy_protocol::{Acceptor, Header, ProxyStream, Version};
+use actix_proxy_protocol::{
+    Acceptor, Header, ProxyStream, Version,
+    tlv::{Alpn, Authority, Ssl, UniqueId},
+};
 use actix_rt::net::TcpStream;
 use actix_server::Server;
 use actix_service::{ServiceFactoryExt as _, fn_service};
@@ -68,7 +71,11 @@ async fn main() -> io::Result<()> {
                 if let Some(Header::V2(header)) = stream.header() {
                     tracing::debug!(
                         crc32c_valid = ?header.validate_crc32c_tlv(),
-                        "verified PROXY v2 CRC32C checksum",
+                        alpn = ?header.typed_tlv::<Alpn>(),
+                        authority = ?header.typed_tlv::<Authority>(),
+                        unique_id = ?header.typed_tlv::<UniqueId>(),
+                        ssl = ?header.typed_tlv::<Ssl>(),
+                        "decoded PROXY v2 TLVs",
                     );
                 }
 
