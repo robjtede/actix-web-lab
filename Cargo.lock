@@ -66,7 +66,7 @@ dependencies = [
  "actix-web-lab",
  "blake2",
  "blake3",
- "digest 0.10.7",
+ "digest 0.11.3",
  "env_logger",
  "futures-core",
  "futures-util",
@@ -74,7 +74,7 @@ dependencies = [
  "md-5",
  "md4",
  "pin-project-lite",
- "sha1",
+ "sha1 0.10.7",
  "sha2",
  "sha3",
  "subtle",
@@ -113,7 +113,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "rand 0.10.2",
- "sha1",
+ "sha1 0.11.0",
  "smallvec",
  "tokio",
  "tokio-util",
@@ -358,7 +358,7 @@ dependencies = [
  "bytestring",
  "csv",
  "derive_more",
- "digest 0.10.7",
+ "digest 0.11.3",
  "ed25519-dalek",
  "env_logger",
  "form_urlencoded",
@@ -3007,6 +3007,17 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "sha1"
+version = "0.10.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a978451301f4db1d02937a4ab3ccce137717b81826e79b7d49ffe3244a13c3b8"
+dependencies = [
+ "cfg-if",
+ "cpufeatures 0.2.17",
+ "digest 0.10.7",
 ]
 
 [[package]]
