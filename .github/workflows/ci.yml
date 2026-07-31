@@ -51,6 +51,17 @@ jobs:
         with:
           tool: just,cargo-hack,cargo-nextest,cargo-ci-cache-clean
 
+      - name: Install Determinate Nix
+        uses: DeterminateSystems/determinate-nix-action@d96678350ffd6a456235832eb11e1c491589b7bb # v3.21.8
+        with:
+          extra-conf: lazy-trees = true
+
+      - name: Set up FlakeHub Cache
+        uses: DeterminateSystems/flakehub-cache-action@77c6bddd7d747943530aaa578c57f233ee5d920e # v3.21.8
+
+      - name: Enter Nix devshell
+        uses: nicknovitski/nix-develop@9be7cfb4b10451d3390a75dc18ad0465bed4932a # v1.2.1
+
       - name: workaround MSRV issues
         if: matrix.version.name == 'msrv'
         run: just downgrade-for-msrv
@@ -79,6 +90,17 @@ jobs:
         uses: taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419 # v2.82.7
         with:
           tool: just
+
+      - name: Install Determinate Nix
+        uses: DeterminateSystems/determinate-nix-action@d96678350ffd6a456235832eb11e1c491589b7bb # v3.21.8
+        with:
+          extra-conf: lazy-trees = true
+
+      - name: Set up FlakeHub Cache
+        uses: DeterminateSystems/flakehub-cache-action@77c6bddd7d747943530aaa578c57f233ee5d920e # v3.21.8
+
+      - name: Enter Nix devshell
+        uses: nicknovitski/nix-develop@9be7cfb4b10451d3390a75dc18ad0465bed4932a # v1.2.1
 
       - name: doc tests
         run: just test-docs
