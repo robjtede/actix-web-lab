@@ -135,4 +135,4 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: x52dev/actions/full-cargo-check-external-types@7dd0074f21658b0588ebda3deff9245accfa5d83
+      - uses: x52dev/actions/cargo-workspace-check-external-types@8dc0274800321d780097bc9b3b1ffa9f8dfb1e8b
