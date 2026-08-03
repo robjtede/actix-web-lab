@@ -66,7 +66,7 @@ dependencies = [
  "actix-web-lab",
  "blake2",
  "blake3",
- "digest 0.11.3",
+ "digest 0.10.7",
  "env_logger",
  "futures-core",
  "futures-util",
@@ -358,7 +358,7 @@ dependencies = [
  "bytestring",
  "csv",
  "derive_more",
- "digest 0.11.3",
+ "digest 0.10.7",
  "ed25519-dalek",
  "env_logger",
  "form_urlencoded",
@@ -2773,9 +2773,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.40"
+version = "0.23.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef86cd5876211988985292b91c96a8f2d298df24e75989a43a3c73f2d4d8168b"
+checksum = "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
 dependencies = [
  "aws-lc-rs",
  "log",
