@@ -127,7 +127,6 @@ jobs:
           cargo hack --each-feature check --all-targets
 
   external-types:
-    name: External types
     runs-on: ubuntu-latest
 
     steps:
