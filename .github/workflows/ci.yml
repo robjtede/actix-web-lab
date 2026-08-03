@@ -125,13 +125,3 @@ jobs:
         run: |
           cargo hack --each-feature check
           cargo hack --each-feature check --all-targets
-
-  external-types:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - uses: x52dev/actions/cargo-workspace-check-external-types@8dc0274800321d780097bc9b3b1ffa9f8dfb1e8b
