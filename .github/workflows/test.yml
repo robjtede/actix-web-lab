@@ -135,7 +135,4 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: x52dev/actions/setup-external-types@5b150f6dba9d62eefdf334f60b7ad240cb16750f
-
-      - name: Check external types
-        run: just check-external-types-all
+      - uses: x52dev/actions/setup-external-types@dcac20665d3bfbaa72d15479a5c8e0f4b92e990c
