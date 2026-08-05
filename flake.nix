@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-parts.url = "github:hercules-ci/flake-parts";
     x52 = {
       url = "github:x52dev/nix";
@@ -26,7 +26,7 @@
             pkgs.fd
             pkgs.jq
             pkgs.just
-            pkgs.nodePackages.prettier
+            pkgs.prettier
             pkgs.openssl
             pkgs.pkg-config
             pkgs.taplo
