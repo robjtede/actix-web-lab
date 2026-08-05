@@ -26,7 +26,7 @@
             pkgs.fd
             pkgs.jq
             pkgs.just
-            pkgs.nodePackages.prettier
+            pkgs.prettier
             pkgs.openssl
             pkgs.pkg-config
             pkgs.taplo
