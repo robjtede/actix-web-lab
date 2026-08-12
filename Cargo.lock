@@ -8,7 +8,7 @@ version = "0.3.0"
 dependencies = [
  "actix-utils",
  "actix-web",
- "impl-more 0.3.1",
+ "impl-more 0.3.5",
  "ipnetwork",
  "reqwest 0.13.4",
  "rustls",
@@ -308,7 +308,7 @@ dependencies = [
  "foldhash",
  "futures-core",
  "futures-util",
- "impl-more 0.3.1",
+ "impl-more 0.3.5",
  "itoa",
  "language-tags",
  "log",
@@ -369,7 +369,7 @@ dependencies = [
  "hex-literal",
  "hmac",
  "http 0.2.12",
- "impl-more 0.3.1",
+ "impl-more 0.3.5",
  "itertools",
  "local-channel",
  "mime",
@@ -1836,9 +1836,9 @@ checksum = "e8a5a9a0ff0086c7a148acb942baaabeadf9504d10400b5a05645853729b9cd2"
 
 [[package]]
 name = "impl-more"
-version = "0.3.1"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35a84fd5aa25fae5c0f4a33d9cac2ca017fc622cbd089be2229993514990f870"
+checksum = "277ff51754a3f68f12f58446c5d006aa8baa4914ea273cce24a599cfaff33d4f"
 
 [[package]]
 name = "indenter"
