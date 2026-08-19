@@ -31,7 +31,7 @@
             pkgs.pkg-config
             pkgs.taplo
             pkgs.watchexec
-          ] ++ lib.optional pkgs.stdenv.isDarwin [
+          ] ++ lib.optionals pkgs.stdenv.isDarwin [
             pkgs.pkgsBuildHost.libiconv
           ];
 
