@@ -99,7 +99,7 @@ mod tests {
     use actix_web::{
         App, Error,
         body::{MessageBody, to_bytes},
-        dev::{Service as _, ServiceFactory},
+        dev::ServiceFactory,
         http::StatusCode,
         test, web,
     };

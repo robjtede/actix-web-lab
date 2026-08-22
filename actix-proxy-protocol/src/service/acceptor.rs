@@ -77,7 +77,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use actix_service::Service as _;
     use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
 
     use super::*;

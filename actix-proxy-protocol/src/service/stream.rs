@@ -257,7 +257,7 @@ where
 mod tests {
     use std::net::SocketAddr;
 
-    use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _, duplex};
+    use tokio::io::{AsyncWriteExt as _, duplex};
 
     use super::*;
     use crate::{AddressFamily, Command, TransportProtocol};
