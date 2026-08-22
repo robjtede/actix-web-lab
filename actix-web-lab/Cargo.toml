@@ -52,7 +52,7 @@ actix-http = "3.10"
 actix-router = "0.5"
 actix-service = "2"
 actix-utils = "3"
-actix-web = { version = "4.9", default-features = false }
+actix-web = { version = "4.15", default-features = false }
 ahash = "0.8"
 arc-swap = "1.1"
 bytes = "1"
@@ -90,7 +90,7 @@ actix-files = { version = "0.6", optional = true }
 [dev-dependencies]
 actix-web-lab-derive = "=0.26.0"
 
-actix-web = { version = "4", features = ["rustls-0_23"] }
+actix-web = { version = "4.15", features = ["rustls-0_23"] }
 async_zip = { version = "0.0.18", features = ["deflate", "tokio"] }
 base64 = "0.22"
 digest = "0.10"

@@ -4,7 +4,7 @@ use std::{
 };
 
 use actix_web::{
-    HttpResponse, Responder as _,
+    Error, HttpResponse, Responder as _,
     body::EitherBody,
     dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
     http::header::TryIntoHeaderPair,
@@ -96,10 +96,10 @@ impl RedirectHttps {
 
 impl<S, B> Transform<S, ServiceRequest> for RedirectHttps
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>> + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
 {
     type Response = ServiceResponse<EitherBody<B, ()>>;
-    type Error = S::Error;
+    type Error = Error;
     type Transform = RedirectHttpsMiddleware<S>;
     type InitError = ();
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
@@ -126,10 +126,10 @@ pub struct RedirectHttpsMiddleware<S> {
 
 impl<S, B> Service<ServiceRequest> for RedirectHttpsMiddleware<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>> + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
 {
     type Response = ServiceResponse<EitherBody<B, ()>>;
-    type Error = S::Error;
+    type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     forward_ready!(service);
@@ -183,12 +183,23 @@ where
 
             let req = ServiceRequest::from_parts(req, pl);
 
-            // TODO: apply HSTS header to error case
+            service
+                .call(req)
+                .await
+                .map(|mut res| {
+                    apply_hsts(res.response_mut(), hsts);
+                    res.map_into_left_body()
+                })
+                .map_err(|mut err| {
+                    if let Some(hsts) = hsts {
+                        err.add_response_mapper(move |mut res| {
+                            apply_hsts(&mut res, Some(hsts));
+                            res
+                        });
+                    }
 
-            service.call(req).await.map(|mut res| {
-                apply_hsts(res.response_mut(), hsts);
-                res.map_into_left_body()
-            })
+                    err
+                })
         })
     }
 }
@@ -291,6 +302,24 @@ mod tests {
 
         let req = test_request!(GET "https://localhost:443/").to_srv_request();
         let res = test::call_service(&app, req).await;
+        assert!(res.headers().contains_key(StrictTransportSecurity::name()));
+    }
+
+    #[actix_web::test]
+    async fn hsts_on_error_response() {
+        let srv = actix_service::fn_service(|_req: ServiceRequest| async {
+            Err::<ServiceResponse, _>(actix_web::error::ErrorInternalServerError("boom"))
+        });
+        let app = RedirectHttps::with_hsts(StrictTransportSecurity::recommended())
+            .new_transform(srv)
+            .await
+            .unwrap();
+
+        let req = test_request!(GET "https://localhost/").to_srv_request();
+        let err = test::try_call_service(&app, req).await.unwrap_err();
+        let res = err.error_response();
+
+        assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
         assert!(res.headers().contains_key(StrictTransportSecurity::name()));
     }
 

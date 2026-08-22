@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Apply configured HSTS headers to error responses returned by wrapped services.
+- `RedirectHttps` now requires wrapped services to use `actix_web::Error` as their error type.
+
 ## 0.26.0
 
 - Add `middleware::HostAllowlist` and `RedirectHttps::allow_hosts()` to harden redirect middleware against host header poisoning when configured.

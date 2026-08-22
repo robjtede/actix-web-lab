@@ -123,9 +123,7 @@ mod tests {
     };
 
     use actix_web::{
-        App,
-        dev::Service as _,
-        test,
+        App, test,
         web::{self, ServiceConfig},
     };
 
