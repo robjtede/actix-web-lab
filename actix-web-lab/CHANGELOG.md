@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.27.0
+
 - Apply configured HSTS headers to error responses returned by wrapped services.
 - `RedirectHttps` now requires wrapped services to use `actix_web::Error` as their error type.
 
