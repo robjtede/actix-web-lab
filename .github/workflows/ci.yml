@@ -58,7 +58,7 @@ jobs:
           extra-conf: lazy-trees = true
 
       - name: Set up FlakeHub Cache
-        uses: DeterminateSystems/flakehub-cache-action@e62e272c914d4ad8e4d1587a864e9c3ad2cba9de # v3.21.9
+        uses: DeterminateSystems/flakehub-cache-action@83293488abfd33fbfb2ab084097467491c029962 # v3.22.2
 
       - name: Enter Nix devshell
         uses: nicknovitski/nix-develop@9be7cfb4b10451d3390a75dc18ad0465bed4932a # v1.2.1
@@ -99,7 +99,7 @@ jobs:
           extra-conf: lazy-trees = true
 
       - name: Set up FlakeHub Cache
-        uses: DeterminateSystems/flakehub-cache-action@e62e272c914d4ad8e4d1587a864e9c3ad2cba9de # v3.21.9
+        uses: DeterminateSystems/flakehub-cache-action@83293488abfd33fbfb2ab084097467491c029962 # v3.22.2
 
       - name: Enter Nix devshell
         uses: nicknovitski/nix-develop@9be7cfb4b10451d3390a75dc18ad0465bed4932a # v1.2.1
