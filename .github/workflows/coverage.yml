@@ -27,7 +27,7 @@ jobs:
           cache-key: ${{ hashFiles('flake.lock') }}
 
       - name: Install just, cargo-llvm-cov
-        uses: taiki-e/install-action@67729d5c413db75907f0ad1e39bb04b9c868ff60 # v2.85.7
+        uses: taiki-e/install-action@742a3317eac7bd62f91cd888b4eead5e784ba833 # v2.87.1
         with:
           tool: just,cargo-llvm-cov
 
