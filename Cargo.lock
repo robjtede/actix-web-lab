@@ -66,7 +66,7 @@ dependencies = [
  "actix-web-lab",
  "blake2",
  "blake3",
- "digest 0.11.3",
+ "digest 0.10.7",
  "env_logger",
  "futures-core",
  "futures-util",
@@ -358,7 +358,7 @@ dependencies = [
  "bytestring",
  "csv",
  "derive_more",
- "digest 0.11.3",
+ "digest 0.10.7",
  "ed25519-dalek",
  "env_logger",
  "form_urlencoded",
@@ -1394,7 +1394,7 @@ checksum = "9fb9654ba8355388abeb8dcb4fc62f511300867002afc858860463bdd9fe0c44"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.3",
+ "syn 3.0.4",
 ]
 
 [[package]]
@@ -3127,9 +3127,9 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "smallvec"
-version = "1.15.2"
+version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
+checksum = "b9be42f50aa861c555654aa3a37f52f4b1074bacf4e48fe0ef7fa584e80f1f0f"
 
 [[package]]
 name = "socket2"
