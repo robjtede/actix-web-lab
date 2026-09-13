@@ -1,4 +1,4 @@
-use std::{fmt, io, path::PathBuf};
+use std::{io, path::PathBuf};
 
 /// An initialization, configuration, or credential validation error.
 #[derive(Debug)]
@@ -29,38 +29,24 @@ pub enum Error {
     Configuration(Box<dyn std::error::Error + Send + Sync>),
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Io(error) => write!(f, "credential I/O failed: {error}"),
-            Self::Tls(error) => write!(f, "TLS validation failed: {error}"),
-            Self::Watch(error) => write!(f, "filesystem watcher setup failed: {error}"),
-            Self::InvalidPath(path) => {
-                write!(f, "credential path must name a file: {}", path.display())
-            }
-            Self::MissingPrivateKey => f.write_str("no private key in PEM file"),
-            Self::ProviderMismatch => {
-                f.write_str("TLS builder must use the provider passed to Builder::new")
-            }
-            Self::WorkerStopped => f.write_str("TLS reload worker stopped during initialization"),
-            Self::Configuration(error) => write!(f, "TLS configuration callback failed: {error}"),
-        }
-    }
+impl_more::impl_display_enum! {
+    Error:
+    Io(_) => "credential I/O failed",
+    Tls(_) => "TLS validation failed",
+    Watch(_) => "filesystem watcher setup failed",
+    InvalidPath(path) => ("credential path must name a file: {}", path.display()),
+    MissingPrivateKey => "no private key in PEM file",
+    ProviderMismatch => "TLS builder must use the provider passed to Builder::new",
+    WorkerStopped => "TLS reload worker stopped during initialization",
+    Configuration(_) => "TLS configuration callback failed",
 }
 
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Io(error) => Some(error),
-            Self::Tls(error) => Some(error),
-            Self::Watch(error) => Some(error),
-            Self::Configuration(error) => Some(error.as_ref()),
-            Self::InvalidPath(_)
-            | Self::MissingPrivateKey
-            | Self::ProviderMismatch
-            | Self::WorkerStopped => None,
-        }
-    }
+impl_more::impl_error_enum! {
+    Error:
+    Io(error) => error,
+    Tls(error) => error,
+    Watch(error) => error,
+    Configuration(error) => error.as_ref(),
 }
 
 impl From<io::Error> for Error {

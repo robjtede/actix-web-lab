@@ -510,5 +510,5 @@ fn configuration_failure_preserves_cause() {
     assert!(matches!(error, Error::Configuration(_)));
     let cause = std::error::Error::source(&error).unwrap();
     assert_eq!(cause.to_string(), "custom policy rejected");
-    assert!(error.to_string().contains("custom policy rejected"));
+    assert_eq!(error.to_string(), "TLS configuration callback failed");
 }
