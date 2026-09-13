@@ -11,8 +11,7 @@ async fn main() -> eyre::Result<()> {
         "key.pem",
         Arc::new(rustls::crypto::aws_lc_rs::default_provider()),
     )
-    .build()
-    .map_err(|error| eyre::eyre!(error))?;
+    .build()?;
 
     let observer = watcher.spawn_observer(|event| eprintln!("{event:?}"))?;
 

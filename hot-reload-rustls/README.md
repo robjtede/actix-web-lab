@@ -30,6 +30,8 @@ The examples call `build` directly during startup and drop the watcher after the
 
 ## Defaults and customization
 
+`Error` is a non-exhaustive enum. Callers can match I/O, TLS validation, watcher setup, invalid paths, missing private keys, provider mismatches, and worker initialization failures. Wrapped errors remain available through `std::error::Error::source`. Configuration callbacks can return `Error::Configuration` to preserve a custom error.
+
 The caller must supply a crypto provider. This crate does not enable any Rustls crypto-provider feature or use a process-global provider. Enable your preferred provider on your application’s Rustls dependency. The examples and tests select Rustls’s `aws_lc_rs` feature as a dev-dependency only. The builder uses Rustls safe protocol defaults (TLS 1.2 and TLS 1.3) and no client-certificate authentication.
 
 Use `configure` for ALPN and session settings. For custom protocol versions or client authentication, pass a Rustls `ConfigBuilder` using the same provider to `tls_config`. The reload resolver is installed internally; do not replace it in a customization callback. Providers that cannot establish key consistency are rejected.

@@ -16,8 +16,7 @@ use std::{
 use arc_swap::ArcSwap;
 use notify::{EventKind, RecursiveMode, Watcher as _};
 
-/// An initialization or credential validation error.
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
+use crate::Error;
 
 const DEBOUNCE: Duration = Duration::from_millis(100);
 const RETRY_DELAY: Duration = Duration::from_millis(200);
@@ -103,12 +102,14 @@ impl Drop for Watcher {
 
 fn absolute_file(path: &Path) -> Result<PathBuf, Error> {
     let path = std::path::absolute(path)?;
-    let name = path.file_name().ok_or("credential path must name a file")?;
+    let name = path
+        .file_name()
+        .ok_or_else(|| Error::InvalidPath(path.clone()))?;
 
     // Canonicalize only the parent: replacing the file must not change the watch target.
     Ok(path
         .parent()
-        .ok_or("credential path has no parent")?
+        .ok_or_else(|| Error::InvalidPath(path.clone()))?
         .canonicalize()?
         .join(name))
 }
@@ -269,9 +270,7 @@ where
         events: Some(receiver),
     };
 
-    let output = initialized
-        .recv()
-        .map_err(|_| "TLS reload worker stopped during initialization")??;
+    let output = initialized.recv().map_err(|_| Error::WorkerStopped)??;
 
     Ok((output, watcher))
 }

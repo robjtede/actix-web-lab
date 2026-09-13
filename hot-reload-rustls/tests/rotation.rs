@@ -11,7 +11,7 @@ use std::{
 };
 
 use actix_web::{App, HttpServer, dev::ServerHandle, web};
-use hot_reload_rustls::{Event, Watcher};
+use hot_reload_rustls::{Error, Event, Watcher};
 
 #[derive(Debug)]
 struct WorkerKeyProvider;
@@ -394,11 +394,23 @@ fn validate_initial() {
         .map(|_| ())
     };
 
-    assert!(load().is_err(), "missing initial files must fail");
+    let error = load().unwrap_err();
+    assert!(matches!(&error, Error::Io(source) if source.kind() == std::io::ErrorKind::NotFound));
+    assert!(
+        std::error::Error::source(&error)
+            .unwrap()
+            .is::<std::io::Error>()
+    );
 
     fs::write(&cert, &pairs()[0].cert).unwrap();
     fs::write(&key, &pairs()[1].key).unwrap();
-    assert!(load().is_err(), "mismatched initial pair must fail");
+    assert!(
+        matches!(load(), Err(Error::Tls(_))),
+        "mismatched initial pair must fail"
+    );
+
+    fs::write(&key, b"").unwrap();
+    assert!(matches!(load(), Err(Error::MissingPrivateKey)));
 
     fs::write(&key, b"invalid private key").unwrap();
     assert!(load().is_err(), "invalid initial key must fail");
@@ -472,4 +484,31 @@ fn default_builder_rejects_tls11() {
         &[2, 70],
         "expected fatal protocol_version alert"
     );
+}
+
+#[test]
+fn configuration_failure_preserves_cause() {
+    let dir = tempfile::tempdir().unwrap();
+    let cert = dir.path().join("cert.pem");
+    let key = dir.path().join("key.pem");
+    fs::write(&cert, &pairs()[0].cert).unwrap();
+    fs::write(&key, &pairs()[0].key).unwrap();
+
+    let error = hot_reload_rustls::Builder::new(
+        cert,
+        key,
+        Arc::new(rustls::crypto::aws_lc_rs::default_provider()),
+    )
+    .configure(|_| {
+        Err(Error::Configuration(
+            std::io::Error::other("custom policy rejected").into(),
+        ))
+    })
+    .build()
+    .unwrap_err();
+
+    assert!(matches!(error, Error::Configuration(_)));
+    let cause = std::error::Error::source(&error).unwrap();
+    assert_eq!(cause.to_string(), "custom policy rejected");
+    assert!(error.to_string().contains("custom policy rejected"));
 }

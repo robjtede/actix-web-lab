@@ -14,9 +14,13 @@ use rustls::{
     sign::CertifiedKey,
 };
 
+mod error;
 mod watcher;
 
-pub use self::watcher::{Error, Event, Watcher};
+pub use self::{
+    error::Error,
+    watcher::{Event, Watcher},
+};
 
 /// A resolver that reads one validated snapshot per full handshake.
 #[derive(Debug)]
@@ -96,7 +100,7 @@ impl Builder {
         let tls = match self.tls {
             Some(tls) => {
                 if !Arc::ptr_eq(tls.crypto_provider(), &self.provider) {
-                    return Err("TLS builder must use the provider passed to Builder::new".into());
+                    return Err(Error::ProviderMismatch);
                 }
                 tls
             }
@@ -126,8 +130,7 @@ fn load(
                 rustls::server::ParsedCertificate::try_from(cert)?;
             }
 
-            let key =
-                rustls_pemfile::private_key(&mut &*key)?.ok_or("no private key in PEM file")?;
+            let key = rustls_pemfile::private_key(&mut &*key)?.ok_or(Error::MissingPrivateKey)?;
 
             let pair = CertifiedKey::from_der(certs, key, &provider)?;
             pair.keys_match()?;
