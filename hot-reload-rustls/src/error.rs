@@ -19,6 +19,9 @@ pub enum BuildError {
     /// The initial certificate/key pair could not be loaded or validated.
     Credentials(CredentialError),
 
+    /// No explicit provider was supplied and no global provider is installed.
+    MissingProvider,
+
     /// The custom TLS builder uses a different provider from the reload builder.
     ProviderMismatch,
 
@@ -36,7 +39,8 @@ impl_more::impl_display_enum! {
     Watch(_) => "Filesystem watcher setup failed",
     InvalidPath(path) => ("Credential path must name a file: {}", path.display()),
     Credentials(_) => "Initial credential loading failed",
-    ProviderMismatch => "TLS builder must use the provider passed to Builder::new",
+    MissingProvider => "No crypto provider supplied or installed globally",
+    ProviderMismatch => "TLS builder must use the selected crypto provider",
     WorkerStopped => "TLS reload worker stopped during initialization",
     Configuration(_) => "TLS configuration callback failed",
 }

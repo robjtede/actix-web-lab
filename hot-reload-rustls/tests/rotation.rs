@@ -96,11 +96,13 @@ fn start(cert: &Path, key: &Path, scenario: &str) -> (Server, Watcher, mpsc::Rec
             .unwrap()
             .with_no_client_auth();
         let (config, mut watcher) = if defaults {
-            hot_reload_rustls::Builder::new(cert, key, Arc::clone(&provider))
+            hot_reload_rustls::Builder::new(cert, key)
+                .crypto_provider(Arc::clone(&provider))
                 .build()
                 .unwrap()
         } else {
-            hot_reload_rustls::Builder::new(cert, key, Arc::clone(&provider))
+            hot_reload_rustls::Builder::new(cert, key)
+                .crypto_provider(Arc::clone(&provider))
                 .tls_config(builder)
                 .configure(|config| {
                     assert_eq!(thread::current().name(), Some(env!("CARGO_PKG_NAME")));
@@ -385,13 +387,10 @@ fn validate_initial() {
     let key = dir.path().join("key.pem");
 
     let load = || {
-        hot_reload_rustls::Builder::new(
-            &cert,
-            &key,
-            Arc::new(rustls::crypto::aws_lc_rs::default_provider()),
-        )
-        .build()
-        .map(|_| ())
+        hot_reload_rustls::Builder::new(&cert, &key)
+            .crypto_provider(Arc::new(rustls::crypto::aws_lc_rs::default_provider()))
+            .build()
+            .map(|_| ())
     };
 
     let error = load().unwrap_err();
@@ -502,18 +501,15 @@ fn configuration_failure_preserves_cause() {
     fs::write(&cert, &pairs()[0].cert).unwrap();
     fs::write(&key, &pairs()[0].key).unwrap();
 
-    let error = hot_reload_rustls::Builder::new(
-        cert,
-        key,
-        Arc::new(rustls::crypto::aws_lc_rs::default_provider()),
-    )
-    .configure(|_| {
-        Err(BuildError::Configuration(
-            std::io::Error::other("custom policy rejected").into(),
-        ))
-    })
-    .build()
-    .unwrap_err();
+    let error = hot_reload_rustls::Builder::new(cert, key)
+        .crypto_provider(Arc::new(rustls::crypto::aws_lc_rs::default_provider()))
+        .configure(|_| {
+            Err(BuildError::Configuration(
+                std::io::Error::other("custom policy rejected").into(),
+            ))
+        })
+        .build()
+        .unwrap_err();
 
     assert!(matches!(error, BuildError::Configuration(_)));
     let cause = std::error::Error::source(&error).unwrap();

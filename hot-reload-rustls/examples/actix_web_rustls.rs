@@ -1,17 +1,14 @@
 //! Actix Web with live Rustls credential rotation.
 
-use std::sync::Arc;
-
 use actix_web::{App, HttpServer, web};
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
-    let (config, mut watcher) = hot_reload_rustls::Builder::new(
-        "cert.pem",
-        "key.pem",
-        Arc::new(rustls::crypto::aws_lc_rs::default_provider()),
-    )
-    .build()?;
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .map_err(|_| eyre::eyre!("Crypto provider already installed"))?;
+
+    let (config, mut watcher) = hot_reload_rustls::Builder::new("cert.pem", "key.pem").build()?;
 
     let observer = watcher.spawn_observer(|event| eprintln!("{event:?}"))?;
 

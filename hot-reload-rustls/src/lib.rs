@@ -34,13 +34,13 @@ impl ResolvesServerCert for Resolver {
 
 type Configure = dyn FnOnce(&mut ServerConfig) -> Result<(), BuildError> + Send;
 
-/// TLS credential watcher builder. Requires PEM file paths and an explicit crypto provider.
+/// TLS credential watcher builder. Uses an explicit or installed global crypto provider.
 #[must_use]
 pub struct Builder {
     cert: PathBuf,
     key: PathBuf,
     configure: Box<Configure>,
-    provider: Arc<CryptoProvider>,
+    provider: Option<Arc<CryptoProvider>>,
     tls: Option<ConfigBuilder<ServerConfig, WantsServerCert>>,
 }
 
@@ -54,19 +54,25 @@ impl fmt::Debug for Builder {
 }
 
 impl Builder {
-    /// Use safe protocol defaults with the given PEM files and caller-selected crypto provider.
-    pub fn new(
-        cert: impl AsRef<Path>,
-        key: impl AsRef<Path>,
-        provider: Arc<CryptoProvider>,
-    ) -> Self {
+    /// Use safe protocol defaults with the given PEM files.
+    ///
+    /// Uses the installed global provider unless overridden by crypto_provider.
+    /// Returns BuildError::MissingProvider from build if neither is available.
+    pub fn new(cert: impl AsRef<Path>, key: impl AsRef<Path>) -> Self {
         Self {
             cert: cert.as_ref().to_owned(),
             key: key.as_ref().to_owned(),
             configure: Box::new(|_| Ok(())),
-            provider,
+            provider: None,
             tls: None,
         }
+    }
+
+    /// Override the global crypto provider for this builder.
+    pub fn crypto_provider(mut self, provider: Arc<CryptoProvider>) -> Self {
+        self.provider = Some(provider);
+
+        self
     }
 
     /// Customize the TLS configuration. A second call replaces the previous callback.
@@ -84,7 +90,7 @@ impl Builder {
     }
 
     /// Customize protocol versions and client authentication with a Rustls builder.
-    /// It must use the same provider passed to `new`; `build` rejects a different provider.
+    /// It must use the same explicit or global provider; `build` rejects a different provider.
     pub fn tls_config(mut self, builder: ConfigBuilder<ServerConfig, WantsServerCert>) -> Self {
         self.tls = Some(builder);
 
@@ -97,14 +103,19 @@ impl Builder {
     /// handle stops watching. Call before starting an async runtime or from a blocking task.
     /// Reloads debounce for 100 ms and retry failures up to five times, 200 ms apart.
     pub fn build(self) -> Result<(ServerConfig, Watcher), BuildError> {
+        let provider = self
+            .provider
+            .or_else(|| CryptoProvider::get_default().cloned())
+            .ok_or(BuildError::MissingProvider)?;
+
         let tls = match self.tls {
             Some(tls) => {
-                if !Arc::ptr_eq(tls.crypto_provider(), &self.provider) {
+                if !Arc::ptr_eq(tls.crypto_provider(), &provider) {
                     return Err(BuildError::ProviderMismatch);
                 }
                 tls
             }
-            None => ServerConfig::builder_with_provider(self.provider)
+            None => ServerConfig::builder_with_provider(provider)
                 .with_safe_default_protocol_versions()?
                 .with_no_client_auth(),
         };
