@@ -9,6 +9,7 @@ use std::{
 use arc_swap::ArcSwap;
 use rustls::{
     ConfigBuilder, ServerConfig,
+    crypto::CryptoProvider,
     server::{ClientHello, ResolvesServerCert, WantsServerCert},
     sign::CertifiedKey,
 };
@@ -29,12 +30,13 @@ impl ResolvesServerCert for Resolver {
 
 type Configure = dyn FnOnce(&mut ServerConfig) -> Result<(), Error> + Send;
 
-/// TLS credential watcher builder. Only the PEM file paths are required.
+/// TLS credential watcher builder. Requires PEM file paths and an explicit crypto provider.
 #[must_use]
 pub struct Builder {
     cert: PathBuf,
     key: PathBuf,
     configure: Box<Configure>,
+    provider: Arc<CryptoProvider>,
     tls: Option<ConfigBuilder<ServerConfig, WantsServerCert>>,
 }
 
@@ -48,12 +50,17 @@ impl fmt::Debug for Builder {
 }
 
 impl Builder {
-    /// Use secure server defaults with the given PEM certificate chain and private key.
-    pub fn new(cert: impl AsRef<Path>, key: impl AsRef<Path>) -> Self {
+    /// Use safe protocol defaults with the given PEM files and caller-selected crypto provider.
+    pub fn new(
+        cert: impl AsRef<Path>,
+        key: impl AsRef<Path>,
+        provider: Arc<CryptoProvider>,
+    ) -> Self {
         Self {
             cert: cert.as_ref().to_owned(),
             key: key.as_ref().to_owned(),
             configure: Box::new(|_| Ok(())),
+            provider,
             tls: None,
         }
     }
@@ -62,7 +69,7 @@ impl Builder {
     ///
     /// Called once on the worker, after the reload resolver is installed. Use this for ALPN
     /// and session settings. Do not replace the certificate resolver. Use `tls_config` to
-    /// select a crypto provider, protocol versions, or client authentication.
+    /// select protocol versions or client authentication.
     pub fn configure(
         mut self,
         configure: impl FnOnce(&mut ServerConfig) -> Result<(), Error> + Send + 'static,
@@ -72,8 +79,8 @@ impl Builder {
         self
     }
 
-    /// Replace the default ring provider, safe protocol versions, and no-client-auth policy
-    /// with a caller-selected Rustls builder. This also works without the default ring feature.
+    /// Customize protocol versions and client authentication with a Rustls builder.
+    /// It must use the same provider passed to `new`; `build` rejects a different provider.
     pub fn tls_config(mut self, builder: ConfigBuilder<ServerConfig, WantsServerCert>) -> Self {
         self.tls = Some(builder);
 
@@ -87,27 +94,18 @@ impl Builder {
     /// Reloads debounce for 100 ms and retry failures up to five times, 200 ms apart.
     pub fn build(self) -> Result<(ServerConfig, Watcher), Error> {
         let tls = match self.tls {
-            Some(tls) => tls,
-            None => default_tls_config()?,
+            Some(tls) => {
+                if !Arc::ptr_eq(tls.crypto_provider(), &self.provider) {
+                    return Err("TLS builder must use the provider passed to Builder::new".into());
+                }
+                tls
+            }
+            None => ServerConfig::builder_with_provider(self.provider)
+                .with_safe_default_protocol_versions()?
+                .with_no_client_auth(),
         };
 
         load(&self.cert, &self.key, tls, self.configure)
-    }
-}
-
-fn default_tls_config() -> Result<ConfigBuilder<ServerConfig, WantsServerCert>, Error> {
-    #[cfg(feature = "ring")]
-    {
-        Ok(
-            ServerConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
-                .with_safe_default_protocol_versions()?
-                .with_no_client_auth(),
-        )
-    }
-
-    #[cfg(not(feature = "ring"))]
-    {
-        Err("enable the ring feature or provide a builder with tls_config".into())
     }
 }
 

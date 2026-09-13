@@ -12,15 +12,6 @@ use std::{
 
 use actix_web::{App, HttpServer, dev::ServerHandle, web};
 use hot_reload_rustls::{Event, Watcher};
-use openssl::{
-    asn1::Asn1Time,
-    bn::BigNum,
-    hash::MessageDigest,
-    pkey::PKey,
-    rsa::Rsa,
-    ssl::{SslConnector, SslMethod, SslVerifyMode},
-    x509::{X509, X509NameBuilder},
-};
 
 #[derive(Debug)]
 struct WorkerKeyProvider;
@@ -31,7 +22,7 @@ impl rustls::crypto::KeyProvider for WorkerKeyProvider {
         key: rustls::pki_types::PrivateKeyDer<'static>,
     ) -> Result<Arc<dyn rustls::sign::SigningKey>, rustls::Error> {
         assert_eq!(thread::current().name(), Some(env!("CARGO_PKG_NAME")));
-        rustls::crypto::ring::default_provider()
+        rustls::crypto::aws_lc_rs::default_provider()
             .key_provider
             .load_private_key(key)
     }
@@ -48,31 +39,15 @@ fn pairs() -> &'static [Pair; 2] {
 
     PAIRS.get_or_init(|| {
         [1, 2].map(|serial| {
-            let key = PKey::from_rsa(Rsa::generate(2048).unwrap()).unwrap();
-
-            let mut name = X509NameBuilder::new().unwrap();
-            name.append_entry_by_text("CN", "localhost").unwrap();
-            let name = name.build();
-
-            let mut cert = X509::builder().unwrap();
-            cert.set_version(2).unwrap();
-            cert.set_serial_number(&BigNum::from_u32(serial).unwrap().to_asn1_integer().unwrap())
-                .unwrap();
-            cert.set_subject_name(&name).unwrap();
-            cert.set_issuer_name(&name).unwrap();
-            cert.set_pubkey(&key).unwrap();
-            cert.set_not_before(&Asn1Time::days_from_now(0).unwrap())
-                .unwrap();
-            cert.set_not_after(&Asn1Time::days_from_now(1).unwrap())
-                .unwrap();
-
-            cert.sign(&key, MessageDigest::sha256()).unwrap();
-            let cert = cert.build();
+            let key = rcgen::KeyPair::generate().unwrap();
+            let mut params = rcgen::CertificateParams::new(vec!["localhost".into()]).unwrap();
+            params.serial_number = Some(serial.into());
+            let cert = params.self_signed(&key).unwrap();
 
             Pair {
-                cert: cert.to_pem().unwrap(),
-                key: key.private_key_to_pem_pkcs8().unwrap(),
-                der: cert.to_der().unwrap(),
+                cert: cert.pem().into_bytes(),
+                key: key.serialize_pem().into_bytes(),
+                der: cert.der().to_vec(),
             }
         })
     })
@@ -109,10 +84,10 @@ fn start(cert: &Path, key: &Path, scenario: &str) -> (Server, Watcher, mpsc::Rec
         let factory = || App::new().route("/", web::get().to(|| async { "rotating" }));
 
         // Initialization occurs before the async runtime starts.
-        let mut provider = rustls::crypto::ring::default_provider();
+        let mut provider = rustls::crypto::aws_lc_rs::default_provider();
         provider.key_provider = &WorkerKeyProvider;
         let provider = Arc::new(provider);
-        let builder = rustls::ServerConfig::builder_with_provider(provider)
+        let builder = rustls::ServerConfig::builder_with_provider(Arc::clone(&provider))
             .with_protocol_versions(&[if tls13 {
                 &rustls::version::TLS13
             } else {
@@ -121,9 +96,11 @@ fn start(cert: &Path, key: &Path, scenario: &str) -> (Server, Watcher, mpsc::Rec
             .unwrap()
             .with_no_client_auth();
         let (config, mut watcher) = if defaults {
-            hot_reload_rustls::Builder::new(cert, key).build().unwrap()
+            hot_reload_rustls::Builder::new(cert, key, Arc::clone(&provider))
+                .build()
+                .unwrap()
         } else {
-            hot_reload_rustls::Builder::new(cert, key)
+            hot_reload_rustls::Builder::new(cert, key, Arc::clone(&provider))
                 .tls_config(builder)
                 .configure(|config| {
                     assert_eq!(thread::current().name(), Some(env!("CARGO_PKG_NAME")));
@@ -177,37 +154,51 @@ fn start(cert: &Path, key: &Path, scenario: &str) -> (Server, Watcher, mpsc::Rec
 }
 
 fn served(server: &Server, sni: bool) -> Vec<u8> {
-    // A fresh connector per probe prevents session resumption.
-    let mut connector = SslConnector::builder(SslMethod::tls_client()).unwrap();
-    connector.set_verify(SslVerifyMode::NONE);
-    if server.defaults {
-        connector
-            .set_max_proto_version(Some(if server.tls13 {
-                openssl::ssl::SslVersion::TLS1_3
-            } else {
-                openssl::ssl::SslVersion::TLS1_2
-            }))
+    // A fresh client per probe prevents session resumption.
+    let mut roots = rustls::RootCertStore::empty();
+    for pair in pairs() {
+        roots
+            .add(rustls::pki_types::CertificateDer::from(pair.der.clone()))
             .unwrap();
     }
-    connector.set_alpn_protos(b"\x08http/1.1").unwrap();
 
-    let mut config = connector.build().configure().unwrap();
-    config.set_use_server_name_indication(sni);
+    let mut config = rustls::ClientConfig::builder_with_provider(Arc::new(
+        rustls::crypto::aws_lc_rs::default_provider(),
+    ))
+    .with_protocol_versions(&[if server.tls13 {
+        &rustls::version::TLS13
+    } else {
+        &rustls::version::TLS12
+    }])
+    .unwrap()
+    .with_root_certificates(roots)
+    .with_no_client_auth();
+    config.enable_sni = sni;
+    config.alpn_protocols = vec![b"http/1.1".to_vec()];
+    config.resumption = rustls::client::Resumption::disabled();
 
-    let tcp = TcpStream::connect_timeout(&server.addr, Duration::from_secs(3)).unwrap();
+    let mut connection =
+        rustls::ClientConnection::new(Arc::new(config), "localhost".try_into().unwrap()).unwrap();
+    let mut tcp = TcpStream::connect_timeout(&server.addr, Duration::from_secs(3)).unwrap();
     tcp.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
     tcp.set_write_timeout(Some(Duration::from_secs(3))).unwrap();
-
-    let mut tls = config.connect("localhost", tcp).unwrap();
-    assert_eq!(
-        tls.ssl().version_str(),
-        if server.tls13 { "TLSv1.3" } else { "TLSv1.2" }
-    );
-    if !server.defaults {
-        assert_eq!(tls.ssl().selected_alpn_protocol(), Some(&b"http/1.1"[..]));
+    while connection.is_handshaking() {
+        connection.complete_io(&mut tcp).unwrap();
     }
 
-    let der = tls.ssl().peer_certificate().unwrap().to_der().unwrap();
+    assert_eq!(
+        connection.protocol_version(),
+        Some(if server.tls13 {
+            rustls::ProtocolVersion::TLSv1_3
+        } else {
+            rustls::ProtocolVersion::TLSv1_2
+        })
+    );
+    if !server.defaults {
+        assert_eq!(connection.alpn_protocol(), Some(&b"http/1.1"[..]));
+    }
+    let der = connection.peer_certificates().unwrap()[0].to_vec();
+    let mut tls = rustls::StreamOwned::new(connection, tcp);
 
     tls.write_all(b"GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
         .unwrap();
@@ -394,17 +385,13 @@ fn validate_initial() {
     let key = dir.path().join("key.pem");
 
     let load = || {
-        hot_reload_rustls::Builder::new(&cert, &key)
-            .tls_config(
-                rustls::ServerConfig::builder_with_provider(Arc::new(
-                    rustls::crypto::ring::default_provider(),
-                ))
-                .with_safe_default_protocol_versions()
-                .unwrap()
-                .with_no_client_auth(),
-            )
-            .build()
-            .map(|_| ())
+        hot_reload_rustls::Builder::new(
+            &cert,
+            &key,
+            Arc::new(rustls::crypto::aws_lc_rs::default_provider()),
+        )
+        .build()
+        .map(|_| ())
     };
 
     assert!(load().is_err(), "missing initial files must fail");
@@ -427,13 +414,11 @@ fn validate_initial() {
     assert!(load().is_ok(), "valid initial pair must succeed");
 }
 
-#[cfg(feature = "ring")]
 #[test]
 fn default_builder_rotates_tls13() {
     exercise("default");
 }
 
-#[cfg(feature = "ring")]
 #[test]
 fn default_builder_rotates_tls12() {
     exercise("default12");
@@ -444,7 +429,6 @@ fn spawned_observer_reports_rotation() {
     exercise("observer");
 }
 
-#[cfg(feature = "ring")]
 #[test]
 fn default_builder_rejects_tls11() {
     let dir = tempfile::tempdir().unwrap();
@@ -456,17 +440,36 @@ fn default_builder_rejects_tls11() {
 
     let (server, _watcher, _events) = start(&cert, &key, "default");
 
-    let mut connector = SslConnector::builder(SslMethod::tls_client()).unwrap();
-    connector.set_verify(SslVerifyMode::NONE);
-    connector.set_security_level(0);
-    connector.set_cipher_list("ALL:@SECLEVEL=0").unwrap();
-    connector
-        .set_max_proto_version(Some(openssl::ssl::SslVersion::TLS1_1))
-        .unwrap();
+    // A TLS 1.1 ClientHello with TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256.
+    // Rustls clients cannot offer obsolete protocol versions.
+    let mut hello = vec![3, 2];
+    hello.extend_from_slice(&[0; 32]);
+    hello.extend_from_slice(&[0, 0, 2, 0xc0, 0x2f, 1, 0]);
+    // Include signature algorithms so rejection reaches version negotiation.
+    hello.extend_from_slice(&[0, 8, 0, 13, 0, 4, 0, 2, 4, 3]);
+    let mut record = vec![
+        22,
+        3,
+        2,
+        0,
+        (hello.len() + 4) as u8,
+        1,
+        0,
+        0,
+        hello.len() as u8,
+    ];
+    record.extend_from_slice(&hello);
 
-    let tcp = TcpStream::connect(server.addr).unwrap();
+    let mut tcp = TcpStream::connect(server.addr).unwrap();
     tcp.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+    tcp.write_all(&record).unwrap();
 
-    let error = connector.build().connect("localhost", tcp).unwrap_err();
-    assert!(error.to_string().contains("SSL alert number"), "{error}");
+    let mut alert = [0; 7];
+    tcp.read_exact(&mut alert).unwrap();
+    assert_eq!(alert[0], 21, "expected TLS alert");
+    assert_eq!(
+        &alert[5..],
+        &[2, 70],
+        "expected fatal protocol_version alert"
+    );
 }

@@ -7,7 +7,9 @@ Reusable TLS credential rotation for Rustls 0.23. The library does not depend on
 A dedicated thread owns the watcher and does all file reads, parsing, and key validation. Related events are debounced. A failed attempt retains the last valid pair and is retried a bounded number of times. A later filesystem event starts a new batch after retries are exhausted. An unchanged pair is not republished. Successful validation publishes the entire pair with `arc-swap`.
 
 ```rust,no_run
-let (config, mut watcher) = hot_reload_rustls::Builder::new("cert.pem", "key.pem").build()?;
+let provider = std::sync::Arc::new(rustls::crypto::aws_lc_rs::default_provider());
+let (config, mut watcher) =
+    hot_reload_rustls::Builder::new("cert.pem", "key.pem", provider).build()?;
 // Optional: dispatch reload events on a separate thread.
 let observer = watcher.spawn_observer(|event| eprintln!("{event:?}"))?;
 // Pass config to HttpServer::bind_rustls_0_23 and keep watcher until shutdown.
@@ -18,7 +20,7 @@ let observer = watcher.spawn_observer(|event| eprintln!("{event:?}"))?;
 
 ## Interface and lifetime
 
-`Builder::new` takes only the PEM file paths. `build()` loads the initial pair, starts the filesystem worker, and returns `(tls_configuration, watcher)`:
+`Builder::new` takes the PEM file paths and an `Arc<CryptoProvider>` selected by the caller. `build()` loads the initial pair, starts the filesystem worker, and returns `(tls_configuration, watcher)`:
 
 - Keep `watcher` alive until the server stops. Dropping it stops watching, interrupts pending waits, and joins the worker. Drop can wait for an active file read or validation. A TLS configuration can outlive the watcher and retain its last pair.
 - Call `watcher.spawn_observer(callback)` if you want reload notifications on a separate thread. It returns a join handle; after dropping the watcher, join it if you need to wait for buffered events to drain. Callbacks must return for the observer to stop. For manual event handling, use `take_events()` instead. Either method consumes the single event stream. `Reloaded` means publication completed. `ReloadFailed` reports each failed attempt, including its number. `WatchFailed` reports native watcher errors; watch coverage can then be impaired. Monitoring is optional. The stream buffers up to 64 events and drops new events when full, so an absent or slow observer cannot block rotation or cause unbounded memory growth.
@@ -28,12 +30,13 @@ The examples call `build` directly during startup and drop the watcher after the
 
 ## Defaults and customization
 
-The default builder uses an explicit ring crypto provider, Rustls safe protocol defaults (TLS 1.2 and TLS 1.3), and no client-certificate authentication. It does not depend on a process-global provider. The default `ring` Cargo feature can be disabled when supplying a provider through `tls_config`.
+The caller must supply a crypto provider. This crate does not enable any Rustls crypto-provider feature or use a process-global provider. Enable your preferred provider on your application’s Rustls dependency. The examples and tests select Rustls’s `aws_lc_rs` feature as a dev-dependency only. The builder uses Rustls safe protocol defaults (TLS 1.2 and TLS 1.3) and no client-certificate authentication.
 
-Use `configure` for ALPN and session settings. For a different provider, protocol versions, or client authentication, pass a Rustls `ConfigBuilder` to `tls_config`. The reload resolver is installed internally; do not replace it in a customization callback. Providers that cannot establish key consistency are rejected.
+Use `configure` for ALPN and session settings. For custom protocol versions or client authentication, pass a Rustls `ConfigBuilder` using the same provider to `tls_config`. The reload resolver is installed internally; do not replace it in a customization callback. Providers that cannot establish key consistency are rejected.
 
 ```rust,no_run
-let (config, watcher) = hot_reload_rustls::Builder::new("cert.pem", "key.pem")
+let provider = std::sync::Arc::new(rustls::crypto::aws_lc_rs::default_provider());
+let (config, watcher) = hot_reload_rustls::Builder::new("cert.pem", "key.pem", provider)
     .configure(|config| {
         config.alpn_protocols = vec![b"http/1.1".to_vec()];
         Ok(())
