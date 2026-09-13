@@ -31,11 +31,11 @@ pub enum Error {
 
 impl_more::impl_display_enum! {
     Error:
-    Io(_) => "credential I/O failed",
+    Io(_) => "Credential I/O failed",
     Tls(_) => "TLS validation failed",
-    Watch(_) => "filesystem watcher setup failed",
-    InvalidPath(path) => ("credential path must name a file: {}", path.display()),
-    MissingPrivateKey => "no private key in PEM file",
+    Watch(_) => "Filesystem watcher setup failed",
+    InvalidPath(path) => ("Credential path must name a file: {}", path.display()),
+    MissingPrivateKey => "No private key in PEM file",
     ProviderMismatch => "TLS builder must use the provider passed to Builder::new",
     WorkerStopped => "TLS reload worker stopped during initialization",
     Configuration(_) => "TLS configuration callback failed",

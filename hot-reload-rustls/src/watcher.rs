@@ -67,7 +67,7 @@ impl Watcher {
         let events = self.take_events().ok_or_else(|| {
             std::io::Error::new(
                 std::io::ErrorKind::AlreadyExists,
-                "event stream already taken",
+                "Event stream already taken",
             )
         })?;
 
