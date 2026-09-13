@@ -17,7 +17,7 @@ allowed_external_types = ["notify::*", "rustls::*"]
 
 [dependencies]
 arc-swap = "1.1"
-impl-more = "0.3.7"
+impl-more = "0.3.8"
 notify = "8"
 rustls = { version = "0.23", default-features = false, features = ["std", "tls12"] }
 rustls-pemfile = "2"

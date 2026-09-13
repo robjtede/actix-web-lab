@@ -50,29 +50,13 @@ impl_more::impl_error_enum! {
     Configuration(error) => error.as_ref(),
 }
 
-impl From<io::Error> for BuildError {
-    fn from(error: io::Error) -> Self {
-        Self::Io(error)
-    }
-}
+impl_more::impl_enum_from!(io::Error => BuildError::Io);
 
-impl From<rustls::Error> for BuildError {
-    fn from(error: rustls::Error) -> Self {
-        Self::Tls(error)
-    }
-}
+impl_more::impl_enum_from!(rustls::Error => BuildError::Tls);
 
-impl From<notify::Error> for BuildError {
-    fn from(error: notify::Error) -> Self {
-        Self::Watch(error)
-    }
-}
+impl_more::impl_enum_from!(notify::Error => BuildError::Watch);
 
-impl From<CredentialError> for BuildError {
-    fn from(error: CredentialError) -> Self {
-        Self::Credentials(error)
-    }
-}
+impl_more::impl_enum_from!(CredentialError => BuildError::Credentials);
 
 /// A failure to read, parse, or validate a complete certificate/key pair.
 #[derive(Debug)]
@@ -101,14 +85,6 @@ impl_more::impl_error_enum! {
     Tls(error) => error,
 }
 
-impl From<io::Error> for CredentialError {
-    fn from(error: io::Error) -> Self {
-        Self::Io(error)
-    }
-}
+impl_more::impl_enum_from!(io::Error => CredentialError::Io);
 
-impl From<rustls::Error> for CredentialError {
-    fn from(error: rustls::Error) -> Self {
-        Self::Tls(error)
-    }
-}
+impl_more::impl_enum_from!(rustls::Error => CredentialError::Tls);
