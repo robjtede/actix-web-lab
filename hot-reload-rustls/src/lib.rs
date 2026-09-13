@@ -18,7 +18,7 @@ mod error;
 mod watcher;
 
 pub use self::{
-    error::Error,
+    error::{BuildError, CredentialError},
     watcher::{Event, Watcher},
 };
 
@@ -32,7 +32,7 @@ impl ResolvesServerCert for Resolver {
     }
 }
 
-type Configure = dyn FnOnce(&mut ServerConfig) -> Result<(), Error> + Send;
+type Configure = dyn FnOnce(&mut ServerConfig) -> Result<(), BuildError> + Send;
 
 /// TLS credential watcher builder. Requires PEM file paths and an explicit crypto provider.
 #[must_use]
@@ -76,7 +76,7 @@ impl Builder {
     /// select protocol versions or client authentication.
     pub fn configure(
         mut self,
-        configure: impl FnOnce(&mut ServerConfig) -> Result<(), Error> + Send + 'static,
+        configure: impl FnOnce(&mut ServerConfig) -> Result<(), BuildError> + Send + 'static,
     ) -> Self {
         self.configure = Box::new(configure);
 
@@ -96,11 +96,11 @@ impl Builder {
     /// Returns the TLS configuration and a handle to keep until server shutdown. Dropping the
     /// handle stops watching. Call before starting an async runtime or from a blocking task.
     /// Reloads debounce for 100 ms and retry failures up to five times, 200 ms apart.
-    pub fn build(self) -> Result<(ServerConfig, Watcher), Error> {
+    pub fn build(self) -> Result<(ServerConfig, Watcher), BuildError> {
         let tls = match self.tls {
             Some(tls) => {
                 if !Arc::ptr_eq(tls.crypto_provider(), &self.provider) {
-                    return Err(Error::ProviderMismatch);
+                    return Err(BuildError::ProviderMismatch);
                 }
                 tls
             }
@@ -118,7 +118,7 @@ fn load(
     key: impl AsRef<Path>,
     builder: ConfigBuilder<ServerConfig, WantsServerCert>,
     configure: Box<Configure>,
-) -> Result<(ServerConfig, Watcher), Error> {
+) -> Result<(ServerConfig, Watcher), BuildError> {
     let provider = Arc::clone(builder.crypto_provider());
 
     watcher::start(
@@ -130,7 +130,8 @@ fn load(
                 rustls::server::ParsedCertificate::try_from(cert)?;
             }
 
-            let key = rustls_pemfile::private_key(&mut &*key)?.ok_or(Error::MissingPrivateKey)?;
+            let key = rustls_pemfile::private_key(&mut &*key)?
+                .ok_or(CredentialError::MissingPrivateKey)?;
 
             let pair = CertifiedKey::from_der(certs, key, &provider)?;
             pair.keys_match()?;

@@ -16,7 +16,7 @@ use std::{
 use arc_swap::ArcSwap;
 use notify::{EventKind, RecursiveMode, Watcher as _};
 
-use crate::Error;
+use crate::{BuildError, CredentialError};
 
 const DEBOUNCE: Duration = Duration::from_millis(100);
 const RETRY_DELAY: Duration = Duration::from_millis(200);
@@ -33,7 +33,7 @@ pub enum Event {
         /// One-based attempt number in this batch.
         attempt: usize,
         /// Cause of the failure.
-        error: Error,
+        error: CredentialError,
     },
 
     /// The native watcher reported an error. Its coverage may be impaired.
@@ -100,16 +100,16 @@ impl Drop for Watcher {
     }
 }
 
-fn absolute_file(path: &Path) -> Result<PathBuf, Error> {
+fn absolute_file(path: &Path) -> Result<PathBuf, BuildError> {
     let path = std::path::absolute(path)?;
     let name = path
         .file_name()
-        .ok_or_else(|| Error::InvalidPath(path.clone()))?;
+        .ok_or_else(|| BuildError::InvalidPath(path.clone()))?;
 
     // Canonicalize only the parent: replacing the file must not change the watch target.
     Ok(path
         .parent()
-        .ok_or_else(|| Error::InvalidPath(path.clone()))?
+        .ok_or_else(|| BuildError::InvalidPath(path.clone()))?
         .canonicalize()?
         .join(name))
 }
@@ -118,9 +118,9 @@ fn absolute_file(path: &Path) -> Result<PathBuf, Error> {
 pub(crate) fn start<T, O>(
     cert: &Path,
     key: &Path,
-    mut parse: impl FnMut(&[u8], &[u8]) -> Result<T, Error> + Send + 'static,
-    wrap: impl FnOnce(Arc<ArcSwap<T>>) -> Result<O, Error> + Send + 'static,
-) -> Result<(O, Watcher), Error>
+    mut parse: impl FnMut(&[u8], &[u8]) -> Result<T, CredentialError> + Send + 'static,
+    wrap: impl FnOnce(Arc<ArcSwap<T>>) -> Result<O, BuildError> + Send + 'static,
+) -> Result<(O, Watcher), BuildError>
 where
     T: Send + Sync + 'static,
     O: Send + 'static,
@@ -173,11 +173,14 @@ where
                     watcher.watch(key.parent().unwrap(), RecursiveMode::NonRecursive)?;
                 }
 
-                let bytes = (std::fs::read(&cert)?, std::fs::read(&key)?);
+                let bytes = (
+                    std::fs::read(&cert).map_err(CredentialError::Io)?,
+                    std::fs::read(&key).map_err(CredentialError::Io)?,
+                );
                 let current = Arc::new(ArcSwap::from_pointee(parse(&bytes.0, &bytes.1)?));
                 let output = wrap(Arc::clone(&current))?;
 
-                Ok::<_, Error>((watcher, cert, key, bytes, current, output))
+                Ok::<_, BuildError>((watcher, cert, key, bytes, current, output))
             })();
 
             let (_watcher, cert, key, mut last, current, output) = match setup {
@@ -220,14 +223,17 @@ where
                     }
 
                     let result = (|| {
-                        let bytes = (std::fs::read(&cert)?, std::fs::read(&key)?);
+                        let bytes = (
+                            std::fs::read(&cert).map_err(CredentialError::Io)?,
+                            std::fs::read(&key).map_err(CredentialError::Io)?,
+                        );
                         if bytes == last {
                             return Ok(None);
                         }
 
                         let pair = parse(&bytes.0, &bytes.1)?;
 
-                        Ok::<_, Error>(Some((bytes, pair)))
+                        Ok::<_, CredentialError>(Some((bytes, pair)))
                     })();
 
                     match result {
@@ -270,7 +276,9 @@ where
         events: Some(receiver),
     };
 
-    let output = initialized.recv().map_err(|_| Error::WorkerStopped)??;
+    let output = initialized
+        .recv()
+        .map_err(|_| BuildError::WorkerStopped)??;
 
     Ok((output, watcher))
 }

@@ -11,7 +11,7 @@ use std::{
 };
 
 use actix_web::{App, HttpServer, dev::ServerHandle, web};
-use hot_reload_rustls::{Error, Event, Watcher};
+use hot_reload_rustls::{BuildError, CredentialError, Event, Watcher};
 
 #[derive(Debug)]
 struct WorkerKeyProvider;
@@ -395,22 +395,30 @@ fn validate_initial() {
     };
 
     let error = load().unwrap_err();
-    assert!(matches!(&error, Error::Io(source) if source.kind() == std::io::ErrorKind::NotFound));
+    assert!(
+        matches!(&error, BuildError::Credentials(CredentialError::Io(source)) if source.kind() == std::io::ErrorKind::NotFound)
+    );
     assert!(
         std::error::Error::source(&error)
             .unwrap()
-            .is::<std::io::Error>()
+            .is::<CredentialError>()
     );
 
     fs::write(&cert, &pairs()[0].cert).unwrap();
     fs::write(&key, &pairs()[1].key).unwrap();
     assert!(
-        matches!(load(), Err(Error::Tls(_))),
+        matches!(
+            load(),
+            Err(BuildError::Credentials(CredentialError::Tls(_)))
+        ),
         "mismatched initial pair must fail"
     );
 
     fs::write(&key, b"").unwrap();
-    assert!(matches!(load(), Err(Error::MissingPrivateKey)));
+    assert!(matches!(
+        load(),
+        Err(BuildError::Credentials(CredentialError::MissingPrivateKey))
+    ));
 
     fs::write(&key, b"invalid private key").unwrap();
     assert!(load().is_err(), "invalid initial key must fail");
@@ -500,14 +508,14 @@ fn configuration_failure_preserves_cause() {
         Arc::new(rustls::crypto::aws_lc_rs::default_provider()),
     )
     .configure(|_| {
-        Err(Error::Configuration(
+        Err(BuildError::Configuration(
             std::io::Error::other("custom policy rejected").into(),
         ))
     })
     .build()
     .unwrap_err();
 
-    assert!(matches!(error, Error::Configuration(_)));
+    assert!(matches!(error, BuildError::Configuration(_)));
     let cause = std::error::Error::source(&error).unwrap();
     assert_eq!(cause.to_string(), "custom policy rejected");
     assert_eq!(error.to_string(), "TLS configuration callback failed");

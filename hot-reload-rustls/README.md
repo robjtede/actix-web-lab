@@ -15,7 +15,7 @@ let observer = watcher.spawn_observer(|event| eprintln!("{event:?}"))?;
 // Pass config to HttpServer::bind_rustls_0_23 and keep watcher until shutdown.
 # drop(watcher);
 # let _ = observer.join();
-# Ok::<(), hot_reload_rustls::Error>(())
+# Ok::<(), hot_reload_rustls::BuildError>(())
 ```
 
 ## Interface and lifetime
@@ -30,7 +30,7 @@ The examples call `build` directly during startup and drop the watcher after the
 
 ## Defaults and customization
 
-`Error` is a non-exhaustive enum. Callers can match I/O, TLS validation, watcher setup, invalid paths, missing private keys, provider mismatches, and worker initialization failures. Wrapped errors remain available through `std::error::Error::source`. Configuration callbacks can return `Error::Configuration` to preserve a custom error.
+`BuildError` covers TLS configuration and watcher initialization. Initial credential failures are wrapped in `BuildError::Credentials`. `CredentialError` covers file reads, PEM parsing, missing private keys, and certificate/key validation; it is also the error type in `Event::ReloadFailed`. Both enums are non-exhaustive and preserve underlying causes through `std::error::Error::source`. Configuration callbacks can return `BuildError::Configuration` to preserve a custom error.
 
 The caller must supply a crypto provider. This crate does not enable any Rustls crypto-provider feature or use a process-global provider. Enable your preferred provider on your application’s Rustls dependency. The examples and tests select Rustls’s `aws_lc_rs` feature as a dev-dependency only. The builder uses Rustls safe protocol defaults (TLS 1.2 and TLS 1.3) and no client-certificate authentication.
 
@@ -44,7 +44,7 @@ let (config, watcher) = hot_reload_rustls::Builder::new("cert.pem", "key.pem", p
         Ok(())
     })
     .build()?;
-# Ok::<(), hot_reload_rustls::Error>(())
+# Ok::<(), hot_reload_rustls::BuildError>(())
 ```
 
 Pass the returned `ServerConfig` to `HttpServer::bind_rustls_0_23` or `listen_rustls_0_23`.
