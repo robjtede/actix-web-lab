@@ -53,11 +53,11 @@ New full TLS handshakes use the replacement credentials. The server and its list
 
 ## Run
 
-From the workspace root, generate a development certificate:
+Use [mkcert](https://github.com/FiloSottile/mkcert#installation) for local development certificates. After installing it, run these commands from the workspace root. The first command installs mkcert’s local CA in your trust store:
 
 ```sh
-openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem \
-  -days 1 -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost'
+mkcert -install
+mkcert -cert-file cert.pem -key-file key.pem localhost 127.0.0.1 ::1
 cargo run -p hot-reload-rustls --example actix_web_rustls
 ```
 
@@ -65,14 +65,13 @@ In another terminal, use [inspect-cert-chain](https://github.com/robjtede/inspec
 
 ```sh
 inspect-cert-chain --host localhost --port 8443 | rg -A1 '^Serial Number'
-curl --cacert cert.pem https://localhost:8443/
+curl --cacert "$(mkcert -CAROOT)/rootCA.pem" https://localhost:8443/
 ```
 
 Generate and install a replacement while the example stays running:
 
 ```sh
-openssl req -x509 -newkey rsa:2048 -nodes -keyout key.next -out cert.next \
-  -days 1 -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost'
+mkcert -cert-file cert.next -key-file key.next localhost 127.0.0.1 ::1
 mv cert.next cert.pem
 mv key.next key.pem
 ```
