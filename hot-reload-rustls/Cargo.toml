@@ -1,0 +1,34 @@
+[package]
+name = "hot-reload-rustls"
+version = "0.0.1"
+authors = ["Rob Ede <robjtede@icloud.com>"]
+description = "Notification-driven Rustls credential rotation"
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
+
+[package.metadata.cargo_check_external_types]
+allowed_external_types = ["notify::*", "rustls::*"]
+
+[dependencies]
+arc-swap = "1.1"
+impl-more = "0.3.8"
+notify = "8"
+rustls = { version = "0.23", default-features = false, features = ["std", "tls12"] }
+rustls-pemfile = "2"
+
+[dev-dependencies]
+actix-web = { version = "4.15", features = ["rustls-0_23"] }
+eyre = "0.6"
+rcgen = { version = "0.13", default-features = false, features = ["aws_lc_rs", "pem", "crypto"] }
+rustls = { version = "0.23", default-features = false, features = ["std", "aws_lc_rs", "tls12"] }
+tempfile = "3"
+tokio = { version = "1.38.2", features = ["macros", "rt-multi-thread"] }
+
+[lints]
+workspace = true
