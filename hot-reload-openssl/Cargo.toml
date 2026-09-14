@@ -1,6 +1,6 @@
 [package]
 name = "hot-reload-openssl"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Notification-driven OpenSSL credential rotation"
 repository.workspace = true
