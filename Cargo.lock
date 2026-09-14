@@ -1588,7 +1588,7 @@ dependencies = [
 
 [[package]]
 name = "hot-reload-rustls"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "actix-web",
  "arc-swap",
