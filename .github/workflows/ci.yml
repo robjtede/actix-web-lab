@@ -69,7 +69,7 @@ jobs:
 
       - name: tests
         timeout-minutes: 60
-        run: just test-no-doc
+        run: just test-no-docs
 
       - name: CI cache clean
         run: cargo-ci-cache-clean
