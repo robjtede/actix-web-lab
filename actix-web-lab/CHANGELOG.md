@@ -4,6 +4,7 @@
 
 ## 0.28.0
 
+- Update all RustCrypto dependencies.
 - Update `actix-files` dependency to `0.7`.
 
 ## 0.27.0

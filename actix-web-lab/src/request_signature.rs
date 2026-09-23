@@ -44,7 +44,7 @@ use tracing::trace;
 /// ```
 /// use actix_web::{Error, HttpRequest, web::Bytes};
 /// use actix_web_lab::extract::RequestSignatureScheme;
-/// use hmac::{Mac, SimpleHmac, digest::CtOutput};
+/// use hmac::{KeyInit as _, Mac as _, SimpleHmac, digest::CtOutput};
 /// use sha2::Sha256;
 ///
 /// struct AbcApi {
