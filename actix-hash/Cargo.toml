@@ -40,7 +40,7 @@ sha3 = ["dep:sha3"]
 [dependencies]
 actix-http = "3"
 actix-web = { version = "4", default-features = false }
-actix-web-lab = "0.27"
+actix-web-lab = "0.28"
 futures-core = "0.3.17"
 futures-util = { version = "0.3.31", default-features = false, features = ["std"] }
 pin-project-lite = "0.2"

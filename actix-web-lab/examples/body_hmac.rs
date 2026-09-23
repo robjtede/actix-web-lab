@@ -9,7 +9,7 @@ use actix_web::{
 };
 use actix_web_lab::extract::{RequestSignature, RequestSignatureScheme};
 use digest::{CtOutput, Mac};
-use hmac::SimpleHmac;
+use hmac::{KeyInit as _, SimpleHmac};
 use sha2::Sha256;
 use tracing::info;
 

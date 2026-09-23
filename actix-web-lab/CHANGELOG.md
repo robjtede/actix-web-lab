@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.28.0
+
+- Update `actix-files` dependency to `0.7`.
+
 ## 0.27.0
 
 - Apply configured HSTS headers to error responses returned by wrapped services.

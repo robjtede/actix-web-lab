@@ -112,10 +112,10 @@ impl HttpServiceFactory for SpaService {
 async fn serve_index(
     req: ServiceRequest,
     index_file: String,
-) -> Result<ServiceResponse, actix_web::Error> {
+) -> actix_web::Result<ServiceResponse> {
     trace!("serving default SPA page");
     let (req, _) = req.into_parts();
-    let file = NamedFile::open_async(&index_file).await?;
+    let file = NamedFile::open(&index_file)?;
     let res = file.into_response(&req);
     Ok(ServiceResponse::new(req, res))
 }

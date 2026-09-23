@@ -10,9 +10,8 @@ use actix_web::{
 };
 use actix_web_lab::extract::{RequestSignature, RequestSignatureScheme};
 use base64::prelude::*;
-use digest::{CtOutput, Digest, Mac};
-use generic_array::GenericArray;
-use hmac::SimpleHmac;
+use digest::{CtOutput, Digest, Mac, array::Array};
+use hmac::{KeyInit as _, SimpleHmac};
 use sha2::{Sha256, Sha512};
 use tracing::info;
 
@@ -104,7 +103,9 @@ impl RequestSignatureScheme for ExampleApi {
         req: &HttpRequest,
     ) -> Result<Self::Signature, Self::Error> {
         let user_sig = get_user_signature(req)?;
-        let user_sig = CtOutput::new(GenericArray::from_slice(&user_sig).to_owned());
+        let user_sig = Array::try_from(user_sig.as_slice())
+            .map_err(|_| error::ErrorUnauthorized("invalid signature"))?;
+        let user_sig = CtOutput::new(user_sig);
 
         if signature == user_sig {
             Ok(signature)
