@@ -52,13 +52,8 @@ jobs:
         with:
           tool: just,cargo-hack,cargo-nextest,cargo-ci-cache-clean
 
-      - name: Install Determinate Nix
-        uses: DeterminateSystems/determinate-nix-action@527f17dd63d2d60d3e5552934bc84b9a33a14d11 # v3.22.2
-        with:
-          extra-conf: lazy-trees = true
-
-      - name: Set up FlakeHub Cache
-        uses: DeterminateSystems/flakehub-cache-action@83293488abfd33fbfb2ab084097467491c029962 # v3.22.2
+      - name: Install Nix
+        uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
 
       - name: Enter Nix devshell
         uses: nicknovitski/nix-develop@9be7cfb4b10451d3390a75dc18ad0465bed4932a # v1.2.1
@@ -93,13 +88,8 @@ jobs:
         with:
           tool: just
 
-      - name: Install Determinate Nix
-        uses: DeterminateSystems/determinate-nix-action@527f17dd63d2d60d3e5552934bc84b9a33a14d11 # v3.22.2
-        with:
-          extra-conf: lazy-trees = true
-
-      - name: Set up FlakeHub Cache
-        uses: DeterminateSystems/flakehub-cache-action@83293488abfd33fbfb2ab084097467491c029962 # v3.22.2
+      - name: Install Nix
+        uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
 
       - name: Enter Nix devshell
         uses: nicknovitski/nix-develop@9be7cfb4b10451d3390a75dc18ad0465bed4932a # v1.2.1
