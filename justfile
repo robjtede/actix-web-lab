@@ -43,11 +43,17 @@ clippy-watch toolchain="":
 test-msrv: downgrade-for-msrv (test msrv_rustup)
 
 # Run tests on all crates in workspace using specified (or default) toolchain.
-test toolchain="":
+test toolchain="": (test-no-docs toolchain) (test-docs toolchain)
+
+[private]
+test-no-docs toolchain="":
     cargo {{ toolchain }} nextest run --no-default-features
     cargo {{ toolchain }} nextest run
     cargo {{ toolchain }} nextest run --all-features
-    cargo {{ toolchain }} test --doc
+
+# Test workspace docs.
+test-docs toolchain="": && doc
+    cargo {{ toolchain }} test --doc --workspace --all-features --no-fail-fast -- --nocapture
 
 # Run tests on all crates in workspace and produce coverage file (Codecov format).
 test-coverage-codecov toolchain="":
@@ -56,10 +62,6 @@ test-coverage-codecov toolchain="":
 # Run tests on all crates in workspace and produce coverage file (lcov format).
 test-coverage-lcov toolchain="":
     cargo {{ toolchain }} llvm-cov --workspace --all-features --lcov --output-path lcov.info
-
-# Test workspace docs.
-test-docs toolchain="": && doc
-    cargo {{ toolchain }} test --doc --workspace --all-features --no-fail-fast -- --nocapture
 
 # Document crates in workspace.
 doc *args: && doc-set-workspace-crates
