@@ -50,6 +50,7 @@
 - `LocalData`: app data/state that uses an `Rc` internally, avoiding atomic overhead (alternative to `Data<RwLock<T>>`) [(docs)](https://docs.rs/actix-web-lab/0.28.0/actix_web_lab/extract/struct.LocalData.html)
 - `ThinData`: (graduated 🎉) app data/state for cheaply-cloned types [(docs)](https://docs.rs/actix-web/4/actix_web/web/struct.ThinData.html)
 - `Json`: simplified JSON extractor with const-generic payload limits [(docs)](https://docs.rs/actix-web-lab/0.28.0/actix_web_lab/extract/struct.Json.html)
+- `json::DeserJson`: JSON extractor that uses deser 0.9 and retains error paths and locations (requires the `deser` feature)
 - `Path`: simplified path parameter extractor that supports destructuring [(docs)](https://docs.rs/actix-web-lab/0.28.0/actix_web_lab/extract/struct.Path.html)
 - `Query`: simplified query-string extractor that can also collect multi-value items [(docs)](https://docs.rs/actix-web-lab/0.28.0/actix_web_lab/extract/struct.Query.html)
 - `RequestSignature`: wraps an extractor and calculates a request signature alongside [(docs)](https://docs.rs/actix-web-lab/0.28.0/actix_web_lab/extract/struct.RequestSignature.html)
