@@ -7,7 +7,7 @@ pub use crate::{
     body_limit::{BodyLimit, DEFAULT_BODY_LIMIT},
     bytes::{Bytes, DEFAULT_BYTES_LIMIT},
     host::Host,
-    json::{DEFAULT_JSON_LIMIT, Json, JsonDeserializeError, JsonPayloadError},
+    json_serde::{DEFAULT_JSON_LIMIT, Json, JsonDeserializeError, JsonPayloadError},
     lazy_data::LazyData,
     lazy_data_shared::LazyDataShared,
     local_data::LocalData,

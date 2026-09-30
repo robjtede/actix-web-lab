@@ -34,12 +34,14 @@ mod clear_site_data;
 mod condition_option;
 mod content_length;
 mod csv;
+#[cfg(feature = "deser")]
+mod deser_json;
 mod display_stream;
 mod err_handler;
 mod forwarded;
 mod host;
 mod infallible_body_stream;
-mod json;
+mod json_serde;
 mod lazy_data;
 mod lazy_data_shared;
 mod load_shed;
@@ -75,6 +77,8 @@ pub mod body;
 pub mod extract;
 pub mod guard;
 pub mod header;
+#[cfg(feature = "deser")]
+pub mod json;
 pub mod middleware;
 pub mod respond;
 pub mod sse;
