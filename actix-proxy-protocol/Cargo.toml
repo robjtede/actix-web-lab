@@ -1,6 +1,6 @@
 [package]
 name = "actix-proxy-protocol"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Actix integration for the PROXY protocol"
 keywords = ["proxy", "protocol", "network", "haproxy", "tcp"]
@@ -11,12 +11,11 @@ edition.workspace = true
 rust-version.workspace = true
 
 [package.metadata.cargo_check_external_types]
-allowed_external_types = ["actix_rt::*", "actix_service::*", "actix_utils::*", "proxyproto::*", "tokio::*"]
+allowed_external_types = ["actix_rt::*", "actix_service::*", "proxyproto::*", "tokio::*"]
 
 [dependencies]
 actix-rt = "2.11"
 actix-service = "2"
-actix-utils = "3"
 futures-core = { version = "0.3.17", default-features = false, features = ["std"] }
 pin-project-lite = "0.2"
 proxyproto = { path = "../proxyproto", version = "0.2", features = ["tokio"] }

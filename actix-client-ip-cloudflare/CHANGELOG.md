@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.4.0
+
+- Change the `TrustedClientIp` extractor's associated future type to `std::future::Ready`.
+
 ## 0.3.0
 
 - Implement `IntoIterator` for `TrustedIps`.

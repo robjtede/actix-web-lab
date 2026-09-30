@@ -1,6 +1,8 @@
-use std::sync::Arc;
+use std::{
+    future::{Ready, ready},
+    sync::Arc,
+};
 
-use actix_utils::future::{Ready, ready};
 use actix_web::{Error, FromRequest, HttpRequest, dev, error};
 use arc_swap::{ArcSwap, Guard};
 use tracing::debug;

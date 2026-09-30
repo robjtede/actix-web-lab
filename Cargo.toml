@@ -24,9 +24,3 @@ nonstandard_style = { level = "deny", priority = 5 }
 future_incompatible = "warn"
 missing_docs = "warn"
 missing_debug_implementations = "warn"
-
-[patch.crates-io]
-actix-client-ip-cloudflare = { path = "./actix-client-ip-cloudflare" }
-actix-hash = { path = "./actix-hash" }
-actix-web-lab = { path = "./actix-web-lab" }
-actix-web-lab-derive = { path = "./actix-web-lab-derive" }

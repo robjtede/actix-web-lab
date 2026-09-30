@@ -4,9 +4,8 @@ version = 4
 
 [[package]]
 name = "actix-client-ip-cloudflare"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
- "actix-utils",
  "actix-web",
  "impl-more 0.3.7",
  "ipnetwork",
@@ -74,7 +73,7 @@ dependencies = [
  "md-5",
  "md4",
  "pin-project-lite",
- "sha1",
+ "sha1 0.10.7",
  "sha2 0.10.9",
  "sha3",
  "subtle",
@@ -112,7 +111,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "rand 0.10.2",
- "sha1",
+ "sha1 0.11.0",
  "smallvec",
  "tokio",
  "tokio-util",
@@ -157,14 +156,13 @@ dependencies = [
 
 [[package]]
 name = "actix-proxy-protocol"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "actix-codec",
  "actix-http",
  "actix-rt",
  "actix-server",
  "actix-service",
- "actix-utils",
  "bytes",
  "futures-core",
  "futures-util",
@@ -339,13 +337,12 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab"
-version = "0.28.0"
+version = "0.29.0"
 dependencies = [
  "actix-files",
  "actix-http",
  "actix-router",
  "actix-service",
- "actix-utils",
  "actix-web",
  "actix-web-lab-derive",
  "ahash",
@@ -393,7 +390,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab-derive"
-version = "0.28.0"
+version = "0.29.0"
 dependencies = [
  "actix-test",
  "actix-web",
@@ -3031,6 +3028,17 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "sha1"
+version = "0.10.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a978451301f4db1d02937a4ab3ccce137717b81826e79b7d49ffe3244a13c3b8"
+dependencies = [
+ "cfg-if",
+ "cpufeatures 0.2.17",
+ "digest 0.10.7",
 ]
 
 [[package]]

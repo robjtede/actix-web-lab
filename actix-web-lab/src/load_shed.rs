@@ -7,12 +7,12 @@ use std::{
     cell::Cell,
     error::Error as StdError,
     fmt,
+    future::{Ready, ready},
     pin::Pin,
     task::{Context, Poll, ready},
 };
 
 use actix_service::{Service, Transform};
-use actix_utils::future::{Ready, ok};
 use actix_web::ResponseError;
 use pin_project_lite::pin_project;
 
@@ -36,7 +36,7 @@ impl<S: Service<Req>, Req> Transform<S, Req> for LoadShed {
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(LoadShedService::new(service))
+        ready(Ok(LoadShedService::new(service)))
     }
 }
 

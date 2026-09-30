@@ -1,13 +1,13 @@
 //! For middleware documentation, see [`NormalizePath`].
 
 use std::{
+    future::{Ready, ready},
     marker::PhantomData,
     pin::Pin,
     task::{Context, Poll, ready},
 };
 
 use actix_service::{Service, Transform};
-use actix_utils::future::{Ready, ready};
 use actix_web::{
     Error, HttpResponse,
     body::EitherBody,
