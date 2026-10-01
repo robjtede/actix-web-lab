@@ -42,6 +42,8 @@
             pkgs.pkgsBuildHost.libiconv
           ];
 
+          LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.openssl ];
+
           shellHook = config.x52.justRust.shellHook;
         };
       };
