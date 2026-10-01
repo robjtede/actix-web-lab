@@ -2726,7 +2726,7 @@ dependencies = [
 
 [[package]]
 name = "russe"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "aho-corasick",
  "bytes",

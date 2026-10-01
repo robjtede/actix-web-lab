@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.0.7
+
 - Add `Encoder` for SSE messages, comments, and retry delays using Tokio's `Encoder<Event>` trait.
 
 ## 0.0.6
