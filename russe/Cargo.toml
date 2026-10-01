@@ -2,7 +2,7 @@
 name = "russe"
 version = "0.0.6"
 authors = ["Rob Ede <robjtede@icloud.com>"]
-description = "Server-Sent Events (SSE) decoder"
+description = "Server-Sent Events (SSE) encoder and decoder"
 keywords = ["sse", "server", "sent", "events"]
 repository.workspace = true
 license.workspace = true
@@ -40,6 +40,7 @@ color-eyre = "0.6"
 divan = "0.1"
 eyre = "0.6"
 futures-test = "0.3"
+futures-util = { version = "0.3.18", features = ["sink"] }
 indoc = "2"
 tokio = { version = "1.38.2", features = ["macros", "rt"] }
 tokio-stream = "0.1"

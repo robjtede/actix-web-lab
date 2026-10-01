@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `Encoder` for SSE messages, comments, and retry delays using Tokio's `Encoder<Event>` trait.
+
 ## 0.0.6
 
 - Add `reqwest-0_13` crate feature (off-by-default).

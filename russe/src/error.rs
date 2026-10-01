@@ -1,6 +1,6 @@
 use std::{fmt, io};
 
-/// SSE decoding error.
+/// SSE encoding or decoding error.
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum Error {

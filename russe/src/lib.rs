@@ -1,4 +1,4 @@
-//! Server-Sent Events (SSE) decoder.
+//! Server-Sent Events (SSE) encoder and decoder.
 
 #![forbid(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -12,7 +12,7 @@ mod message;
 pub mod reqwest_0_12;
 mod unix_lines;
 
-pub use self::{decoder::Decoder, error::Error, event::Event, message::Message};
+pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, message::Message};
 
 /// A specialized `Result` type for `russe` operations.
 pub type Result<T> = std::result::Result<T, Error>;
