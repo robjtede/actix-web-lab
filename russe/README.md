@@ -15,6 +15,6 @@
 
 <!-- cargo-rdme start -->
 
-Server-Sent Events (SSE) decoder.
+Server-Sent Events (SSE) encoder and decoder.
 
 <!-- cargo-rdme end -->
