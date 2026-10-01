@@ -1,4 +1,4 @@
-use std::{io::Write as _, time::Duration};
+use std::io::Write as _;
 
 use bytes::{BufMut as _, BytesMut};
 
@@ -60,7 +60,7 @@ impl tokio_util::codec::Encoder<Event> for Encoder {
                 }
 
                 if let Some(retry) = message.retry {
-                    encode_retry(dst, retry)?;
+                    writeln!(dst.writer(), "retry: {}", retry.as_millis())?;
                 }
 
                 encode_lines(dst, b"data: ", &message.data);
@@ -77,19 +77,13 @@ impl tokio_util::codec::Encoder<Event> for Encoder {
             }
 
             Event::Retry(retry) => {
-                encode_retry(dst, retry)?;
+                writeln!(dst.writer(), "retry: {}", retry.as_millis())?;
                 dst.extend_from_slice(b"\n");
 
                 Ok(())
             }
         }
     }
-}
-
-fn encode_retry(dst: &mut BytesMut, retry: Duration) -> Result<(), Error> {
-    writeln!(dst.writer(), "retry: {}", retry.as_millis())?;
-
-    Ok(())
 }
 
 fn encode_lines(dst: &mut BytesMut, prefix: &[u8], mut text: &str) {
