@@ -1,6 +1,8 @@
-use std::net::IpAddr;
+use std::{
+    future::{Ready, ready},
+    net::IpAddr,
+};
 
-use actix_utils::future::{Ready, err, ok};
 use actix_web::{
     FromRequest, HttpRequest,
     dev::{self, PeerAddr},
@@ -38,20 +40,20 @@ impl FromRequest for TrustedClientIp {
 
         let client_ip = match client_ip_hdr.or(client_ipv6_hdr) {
             Ok(ip) => ip,
-            Err(_) => return err(bad_req("cf-connecting-ip header not present")),
+            Err(_) => return ready(Err(bad_req("cf-connecting-ip header not present"))),
         };
 
         let trusted_ips = match req.app_data::<TrustedIps>() {
             Some(ips) => ips,
-            None => return err(bad_req("trusted IPs not in app data")),
+            None => return ready(Err(bad_req("trusted IPs not in app data"))),
         };
 
         let peer_ip = PeerAddr::extract(req).into_inner().unwrap().0.ip();
 
         if trusted_ips.contains(peer_ip) {
-            ok(Self(client_ip))
+            ready(Ok(Self(client_ip)))
         } else {
-            err(bad_req("cf-connecting-ip read from untrusted peer"))
+            ready(Err(bad_req("cf-connecting-ip read from untrusted peer")))
         }
     }
 }

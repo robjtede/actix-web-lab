@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.29.0
+
+- Change the associated future types of `Host`, `LocalData`, `Path`, `SwapData`, `LoadShed`, and `NormalizePath` to `std::future::Ready`.
+
 ## 0.28.0
 
 - Update all RustCrypto dependencies.

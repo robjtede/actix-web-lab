@@ -1,7 +1,8 @@
 //! For path segment extractor documentation, see [`Path`].
 
+use std::future::{Ready, ready};
+
 use actix_router::PathDeserializer;
-use actix_utils::future::{Ready, ready};
 use actix_web::{
     FromRequest, HttpRequest,
     dev::Payload,

@@ -1,6 +1,6 @@
 [package]
 name = "actix-client-ip-cloudflare"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Extractor for trustworthy client IP addresses when proxied through Cloudflare"
 keywords = ["actix", "web", "client", "ip", "cloudflare"]
@@ -15,7 +15,7 @@ autoexamples = false
 all-features = true
 
 [package.metadata.cargo_check_external_types]
-allowed_external_types = ["actix_http::*", "actix_utils::*", "actix_web::*", "http::*", "ipnetwork::*"]
+allowed_external_types = ["actix_http::*", "actix_web::*", "http::*", "ipnetwork::*"]
 
 [features]
 default = ["fetch-ips"]
@@ -24,7 +24,6 @@ fetch-ips-rustls = ["dep:reqwest", "reqwest/rustls"]
 fetch-ips-openssl = ["dep:reqwest", "reqwest/native-tls"]
 
 [dependencies]
-actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 impl-more = "0.3"
 ipnetwork = { version = "0.21", features = ["serde"] }

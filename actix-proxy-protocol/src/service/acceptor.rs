@@ -1,8 +1,10 @@
-use std::convert::Infallible;
+use std::{
+    convert::Infallible,
+    future::{Ready, ready},
+};
 
 use actix_rt::net::ActixStream;
 use actix_service::{Service, ServiceFactory};
-use actix_utils::future::{Ready, ready};
 use futures_core::future::LocalBoxFuture;
 
 use super::{HeaderPolicy, ProxyProtocolError, ProxyStream};

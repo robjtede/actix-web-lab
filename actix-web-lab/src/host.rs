@@ -1,6 +1,8 @@
-use std::convert::Infallible;
+use std::{
+    convert::Infallible,
+    future::{Ready, ready},
+};
 
-use actix_utils::future::{Ready, ok};
 use actix_web::{FromRequest, HttpRequest, dev::Payload};
 
 /// Host information.
@@ -26,7 +28,7 @@ impl FromRequest for Host {
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        ok(Host(req.connection_info().host().to_owned()))
+        ready(Ok(Host(req.connection_info().host().to_owned())))
     }
 }
 

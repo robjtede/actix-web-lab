@@ -1,6 +1,10 @@
-use std::{any::type_name, ops::Deref, rc::Rc};
+use std::{
+    any::type_name,
+    future::{Ready, ready},
+    ops::Deref,
+    rc::Rc,
+};
 
-use actix_utils::future::{Ready, err, ok};
 use actix_web::{Error, FromRequest, HttpRequest, dev::Payload, error};
 use tracing::debug;
 
@@ -43,7 +47,7 @@ impl<T: ?Sized + 'static> FromRequest for LocalData<T> {
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         if let Some(st) = req.app_data::<LocalData<T>>() {
-            ok(st.clone())
+            ready(Ok(st.clone()))
         } else {
             debug!(
                 "Failed to extract `LocalData<{}>` for `{}` handler. For the LocalData extractor \
@@ -53,10 +57,10 @@ impl<T: ?Sized + 'static> FromRequest for LocalData<T> {
                 req.match_name().unwrap_or_else(|| req.path())
             );
 
-            err(error::ErrorInternalServerError(
+            ready(Err(error::ErrorInternalServerError(
                 "Requested application data is not configured correctly. \
                 View/enable debug logs for more details.",
-            ))
+            )))
         }
     }
 }

@@ -1,4 +1,5 @@
-use actix_utils::future::ok;
+use std::future::ready;
+
 use actix_web::{
     Error, HttpResponseBuilder,
     body::BoxBody,
@@ -13,6 +14,8 @@ pub fn echo_path_service(
 ) -> impl Service<ServiceRequest, Response = ServiceResponse<BoxBody>, Error = Error> {
     fn_service(move |req: ServiceRequest| {
         let path = req.path().to_owned();
-        ok(req.into_response(HttpResponseBuilder::new(status_code).body(path)))
+        ready(Ok(req.into_response(
+            HttpResponseBuilder::new(status_code).body(path),
+        )))
     })
 }
