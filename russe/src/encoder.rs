@@ -86,6 +86,7 @@ impl tokio_util::codec::Encoder<Event> for Encoder {
     }
 }
 
+/// Prefixes each line, preserves empty lines, and converts CRLF and CR to LF.
 fn encode_lines(dst: &mut BytesMut, prefix: &[u8], mut text: &str) {
     loop {
         dst.extend_from_slice(prefix);
