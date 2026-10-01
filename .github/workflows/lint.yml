@@ -86,7 +86,7 @@ jobs:
           -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
       - name: Check workspace lints inherited
-        uses: ./check-workspace-lints-inherited
+        uses: $/check-workspace-lints-inherited
 
   external-types:
     runs-on: ubuntu-latest
