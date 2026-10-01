@@ -1,0 +1,29 @@
+[workspace]
+changelog_update = false
+dependencies_update = false
+pr_draft = true
+pr_labels = ["release"]
+publish_all_features = true
+git_release_name = "{{ package }}: v{{ version }}"
+
+[[package]]
+name = "actix-client-ip-cloudflare"
+git_tag_name = "client-ip-cloudflare-v{{ version }}"
+
+[[package]]
+name = "actix-hash"
+git_tag_name = "hash-v{{ version }}"
+
+[[package]]
+name = "actix-proxy-protocol"
+git_tag_name = "proxy-protocol-v{{ version }}"
+
+[[package]]
+name = "actix-web-lab"
+git_tag_name = "lab-v{{ version }}"
+version_group = "actix-web-lab"
+
+[[package]]
+name = "actix-web-lab-derive"
+git_tag_name = "lab-derive-v{{ version }}"
+version_group = "actix-web-lab"

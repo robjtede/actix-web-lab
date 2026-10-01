@@ -17,9 +17,16 @@
       perSystem = { pkgs, config, inputs', system, lib, ... }: {
         formatter = pkgs.nixpkgs-fmt;
 
+        devShells.ci-release = pkgs.mkShellNoCC {
+          packages = [
+            inputs'.x52.packages.x52-release-tools
+          ];
+        };
+
         devShells.default = pkgs.mkShell {
           packages = [
             config.formatter
+            inputs'.x52.packages.x52-release-tools
             pkgs.cargo-rdme
             pkgs.cargo-nextest
             pkgs.cargo-outdated
