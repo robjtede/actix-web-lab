@@ -49,7 +49,10 @@ test toolchain="": (test-no-docs toolchain) (test-docs toolchain)
 test-no-docs toolchain="":
     cargo {{ toolchain }} nextest run --no-default-features
     cargo {{ toolchain }} nextest run
-    cargo {{ toolchain }} nextest run --all-features
+
+    # Use Rustls for Cloudflare tests to avoid enabling OpenSSL for the workspace.
+    cargo {{ toolchain }} nextest run --workspace --all-features --exclude actix-client-ip-cloudflare
+    cargo {{ toolchain }} nextest run --package actix-client-ip-cloudflare --features fetch-ips-rustls
 
 # Test workspace docs.
 test-docs toolchain="": && doc
