@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `ReqwestExt` and `Manager` APIs for Reqwest 0.13 through the optional `reqwest-0_13` crate feature.
+
 ## 0.0.7
 
 - Add `Encoder` for SSE messages, comments, and retry delays using Tokio's `Encoder<Event>` trait.
