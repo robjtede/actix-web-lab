@@ -1,4 +1,8 @@
-//! Semantic server-sent events (SSE) responder
+//! Semantic server-sent events (SSE) responder.
+//!
+//! Message data and comments can contain multiple lines. CRLF and CR line endings are converted
+//! to LF. An ID with NUL, CR, or LF, or an event name with CR or LF, causes the response body to
+//! return an encoding error.
 //!
 //! # Examples
 //! ```no_run
@@ -50,7 +54,7 @@ use actix_web::{
     body::{BodySize, BoxBody, MessageBody},
     http::header::ContentEncoding,
 };
-use bytes::{BufMut as _, Bytes, BytesMut};
+use bytes::Bytes;
 use bytestring::ByteString;
 use futures_core::Stream;
 use pin_project_lite::pin_project;
@@ -206,57 +210,20 @@ pub enum Event {
 }
 
 impl Event {
-    /// Splits data into lines and prepend each line with `prefix`.
-    fn line_split_with_prefix(buf: &mut BytesMut, prefix: &'static str, data: ByteString) {
-        // initial buffer size guess is len(data) + 10 lines of prefix + EOLs + EOF
-        buf.reserve(data.len() + (10 * (prefix.len() + 1)) + 1);
+    /// Encodes the event in event-stream format.
+    fn into_bytes(self) -> Result<Bytes, BoxError> {
+        let event = match self {
+            Self::Data(Data { id, event, data }) => russe::Event::Message(russe::Message {
+                data,
+                event,
+                id,
+                retry: None,
+            }),
 
-        // append prefix + space + line to buffer
-        for line in data.split('\n') {
-            buf.put_slice(prefix.as_bytes());
-            buf.put_slice(line.as_bytes());
-            buf.put_u8(b'\n');
-        }
-    }
+            Self::Comment(comment) => russe::Event::Comment(comment),
+        };
 
-    /// Serializes message into event-stream format.
-    fn into_bytes(self) -> Bytes {
-        let mut buf = BytesMut::new();
-
-        match self {
-            Event::Data(Data { id, event, data }) => {
-                if let Some(text) = id {
-                    buf.put_slice(b"id: ");
-                    buf.put_slice(text.as_bytes());
-                    buf.put_u8(b'\n');
-                }
-
-                if let Some(text) = event {
-                    buf.put_slice(b"event: ");
-                    buf.put_slice(text.as_bytes());
-                    buf.put_u8(b'\n');
-                }
-
-                Self::line_split_with_prefix(&mut buf, "data: ", data);
-            }
-
-            Event::Comment(text) => Self::line_split_with_prefix(&mut buf, ": ", text),
-        }
-
-        // final newline to mark end of message
-        buf.put_u8(b'\n');
-
-        buf.freeze()
-    }
-
-    /// Serializes retry message into event-stream format.
-    fn retry_to_bytes(retry: Duration) -> Bytes {
-        Bytes::from(format!("retry: {}\n\n", retry.as_millis()))
-    }
-
-    /// Serializes a keep-alive event-stream comment message into bytes.
-    const fn keep_alive_bytes() -> Bytes {
-        Bytes::from_static(b": keep-alive\n\n")
+        event.into_bytes().map_err(Into::into)
     }
 }
 
@@ -318,7 +285,7 @@ impl Sse<InfallibleStream<ReceiverStream<Event>>> {
 }
 
 impl<S> Sse<S> {
-    /// Enables "keep-alive" messages to be send in the event stream after a period of inactivity.
+    /// Enables "keep-alive" messages to be sent in the event stream after a period of inactivity.
     ///
     /// By default, no keep-alive is set up.
     pub fn with_keep_alive(mut self, keep_alive_period: Duration) -> Self {
@@ -329,7 +296,7 @@ impl<S> Sse<S> {
         self
     }
 
-    /// Queues first event message to inform client of custom retry period.
+    /// Queues the first event to inform the client of a custom retry period.
     ///
     /// Browsers default to retry every 3 seconds or so.
     pub fn with_retry_duration(mut self, retry: Duration) -> Self {
@@ -347,7 +314,7 @@ where
 
     fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
         HttpResponse::Ok()
-            .content_type(mime::TEXT_EVENT_STREAM)
+            .content_type(russe::MEDIA_TYPE_STR)
             .insert_header(ContentEncoding::Identity)
             .insert_header(CacheControl(vec![CacheDirective::NoCache]))
             .body(self)
@@ -373,12 +340,14 @@ where
 
         if let Some(retry) = this.retry_interval.take() {
             cx.waker().wake_by_ref();
-            return Poll::Ready(Some(Ok(Event::retry_to_bytes(retry))));
+            return Poll::Ready(Some(
+                russe::Event::Retry(retry).into_bytes().map_err(Into::into),
+            ));
         }
 
         if let Poll::Ready(msg) = this.stream.poll_next(cx) {
             return match msg {
-                Some(Ok(msg)) => Poll::Ready(Some(Ok(msg.into_bytes()))),
+                Some(Ok(msg)) => Poll::Ready(Some(msg.into_bytes())),
                 Some(Err(err)) => Poll::Ready(Some(Err(err.into()))),
                 None => Poll::Ready(None),
             };
@@ -387,7 +356,11 @@ where
         if let Some(keep_alive) = this.keep_alive
             && keep_alive.poll_tick(cx).is_ready()
         {
-            return Poll::Ready(Some(Ok(Event::keep_alive_bytes())));
+            return Poll::Ready(Some(
+                russe::Event::Comment("keep-alive".into())
+                    .into_bytes()
+                    .map_err(Into::into),
+            ));
         }
 
         Poll::Pending
@@ -403,97 +376,39 @@ mod tests {
     use tokio::time::sleep;
 
     use super::*;
-    use crate::{assert_response_matches, util::InfallibleStream};
+    use crate::assert_response_matches;
 
-    #[test]
-    fn format_retry_message() {
-        assert_eq!(
-            Event::retry_to_bytes(Duration::from_millis(1)),
-            "retry: 1\n\n",
-        );
-        assert_eq!(
-            Event::retry_to_bytes(Duration::from_secs(10)),
-            "retry: 10000\n\n",
-        );
-    }
+    #[actix_web::test]
+    async fn existing_data_api_is_preserved() {
+        let mut data = Data::new("old data").id("old ID").event("old event");
 
-    #[test]
-    fn line_split_format() {
-        let mut buf = BytesMut::new();
-        Event::line_split_with_prefix(&mut buf, "data: ", ByteString::from("foo"));
-        assert_eq!(buf, "data: foo\n");
+        data.set_data("payload");
+        data.set_id("42");
+        data.set_event("update");
 
-        let mut buf = BytesMut::new();
-        Event::line_split_with_prefix(&mut buf, "data: ", ByteString::from("foo\nbar"));
-        assert_eq!(buf, "data: foo\ndata: bar\n");
-    }
-
-    #[test]
-    fn into_bytes_format() {
-        assert_eq!(Event::Comment("foo".into()).into_bytes(), ": foo\n\n");
+        let json = Data::new_json(serde_json::json!({ "bar": 42 })).unwrap();
+        let events = stream::iter([Event::Data(data), json.into()]);
+        let sse = Sse::from_infallible_stream(events);
 
         assert_eq!(
-            Event::Data(Data {
-                id: None,
-                event: None,
-                data: "foo".into()
-            })
-            .into_bytes(),
-            "data: foo\n\n"
-        );
-
-        assert_eq!(
-            Event::Data(Data {
-                id: None,
-                event: None,
-                data: "\n".into()
-            })
-            .into_bytes(),
-            "data: \ndata: \n\n"
-        );
-
-        assert_eq!(
-            Event::Data(Data {
-                id: Some("42".into()),
-                event: None,
-                data: "foo".into()
-            })
-            .into_bytes(),
-            "id: 42\ndata: foo\n\n"
-        );
-
-        assert_eq!(
-            Event::Data(Data {
-                id: None,
-                event: Some("bar".into()),
-                data: "foo".into()
-            })
-            .into_bytes(),
-            "event: bar\ndata: foo\n\n"
-        );
-
-        assert_eq!(
-            Event::Data(Data {
-                id: Some("42".into()),
-                event: Some("bar".into()),
-                data: "foo".into()
-            })
-            .into_bytes(),
-            "id: 42\nevent: bar\ndata: foo\n\n"
+            body::to_bytes(sse).await.unwrap(),
+            "id: 42\nevent: update\ndata: payload\n\ndata: {\"bar\":42}\n\n",
         );
     }
 
-    #[test]
-    fn retry_is_first_msg() {
-        let waker = noop_waker();
-        let mut cx = Context::from_waker(&waker);
+    #[actix_web::test]
+    async fn message_fields_are_encoded() {
+        let events = stream::iter([
+            Event::Comment("foo".into()),
+            Data::new("\n").into(),
+            Data::new("foo").id("42").event("bar").into(),
+        ]);
+        let sse = Sse::from_infallible_stream(events);
 
-        let mut sse = Sse::from_stream(InfallibleStream::new(tokio_stream::empty()))
-            .with_retry_duration(Duration::from_millis(42));
-        match Pin::new(&mut sse).poll_next(&mut cx) {
-            Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "retry: 42\n\n"),
-            res => panic!("poll should return retry message, got {res:?}"),
-        }
+        assert_eq!(
+            body::to_bytes(sse).await.unwrap(),
+            ": foo\n\ndata: \ndata: \n\nid: 42\nevent: bar\ndata: foo\n\n",
+        );
     }
 
     #[actix_web::test]
@@ -512,6 +427,94 @@ mod tests {
             body::to_bytes(sse).await.unwrap(),
             "data: foo\n\ndata: foo\n\n",
         );
+    }
+
+    #[actix_web::test]
+    async fn normalizes_line_endings() {
+        let events = stream::iter([
+            Event::Data(Data::new("first\r\nsecond\rthird\n")),
+            Event::Comment("first\r\nsecond\rthird\n".into()),
+        ]);
+        let sse = Sse::from_infallible_stream(events);
+
+        assert_eq!(
+            body::to_bytes(sse).await.unwrap(),
+            "data: first\ndata: second\ndata: third\ndata: \n\n: first\n: second\n: third\n: \n\n",
+        );
+    }
+
+    #[actix_web::test]
+    async fn rejects_invalid_message_fields() {
+        for (id, event) in [
+            ("bad\nid", "update"),
+            ("bad\rid", "update"),
+            ("bad\0id", "update"),
+            ("42", "bad\nevent"),
+            ("42", "bad\revent"),
+        ] {
+            let events = stream::iter([Event::Data(Data::new("payload").id(id).event(event))]);
+            let sse = Sse::from_infallible_stream(events);
+
+            let err = body::to_bytes(sse).await.unwrap_err();
+
+            assert!(matches!(
+                err.downcast_ref::<russe::Error>(),
+                Some(russe::Error::Invalid),
+            ));
+        }
+    }
+
+    #[test]
+    fn retry_is_first_msg() {
+        let waker = noop_waker();
+        let mut cx = Context::from_waker(&waker);
+
+        let mut sse = Sse::from_stream(InfallibleStream::new(tokio_stream::empty()))
+            .with_retry_duration(Duration::from_millis(42));
+        match Pin::new(&mut sse).poll_next(&mut cx) {
+            Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "retry: 42\n\n"),
+            res => panic!("poll should return retry message, got {res:?}"),
+        }
+    }
+
+    #[actix_web::test]
+    async fn retry_precedes_stream_events() {
+        let events = stream::iter([Event::Comment("first".into())]);
+        let sse =
+            Sse::from_infallible_stream(events).with_retry_duration(Duration::from_millis(42));
+
+        assert_eq!(
+            body::to_bytes(sse).await.unwrap(),
+            "retry: 42\n\n: first\n\n",
+        );
+    }
+
+    #[actix_web::test]
+    async fn receiver_errors_are_preserved() {
+        let (sender, receiver) = mpsc::channel(1);
+        let sse = Sse::from_receiver(receiver);
+
+        sender
+            .send(Err(std::io::Error::other("stream failed")))
+            .await
+            .unwrap();
+
+        let err = body::to_bytes(sse).await.unwrap_err();
+
+        assert_eq!(
+            err.downcast_ref::<std::io::Error>().unwrap().to_string(),
+            "stream failed",
+        );
+    }
+
+    #[actix_web::test]
+    async fn closed_receiver_ends_with_keep_alive() {
+        let (sender, receiver) = mpsc::channel(1);
+        let sse = Sse::from_infallible_receiver(receiver).with_keep_alive(Duration::from_millis(4));
+
+        drop(sender);
+
+        assert_eq!(body::to_bytes(sse).await.unwrap(), "");
     }
 
     #[actix_web::test]
@@ -540,7 +543,7 @@ mod tests {
         );
 
         sender
-            .send(Data::new("bar").event("foo").into())
+            .send(Event::Data(Data::new("bar").event("foo")))
             .await
             .unwrap();
 
@@ -565,12 +568,12 @@ mod tests {
 
         match Pin::new(&mut sse).poll_next(&mut cx) {
             Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, ": keep-alive\n\n"),
-            res => panic!("poll should return data message, got {res:?}"),
+            res => panic!("poll should return keep-alive message, got {res:?}"),
         }
 
         assert!(Pin::new(&mut sse).poll_next(&mut cx).is_pending());
 
-        sender.send(Data::new("foo").into()).await.unwrap();
+        sender.send(Event::Data(Data::new("foo"))).await.unwrap();
 
         match Pin::new(&mut sse).poll_next(&mut cx) {
             Poll::Ready(Some(Ok(bytes))) => assert_eq!(bytes, "data: foo\n\n"),
