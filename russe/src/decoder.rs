@@ -119,7 +119,9 @@ impl tokio_util::codec::Decoder for Decoder {
         for line in lines_reader {
             let mut line = line?;
 
-            let matched = self.directive_finder.find(&line).expect("invalid line");
+            let Some(matched) = self.directive_finder.find(&line) else {
+                continue;
+            };
 
             debug_assert!(
                 matched.start() == 0,
@@ -318,6 +320,13 @@ mod tests {
                 Some(Event::Message(Message::data("next"))),
             );
         }
+    }
+
+    #[test]
+    fn null_field_does_not_panic() {
+        let mut input = BytesMut::from("\0\n\n");
+
+        let _ = Decoder::default().decode(&mut input);
     }
 
     #[tokio::test]
