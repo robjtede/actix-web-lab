@@ -151,8 +151,12 @@ impl tokio_util::codec::Decoder for Decoder {
 
                         let input = str::from_utf8(&input).map_err(invalid_utf8)?;
 
-                        if let Ok(millis) = input.parse::<u64>() {
-                            message.retry = Some(Duration::from_millis(millis));
+                        if let Ok(millis) = input.parse::<u128>()
+                            && let Ok(seconds) = u64::try_from(millis / 1_000)
+                        {
+                            let nanos = (millis % 1_000) as u32 * 1_000_000;
+
+                            message.retry = Some(Duration::new(seconds, nanos));
                         }
                     }
 
@@ -381,6 +385,33 @@ mod tests {
                 ..Message::data("hello")
             })),
         );
+    }
+
+    #[test]
+    fn decodes_retry_larger_than_u64_milliseconds() {
+        for (millis, expected) in [
+            (
+                "18446744073709552000",
+                Some(Duration::from_secs(18_446_744_073_709_552)),
+            ),
+            (
+                "18446744073709552001",
+                Some(Duration::new(18_446_744_073_709_552, 1_000_000)),
+            ),
+            (
+                "18446744073709551615999",
+                Some(Duration::new(u64::MAX, 999_000_000)),
+            ),
+            ("18446744073709551616000", None),
+            ("340282366920938463463374607431768211456", None),
+        ] {
+            let frame = format!("retry: {millis}\n\n");
+            let mut input = BytesMut::from(frame.as_str());
+
+            let event = Decoder::default().decode(&mut input).unwrap();
+
+            assert_eq!(event, expected.map(Event::Retry));
+        }
     }
 
     #[tokio::test]
