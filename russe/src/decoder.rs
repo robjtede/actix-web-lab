@@ -4,8 +4,8 @@ use std::{
     time::Duration,
 };
 
-use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
-use bytes::{Buf as _, BytesMut};
+use aho_corasick::AhoCorasick;
+use bytes::{Buf as _, Bytes, BytesMut};
 use bytestring::ByteString;
 
 use crate::{Error, NEWLINE, SSE_DELIMITER, event::Event, message::Message, unix_lines::UnixLines};
@@ -15,7 +15,6 @@ use crate::{Error, NEWLINE, SSE_DELIMITER, event::Event, message::Message, unix_
 #[non_exhaustive]
 pub struct Decoder {
     event_finder: AhoCorasick,
-    directive_finder: AhoCorasick,
     pending_event: Option<Event>,
     skip_lf: bool,
 }
@@ -24,20 +23,6 @@ impl Default for Decoder {
     fn default() -> Self {
         Self {
             event_finder: AhoCorasick::new([SSE_DELIMITER, b"\n\r", b"\r\r"]).unwrap(),
-            directive_finder: AhoCorasickBuilder::new()
-                .match_kind(aho_corasick::MatchKind::LeftmostFirst)
-                .build(
-                    // patterns arranged in most-to-least common then with
-                    // spaced variants first to support leftmost-first search
-                    [
-                        "data: ", "data:", // 0-1
-                        "id: ", "id:", // 2-3
-                        "event: ", "event:", // 4-5
-                        "retry: ", "retry:", // 6-7
-                        ": ", ":", // 8-9
-                    ],
-                )
-                .unwrap(),
             pending_event: None,
             skip_lf: false,
         }
@@ -120,45 +105,46 @@ impl tokio_util::codec::Decoder for Decoder {
             for line in lines_reader {
                 let mut line = line?;
 
-                let Some(matched) = self.directive_finder.find(&line) else {
-                    continue;
-                };
-
-                if matched.start() != 0 {
+                if line.is_empty() {
                     continue;
                 }
 
-                // discard matched directive bytes
-                let _ = line.split_to(matched.end());
-                let input = line;
+                let input = if let Some(colon) = memchr::memchr(b':', &line) {
+                    let mut input = line.split_off(colon + 1);
+                    line.truncate(colon);
 
-                match matched.pattern().as_u64() {
-                    // data
-                    0 | 1 => {
+                    if input.first() == Some(&b' ') {
+                        input.advance(1);
+                    }
+
+                    input
+                } else {
+                    Bytes::new()
+                };
+
+                match line.as_ref() {
+                    b"data" => {
                         data_buf.extend_from_slice(&input);
                         data_buf.extend_from_slice(&[NEWLINE]);
 
                         message_event = true;
                     }
 
-                    // id
-                    2 | 3 => {
+                    b"id" => {
                         let id = ByteString::try_from(input).map_err(invalid_utf8)?;
 
                         message.id = Some(id);
                         message_event = true;
                     }
 
-                    // event
-                    4 | 5 => {
+                    b"event" => {
                         let event = ByteString::try_from(input).map_err(invalid_utf8)?;
 
                         message.event = Some(event);
                         message_event = true;
                     }
 
-                    // retry
-                    6 | 7 => {
+                    b"retry" => {
                         let input = str::from_utf8(&input).map_err(invalid_utf8)?;
 
                         message.retry = Some(Duration::from_millis(
@@ -168,13 +154,12 @@ impl tokio_util::codec::Decoder for Decoder {
                         ))
                     }
 
-                    // comment
-                    8 | 9 => {
+                    b"" => {
                         comment_buf.extend_from_slice(&input);
                         comment_buf.extend_from_slice(&[NEWLINE]);
                     }
 
-                    _ => unreachable!("all search patterns are covered"),
+                    _ => {}
                 }
             }
 
@@ -350,6 +335,15 @@ mod tests {
         let mut input = BytesMut::from("extension: ignored\n\n");
 
         assert_none!(Decoder::default().decode(&mut input).unwrap());
+    }
+
+    #[test]
+    fn decodes_data_without_a_colon() {
+        let mut input = BytesMut::from("data\n\n");
+
+        let event = Decoder::default().decode(&mut input).unwrap();
+
+        assert_eq!(event, Some(Event::Message(Message::data(""))));
     }
 
     #[tokio::test]
