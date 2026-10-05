@@ -5,7 +5,7 @@ use std::{
 };
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
-use bytes::BytesMut;
+use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
 
 use crate::{Error, NEWLINE, SSE_DELIMITER, event::Event, message::Message, unix_lines::UnixLines};
@@ -17,12 +17,13 @@ pub struct Decoder {
     event_finder: AhoCorasick,
     directive_finder: AhoCorasick,
     pending_event: Option<Event>,
+    skip_lf: bool,
 }
 
 impl Default for Decoder {
     fn default() -> Self {
         Self {
-            event_finder: AhoCorasick::new([SSE_DELIMITER, b"\n\r\n"]).unwrap(),
+            event_finder: AhoCorasick::new([SSE_DELIMITER, b"\n\r", b"\r\r"]).unwrap(),
             directive_finder: AhoCorasickBuilder::new()
                 .match_kind(aho_corasick::MatchKind::LeftmostFirst)
                 .build(
@@ -38,6 +39,7 @@ impl Default for Decoder {
                 )
                 .unwrap(),
             pending_event: None,
+            skip_lf: false,
         }
     }
 }
@@ -51,6 +53,14 @@ impl tokio_util::codec::Decoder for Decoder {
             return Ok(Some(event));
         }
 
+        if self.skip_lf && !src.is_empty() {
+            self.skip_lf = false;
+
+            if src[0] == NEWLINE {
+                src.advance(1);
+            }
+        }
+
         // Find a blank line, or wait for more data.
         let Some(delimiter) = self.event_finder.find(&*src) else {
             tracing::trace!("not enough data in buffer {src:?}");
@@ -58,10 +68,37 @@ impl tokio_util::codec::Decoder for Decoder {
         };
 
         // full message received; remove from src buffer
-        let buf = src.split_to(delimiter.start());
+        let ends_with_cr = src[delimiter.end() - 1] == b'\r';
+        let mut buf = src.split_to(delimiter.start());
 
         // remove the delimiter from the buffer too
         drop(src.split_to(delimiter.len()));
+
+        self.skip_lf = ends_with_cr;
+
+        if self.skip_lf && src.first() == Some(&NEWLINE) {
+            src.advance(1);
+            self.skip_lf = false;
+        }
+
+        if buf.contains(&b'\r') {
+            let mut read = 0;
+            let mut write = 0;
+
+            while read < buf.len() {
+                let byte = buf[read];
+                buf[write] = if byte == b'\r' { NEWLINE } else { byte };
+
+                read += 1;
+                write += 1;
+
+                if byte == b'\r' && buf.get(read) == Some(&NEWLINE) {
+                    read += 1;
+                }
+            }
+
+            buf.truncate(write);
+        }
 
         let lines_reader = UnixLines {
             rdr: BufReader::new(&*buf),
@@ -81,10 +118,6 @@ impl tokio_util::codec::Decoder for Decoder {
 
         for line in lines_reader {
             let mut line = line?;
-
-            if line.ends_with(b"\r") {
-                line.truncate(line.len() - 1);
-            }
 
             let matched = self.directive_finder.find(&line).expect("invalid line");
 
@@ -260,6 +293,31 @@ mod tests {
         let event = Decoder::default().decode(&mut input).unwrap();
 
         assert_eq!(event, Some(Event::Message(Message::data("hello"))));
+    }
+
+    #[test]
+    fn decodes_cr_line_endings() {
+        for (input, expected) in [
+            ("data: hello\r\r", "hello"),
+            ("data: first\rdata: second\r\r", "first\nsecond"),
+            ("data: first\r\ndata: second\r\r", "first\nsecond"),
+            ("data: hello\n\r", "hello"),
+            ("data: hello\r\n\r", "hello"),
+        ] {
+            let mut input = BytesMut::from(input);
+            let mut decoder = Decoder::default();
+
+            let event = decoder.decode(&mut input).unwrap();
+
+            assert_eq!(event, Some(Event::Message(Message::data(expected))));
+
+            input.extend_from_slice(b"\ndata: next\r\r");
+
+            assert_eq!(
+                decoder.decode(&mut input).unwrap(),
+                Some(Event::Message(Message::data("next"))),
+            );
+        }
     }
 
     #[tokio::test]
