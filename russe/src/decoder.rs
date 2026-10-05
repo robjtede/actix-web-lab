@@ -53,163 +53,166 @@ impl tokio_util::codec::Decoder for Decoder {
             return Ok(Some(event));
         }
 
-        if self.skip_lf && !src.is_empty() {
-            self.skip_lf = false;
+        loop {
+            if self.skip_lf && !src.is_empty() {
+                self.skip_lf = false;
 
-            if src[0] == NEWLINE {
+                if src[0] == NEWLINE {
+                    src.advance(1);
+                }
+            }
+
+            // Find a blank line, or wait for more data.
+            let Some(delimiter) = self.event_finder.find(&*src) else {
+                tracing::trace!("not enough data in buffer {src:?}");
+                return Ok(None);
+            };
+
+            // full message received; remove from src buffer
+            let ends_with_cr = src[delimiter.end() - 1] == b'\r';
+            let mut buf = src.split_to(delimiter.start());
+
+            // remove the delimiter from the buffer too
+            drop(src.split_to(delimiter.len()));
+
+            self.skip_lf = ends_with_cr;
+
+            if self.skip_lf && src.first() == Some(&NEWLINE) {
                 src.advance(1);
+                self.skip_lf = false;
             }
-        }
 
-        // Find a blank line, or wait for more data.
-        let Some(delimiter) = self.event_finder.find(&*src) else {
-            tracing::trace!("not enough data in buffer {src:?}");
-            return Ok(None);
-        };
+            if buf.contains(&b'\r') {
+                let mut read = 0;
+                let mut write = 0;
 
-        // full message received; remove from src buffer
-        let ends_with_cr = src[delimiter.end() - 1] == b'\r';
-        let mut buf = src.split_to(delimiter.start());
+                while read < buf.len() {
+                    let byte = buf[read];
+                    buf[write] = if byte == b'\r' { NEWLINE } else { byte };
 
-        // remove the delimiter from the buffer too
-        drop(src.split_to(delimiter.len()));
-
-        self.skip_lf = ends_with_cr;
-
-        if self.skip_lf && src.first() == Some(&NEWLINE) {
-            src.advance(1);
-            self.skip_lf = false;
-        }
-
-        if buf.contains(&b'\r') {
-            let mut read = 0;
-            let mut write = 0;
-
-            while read < buf.len() {
-                let byte = buf[read];
-                buf[write] = if byte == b'\r' { NEWLINE } else { byte };
-
-                read += 1;
-                write += 1;
-
-                if byte == b'\r' && buf.get(read) == Some(&NEWLINE) {
                     read += 1;
+                    write += 1;
+
+                    if byte == b'\r' && buf.get(read) == Some(&NEWLINE) {
+                        read += 1;
+                    }
                 }
+
+                buf.truncate(write);
             }
 
-            buf.truncate(write);
-        }
-
-        let lines_reader = UnixLines {
-            rdr: BufReader::new(&*buf),
-        };
-
-        let mut message = Message {
-            retry: None,
-            event: None,
-            data: ByteString::new(),
-            id: None,
-        };
-
-        // TODO: if optimistic buffering is desired then remove this
-        let mut data_buf = BytesMut::with_capacity(64);
-        let mut comment_buf = BytesMut::new();
-        let mut message_event = false;
-
-        for line in lines_reader {
-            let mut line = line?;
-
-            let Some(matched) = self.directive_finder.find(&line) else {
-                continue;
+            let lines_reader = UnixLines {
+                rdr: BufReader::new(&*buf),
             };
 
-            debug_assert!(
-                matched.start() == 0,
-                "directive matched was not at beginning of line",
-            );
+            let mut message = Message {
+                retry: None,
+                event: None,
+                data: ByteString::new(),
+                id: None,
+            };
 
-            // discard matched directive bytes
-            let _ = line.split_to(matched.end());
-            let input = line;
+            // TODO: if optimistic buffering is desired then remove this
+            let mut data_buf = BytesMut::with_capacity(64);
+            let mut comment_buf = BytesMut::new();
+            let mut message_event = false;
 
-            match matched.pattern().as_u64() {
-                // data
-                0 | 1 => {
-                    data_buf.extend_from_slice(&input);
-                    data_buf.extend_from_slice(&[NEWLINE]);
+            for line in lines_reader {
+                let mut line = line?;
 
-                    message_event = true;
+                let Some(matched) = self.directive_finder.find(&line) else {
+                    continue;
+                };
+
+                if matched.start() != 0 {
+                    continue;
                 }
 
-                // id
-                2 | 3 => {
-                    let id = ByteString::try_from(input).map_err(invalid_utf8)?;
+                // discard matched directive bytes
+                let _ = line.split_to(matched.end());
+                let input = line;
 
-                    message.id = Some(id);
-                    message_event = true;
+                match matched.pattern().as_u64() {
+                    // data
+                    0 | 1 => {
+                        data_buf.extend_from_slice(&input);
+                        data_buf.extend_from_slice(&[NEWLINE]);
+
+                        message_event = true;
+                    }
+
+                    // id
+                    2 | 3 => {
+                        let id = ByteString::try_from(input).map_err(invalid_utf8)?;
+
+                        message.id = Some(id);
+                        message_event = true;
+                    }
+
+                    // event
+                    4 | 5 => {
+                        let event = ByteString::try_from(input).map_err(invalid_utf8)?;
+
+                        message.event = Some(event);
+                        message_event = true;
+                    }
+
+                    // retry
+                    6 | 7 => {
+                        let input = str::from_utf8(&input).map_err(invalid_utf8)?;
+
+                        message.retry = Some(Duration::from_millis(
+                            input
+                                .parse::<u64>()
+                                .expect("retry should be an integer number of milliseconds"),
+                        ))
+                    }
+
+                    // comment
+                    8 | 9 => {
+                        comment_buf.extend_from_slice(&input);
+                        comment_buf.extend_from_slice(&[NEWLINE]);
+                    }
+
+                    _ => unreachable!("all search patterns are covered"),
                 }
-
-                // event
-                4 | 5 => {
-                    let event = ByteString::try_from(input).map_err(invalid_utf8)?;
-
-                    message.event = Some(event);
-                    message_event = true;
-                }
-
-                // retry
-                6 | 7 => {
-                    let input = str::from_utf8(&input).map_err(invalid_utf8)?;
-
-                    message.retry = Some(Duration::from_millis(
-                        input
-                            .parse::<u64>()
-                            .expect("retry should be an integer number of milliseconds"),
-                    ))
-                }
-
-                // comment
-                8 | 9 => {
-                    comment_buf.extend_from_slice(&input);
-                    comment_buf.extend_from_slice(&[NEWLINE]);
-                }
-
-                _ => unreachable!("all search patterns are covered"),
             }
-        }
 
-        let comment = if !comment_buf.is_empty() {
-            comment_buf.truncate(comment_buf.len() - 1);
+            let comment = if !comment_buf.is_empty() {
+                comment_buf.truncate(comment_buf.len() - 1);
 
-            Some(ByteString::try_from(comment_buf).map_err(invalid_utf8)?)
-        } else {
-            None
-        };
-
-        if !data_buf.is_empty() {
-            data_buf.truncate(data_buf.len() - 1);
-
-            let data = ByteString::try_from(data_buf).map_err(invalid_utf8)?;
-
-            message.data = data;
-        }
-
-        if let Some(comment) = comment {
-            self.pending_event = if message_event {
-                Some(Event::Message(message))
+                Some(ByteString::try_from(comment_buf).map_err(invalid_utf8)?)
             } else {
-                message.retry.map(Event::Retry)
+                None
             };
 
-            return Ok(Some(Event::Comment(comment)));
-        }
+            if !data_buf.is_empty() {
+                data_buf.truncate(data_buf.len() - 1);
 
-        match message.retry {
-            Some(retry) if !message_event => return Ok(Some(Event::Retry(retry))),
-            _ => {}
-        }
+                let data = ByteString::try_from(data_buf).map_err(invalid_utf8)?;
 
-        Ok(Some(Event::Message(message)))
+                message.data = data;
+            }
+
+            if let Some(comment) = comment {
+                self.pending_event = if message_event {
+                    Some(Event::Message(message))
+                } else {
+                    message.retry.map(Event::Retry)
+                };
+
+                return Ok(Some(Event::Comment(comment)));
+            }
+
+            match message.retry {
+                Some(retry) if !message_event => return Ok(Some(Event::Retry(retry))),
+                _ => {}
+            }
+
+            if message_event {
+                return Ok(Some(Event::Message(message)));
+            }
+        }
     }
 }
 
@@ -327,6 +330,26 @@ mod tests {
         let mut input = BytesMut::from("\0\n\n");
 
         let _ = Decoder::default().decode(&mut input);
+    }
+
+    #[test]
+    fn ignores_unknown_fields() {
+        for input in [
+            "extension: ignored\ndata: hello\n\n",
+            "xdata: ignored\ndata: hello\n\n",
+            "extension: ignored\n\ndata: hello\n\n",
+            "\n\ndata: hello\n\n",
+        ] {
+            let mut input = BytesMut::from(input);
+
+            let event = Decoder::default().decode(&mut input).unwrap();
+
+            assert_eq!(event, Some(Event::Message(Message::data("hello"))));
+        }
+
+        let mut input = BytesMut::from("extension: ignored\n\n");
+
+        assert_none!(Decoder::default().decode(&mut input).unwrap());
     }
 
     #[tokio::test]
