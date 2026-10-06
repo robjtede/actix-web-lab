@@ -12,11 +12,16 @@ use memchr::memmem;
 use crate::{Error, NEWLINE, SSE_DELIMITER, event::Event, message::Message, unix_lines::UnixLines};
 
 /// SSE decoder.
+///
+/// Comment lines within a frame are combined into one [`Event::Comment`] and emitted
+/// before its message or retry event, regardless of their position. Decoding and
+/// re-encoding can therefore produce different bytes.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct Decoder {
     event_finder: memmem::Finder<'static>,
     directive_finder: AhoCorasick,
+    pending_event: Option<Event>,
 }
 
 impl Default for Decoder {
@@ -37,6 +42,7 @@ impl Default for Decoder {
                     ],
                 )
                 .unwrap(),
+            pending_event: None,
         }
     }
 }
@@ -46,6 +52,10 @@ impl tokio_util::codec::Decoder for Decoder {
     type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+        if let Some(event) = self.pending_event.take() {
+            return Ok(Some(event));
+        }
+
         // find the event delimiter \n\n or return None (more src data needed)
         let Some(idx_end_of_event) = self.event_finder.find(src) else {
             tracing::trace!("not enough data in buffer {src:?}");
@@ -136,10 +146,24 @@ impl tokio_util::codec::Decoder for Decoder {
             }
         }
 
+        if !data_buf.is_empty() {
+            data_buf.truncate(data_buf.len() - 1);
+
+            let data = ByteString::try_from(data_buf).map_err(invalid_utf8)?;
+
+            message.data = data;
+        }
+
         if !comment_buf.is_empty() {
             comment_buf.truncate(comment_buf.len() - 1);
 
             let comment = ByteString::try_from(comment_buf).map_err(invalid_utf8)?;
+
+            self.pending_event = if message_event {
+                Some(Event::Message(message))
+            } else {
+                message.retry.map(Event::Retry)
+            };
 
             return Ok(Some(Event::Comment(comment)));
         }
@@ -147,14 +171,6 @@ impl tokio_util::codec::Decoder for Decoder {
         match message.retry {
             Some(retry) if !message_event => return Ok(Some(Event::Retry(retry))),
             _ => {}
-        }
-
-        if !data_buf.is_empty() {
-            data_buf.truncate(data_buf.len() - 1);
-
-            let data = ByteString::try_from(data_buf).map_err(invalid_utf8)?;
-
-            message.data = data;
         }
 
         Ok(Some(Event::Message(message)))
@@ -221,6 +237,116 @@ mod tests {
         }
 
         assert_eq!(comments.join("\n"), "first\nsecond");
+    }
+
+    #[test]
+    fn comments_do_not_discard_message_data() {
+        for (input, comment) in [
+            (
+                indoc! {"
+                    : heartbeat
+                    data: hello
+
+                "},
+                "heartbeat",
+            ),
+            (
+                indoc! {"
+                    data: hello
+                    : heartbeat
+
+                "},
+                "heartbeat",
+            ),
+            (
+                indoc! {"
+                    : first
+                    data: hello
+                    : second
+
+                "},
+                "first\nsecond",
+            ),
+            (
+                indoc! {"
+                    data: hello
+                    : first
+                    : second
+
+                "},
+                "first\nsecond",
+            ),
+        ] {
+            let mut input = BytesMut::from(input);
+            input.extend_from_slice(indoc! {b"
+                data: next
+
+            "});
+
+            let mut decoder = Decoder::default();
+
+            let events =
+                std::iter::from_fn(|| decoder.decode(&mut input).unwrap()).collect::<Vec<_>>();
+
+            assert_eq!(
+                events,
+                [
+                    Event::Comment(comment.into()),
+                    Event::Message(Message::data("hello")),
+                    Event::Message(Message::data("next")),
+                ],
+            );
+        }
+    }
+
+    #[test]
+    fn comments_do_not_discard_retry_values() {
+        for (input, comment) in [
+            (
+                indoc! {"
+                    : heartbeat
+                    retry: 42
+
+                "},
+                "heartbeat",
+            ),
+            (
+                indoc! {"
+                    retry: 42
+                    : heartbeat
+
+                "},
+                "heartbeat",
+            ),
+            (
+                indoc! {"
+                    : first
+                    retry: 42
+                    : second
+
+                "},
+                "first\nsecond",
+            ),
+        ] {
+            let mut input = BytesMut::from(input);
+            input.extend_from_slice(indoc! {b"
+                data: next
+
+            "});
+
+            let mut decoder = Decoder::default();
+            let events =
+                std::iter::from_fn(|| decoder.decode(&mut input).unwrap()).collect::<Vec<_>>();
+
+            assert_eq!(
+                events,
+                [
+                    Event::Comment(comment.into()),
+                    Event::Retry(Duration::from_millis(42)),
+                    Event::Message(Message::data("next"))
+                ]
+            );
+        }
     }
 
     #[tokio::test]
