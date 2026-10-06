@@ -116,10 +116,27 @@ mod tests {
 
     use bytes::BytesMut;
     use futures_util::SinkExt as _;
+    use quickcheck_macros::quickcheck;
     use tokio_util::codec::{Decoder as _, Encoder as _, FramedWrite};
 
     use super::*;
     use crate::Message;
+
+    #[quickcheck]
+    fn message_data_roundtrips(data: String) {
+        let expected = Message::data(data.replace("\r\n", "\n").replace('\r', "\n"));
+        let mut output = BytesMut::new();
+
+        Encoder::default()
+            .encode(Event::Message(Message::data(data)), &mut output)
+            .unwrap();
+
+        assert_eq!(
+            crate::Decoder::default().decode(&mut output).unwrap(),
+            Some(Event::Message(expected)),
+        );
+        assert!(output.is_empty());
+    }
 
     #[test]
     fn encodes_message_data() {
