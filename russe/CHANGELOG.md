@@ -4,6 +4,7 @@
 
 - Preserve leading empty lines in decoded message data.
 - Avoid decoder panics for lines with no recognized directive.
+- Preserve all lines in decoded multiline comments.
 
 ## 0.0.8
 
