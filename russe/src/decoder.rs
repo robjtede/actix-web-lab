@@ -7,7 +7,6 @@ use std::{
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use bytes::BytesMut;
 use bytestring::ByteString;
-use memchr::memmem;
 
 use crate::{Error, NEWLINE, SSE_DELIMITER, event::Event, message::Message, unix_lines::UnixLines};
 
@@ -19,7 +18,7 @@ use crate::{Error, NEWLINE, SSE_DELIMITER, event::Event, message::Message, unix_
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct Decoder {
-    event_finder: memmem::Finder<'static>,
+    event_finder: AhoCorasick,
     directive_finder: AhoCorasick,
     pending_event: Option<Event>,
 }
@@ -27,7 +26,7 @@ pub struct Decoder {
 impl Default for Decoder {
     fn default() -> Self {
         Self {
-            event_finder: memmem::Finder::new(SSE_DELIMITER),
+            event_finder: AhoCorasick::new([SSE_DELIMITER, b"\n\r\n"]).unwrap(),
             directive_finder: AhoCorasickBuilder::new()
                 .match_kind(aho_corasick::MatchKind::LeftmostFirst)
                 .build(
@@ -56,17 +55,17 @@ impl tokio_util::codec::Decoder for Decoder {
             return Ok(Some(event));
         }
 
-        // find the event delimiter \n\n or return None (more src data needed)
-        let Some(idx_end_of_event) = self.event_finder.find(src) else {
+        // Find a blank line, or wait for more data.
+        let Some(delimiter) = self.event_finder.find(&*src) else {
             tracing::trace!("not enough data in buffer {src:?}");
             return Ok(None);
         };
 
         // full message received; remove from src buffer
-        let buf = src.split_to(idx_end_of_event);
+        let buf = src.split_to(delimiter.start());
 
         // remove the delimiter from the buffer too
-        drop(src.split_to(SSE_DELIMITER.len()));
+        drop(src.split_to(delimiter.len()));
 
         let lines_reader = UnixLines {
             rdr: BufReader::new(&*buf),
@@ -86,6 +85,10 @@ impl tokio_util::codec::Decoder for Decoder {
 
         for line in lines_reader {
             let mut line = line?;
+
+            if line.ends_with(b"\r") {
+                line.truncate(line.len() - 1);
+            }
 
             let Some(matched) = self.directive_finder.find(&line) else {
                 continue;
@@ -347,6 +350,18 @@ mod tests {
                 ]
             );
         }
+    }
+
+    #[test]
+    fn decodes_crlf_line_endings() {
+        let mut input = BytesMut::from(concat! {
+            "data: hello\r\n",
+            "\r\n",
+        });
+
+        let event = Decoder::default().decode(&mut input).unwrap();
+
+        assert_eq!(event, Some(Event::Message(Message::data("hello"))));
     }
 
     #[tokio::test]
