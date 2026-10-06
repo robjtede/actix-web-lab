@@ -7,6 +7,7 @@
 - Preserve all lines in decoded multiline comments.
 - Preserve message data and retry directives in frames that also contain comments.
 - Decode event streams with CRLF line endings.
+- Decode bare CR and mixed line endings, including delimiters split across reads.
 
 ## 0.0.8
 

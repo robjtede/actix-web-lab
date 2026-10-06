@@ -12,7 +12,6 @@ mod message;
 pub mod reqwest_0_12;
 #[cfg(feature = "reqwest-0_13")]
 pub mod reqwest_0_13;
-mod unix_lines;
 
 pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, message::Message};
 
