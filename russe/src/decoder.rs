@@ -90,14 +90,8 @@ impl tokio_util::codec::Decoder for Decoder {
             match matched.pattern().as_u64() {
                 // data
                 0 | 1 => {
-                    if data_buf.is_empty() {
-                        // first line
-                        data_buf = input.into()
-                    } else {
-                        // additional lines
-                        data_buf.extend_from_slice(&[NEWLINE]);
-                        data_buf.extend_from_slice(&input);
-                    }
+                    data_buf.extend_from_slice(&input);
+                    data_buf.extend_from_slice(&[NEWLINE]);
 
                     message_event = true;
                 }
@@ -146,6 +140,8 @@ impl tokio_util::codec::Decoder for Decoder {
         }
 
         if !data_buf.is_empty() {
+            data_buf.truncate(data_buf.len() - 1);
+
             let data = ByteString::try_from(data_buf).map_err(invalid_utf8)?;
 
             message.data = data;
@@ -166,10 +162,27 @@ mod tests {
     use bytes::Bytes;
     use futures_test::stream::StreamTestExt as _;
     use futures_util::{StreamExt as _, stream};
-    use tokio_util::{codec::FramedRead, io::StreamReader};
+    use tokio_util::{
+        codec::{Decoder as _, FramedRead},
+        io::StreamReader,
+    };
 
     use super::*;
     use crate::assert_none;
+
+    #[test]
+    fn preserves_leading_empty_data_lines() {
+        for (input, expected) in [
+            ("data: \ndata: \n\n", "\n"),
+            ("data: \ndata: hello\n\n", "\nhello"),
+        ] {
+            let mut input = BytesMut::from(input);
+
+            let event = Decoder::default().decode(&mut input).unwrap();
+
+            assert_eq!(event, Some(Event::Message(Message::data(expected))));
+        }
+    }
 
     #[tokio::test]
     async fn reads_sse_frames() {

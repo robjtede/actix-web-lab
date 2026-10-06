@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve leading empty lines in decoded message data.
+
 ## 0.0.8
 
 - Add `ReqwestExt` and `Manager` APIs for Reqwest 0.13 through the optional `reqwest-0_13` crate feature.
