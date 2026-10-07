@@ -1,0 +1,21 @@
+name: Prepare Nix devshell
+description: Install Nix and prepare the selected devshell.
+
+inputs:
+  devshell:
+    description: Flake devshell to prepare.
+    required: false
+    default: .
+
+runs:
+  using: composite
+  steps:
+    - name: Install Nix
+      uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
+
+    - name: Prepare Nix devshell
+      shell: bash
+      env:
+        DEVSHELL: ${{ inputs.devshell }}
+      run: |
+        "$HOME/.nix-profile/bin/nix" develop "$DEVSHELL" --command true
