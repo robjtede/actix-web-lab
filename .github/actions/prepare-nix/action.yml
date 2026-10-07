@@ -1,9 +1,9 @@
-name: Prepare Nix devshell
-description: Install Nix and prepare the selected devshell.
+name: Set up Nix devshell
+description: Install Nix and enter the selected devshell.
 
 inputs:
   devshell:
-    description: Flake devshell to prepare.
+    description: Flake devshell to enter.
     required: false
     default: .
 
@@ -13,9 +13,7 @@ runs:
     - name: Install Nix
       uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
 
-    - name: Prepare Nix devshell
-      shell: bash
-      env:
-        DEVSHELL: ${{ inputs.devshell }}
-      run: |
-        "$HOME/.nix-profile/bin/nix" develop "$DEVSHELL" --command true
+    - name: Enter Nix devshell
+      uses: nicknovitski/nix-develop@9be7cfb4b10451d3390a75dc18ad0465bed4932a # v1.2.1
+      with:
+        arguments: ${{ inputs.devshell }}
