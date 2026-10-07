@@ -71,6 +71,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
         // TODO: if optimistic buffering is desired then remove this
         let mut data_buf = BytesMut::with_capacity(64);
+        let mut comment_buf = BytesMut::new();
         let mut message_event = false;
 
         for line in lines_reader {
@@ -127,13 +128,20 @@ impl tokio_util::codec::Decoder for Decoder {
 
                 // comment
                 8 | 9 => {
-                    let comment = ByteString::try_from(input).map_err(invalid_utf8)?;
-
-                    return Ok(Some(Event::Comment(comment)));
+                    comment_buf.extend_from_slice(&input);
+                    comment_buf.extend_from_slice(&[NEWLINE]);
                 }
 
                 _ => unreachable!("all search patterns are covered"),
             }
+        }
+
+        if !comment_buf.is_empty() {
+            comment_buf.truncate(comment_buf.len() - 1);
+
+            let comment = ByteString::try_from(comment_buf).map_err(invalid_utf8)?;
+
+            return Ok(Some(Event::Comment(comment)));
         }
 
         match message.retry {
@@ -164,6 +172,7 @@ mod tests {
     use bytes::Bytes;
     use futures_test::stream::StreamTestExt as _;
     use futures_util::{StreamExt as _, stream};
+    use indoc::indoc;
     use tokio_util::{
         codec::{Decoder as _, FramedRead},
         io::StreamReader,
@@ -193,9 +202,30 @@ mod tests {
         let _ = Decoder::default().decode(&mut input);
     }
 
+    #[test]
+    fn preserves_multiline_comments() {
+        let mut input = BytesMut::from(indoc! {"
+            : first
+            : second
+
+        "});
+        let mut decoder = Decoder::default();
+        let mut comments = Vec::new();
+
+        while let Some(event) = decoder.decode(&mut input).unwrap() {
+            let Event::Comment(comment) = event else {
+                panic!("expected comment, got: {event:?}");
+            };
+
+            comments.push(comment.to_string());
+        }
+
+        assert_eq!(comments.join("\n"), "first\nsecond");
+    }
+
     #[tokio::test]
     async fn reads_sse_frames() {
-        let input = indoc::indoc! {"
+        let input = indoc! {"
             retry: 444
 
             : begin by specifying retry duration
