@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bytes::{Bytes, BytesMut};
+use bytes::BytesMut;
 use bytestring::ByteString;
 use tokio_util::codec::Encoder as _;
 
@@ -20,7 +20,7 @@ pub enum Event {
 }
 
 impl Event {
-    /// Encodes the event into bytes, including the final blank line.
+    /// Encodes the event into a UTF-8 string, including the final blank line.
     ///
     /// # Errors
     ///
@@ -31,16 +31,16 @@ impl Event {
     /// ```
     /// use russe::Event;
     ///
-    /// let bytes = Event::Comment("keep-alive".into()).into_bytes()?;
-    /// assert_eq!(bytes, ": keep-alive\n\n");
+    /// let encoded = Event::Comment("keep-alive".into()).into_bytestring()?;
+    /// assert_eq!(encoded, ": keep-alive\n\n");
     /// # Ok::<_, russe::Error>(())
     /// ```
-    pub fn into_bytes(self) -> crate::Result<Bytes> {
+    pub fn into_bytestring(self) -> crate::Result<ByteString> {
         let mut buf = BytesMut::new();
 
         Encoder::default().encode(self, &mut buf)?;
 
-        Ok(buf.freeze())
+        ByteString::try_from(buf.freeze()).map_err(|_| crate::Error::Invalid)
     }
 }
 
@@ -49,23 +49,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn encodes_events_into_bytes() {
+    fn encodes_events_into_bytestring() {
         let cases = [
             (
                 Event::Message(Message {
-                    data: "first\r\nsecond".into(),
+                    data: "café\r\n世界".into(),
                     event: Some("update".into()),
                     id: Some("42".into()),
                     retry: None,
                 }),
-                "id: 42\nevent: update\ndata: first\ndata: second\n\n",
+                "id: 42\nevent: update\ndata: café\ndata: 世界\n\n",
             ),
             (Event::Comment("keep-alive".into()), ": keep-alive\n\n"),
             (Event::Retry(Duration::from_millis(1500)), "retry: 1500\n\n"),
         ];
 
         for (event, expected) in cases {
-            assert_eq!(event.into_bytes().unwrap(), expected);
+            assert_eq!(event.into_bytestring().unwrap(), expected);
         }
     }
 
@@ -80,7 +80,7 @@ mod tests {
             };
 
             assert!(matches!(
-                Event::Message(message).into_bytes(),
+                Event::Message(message).into_bytestring(),
                 Err(crate::Error::Invalid)
             ));
         }
