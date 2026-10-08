@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab"
-version = "0.29.0"
+version = "0.29.1"
 dependencies = [
  "actix-files",
  "actix-http",
@@ -391,7 +391,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab-derive"
-version = "0.29.0"
+version = "0.29.1"
 dependencies = [
  "actix-test",
  "actix-web",
@@ -853,7 +853,7 @@ checksum = "0c9ea0ac24bc397ab3c98583a3c9ba74fa56b09a4449bbe172b9b1ddb016027a"
 
 [[package]]
 name = "collectools"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "arrayvec",
  "smallvec",
@@ -2704,7 +2704,7 @@ dependencies = [
 
 [[package]]
 name = "russe"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aho-corasick",
  "bytes",
