@@ -2,6 +2,8 @@
 name = "err-report"
 version = "0.1.3"
 description = "Clone of the unstable `std::error::Report` type"
+categories = ["value-formatting", "rust-patterns"]
+keywords = ["error", "error-report", "error-chain", "diagnostics"]
 repository.workspace = true
 license.workspace = true
 edition.workspace = true

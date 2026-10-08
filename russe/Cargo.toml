@@ -3,6 +3,7 @@ name = "russe"
 version = "0.1.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Server-Sent Events (SSE) encoder and decoder"
+categories = ["web-programming", "encoding"]
 keywords = ["sse", "server", "sent", "events"]
 repository.workspace = true
 license.workspace = true
