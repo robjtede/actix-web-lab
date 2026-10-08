@@ -11,6 +11,7 @@
 - Ignore unknown fields and empty frames while continuing to decode buffered events.
 - Decode fields without a colon as fields with an empty value.
 - Ignore invalid retry values without discarding a previous valid retry value.
+- Decode retry delays larger than u64 milliseconds when Duration can represent them.
 
 ## 0.0.8
 
