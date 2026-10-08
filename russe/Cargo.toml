@@ -61,5 +61,9 @@ required-features = ["reqwest-0_12"]
 name = "decoder"
 harness = false
 
+[[bench]]
+name = "encoder"
+harness = false
+
 [lints]
 workspace = true
