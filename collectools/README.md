@@ -9,6 +9,8 @@
 
 <!-- prettier-ignore-end -->
 
+<!-- cargo-rdme start -->
+
 Collection traits and implementations for common collection types.
 
 Use `List` to read a collection's length and elements. Use `MutableList` to append elements and access them mutably.
@@ -45,3 +47,5 @@ append_value(&mut values);
 assert_eq!(List::len(&values), 1);
 assert_eq!(List::get(&values, 0), Some(&42));
 ```
+
+<!-- cargo-rdme end -->
