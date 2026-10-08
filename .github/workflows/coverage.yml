@@ -21,21 +21,35 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust
+        id: rust
+        background: true
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        env:
+          LD_LIBRARY_PATH: ""
         with:
           components: llvm-tools
           cache-key: ${{ hashFiles('flake.lock') }}
-
-      - name: Install just, cargo-llvm-cov
-        uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21
-        with:
-          tool: just,cargo-llvm-cov
 
       - name: Install Nix
         uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
 
       - name: Enter Nix devshell
+        id: devshell
+        background: true
         uses: nicknovitski/nix-develop@9be7cfb4b10451d3390a75dc18ad0465bed4932a # v1.2.1
+
+      - name: Wait for Rust
+        wait: rust
+
+      - name: Install just, cargo-llvm-cov
+        uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21
+        env:
+          LD_LIBRARY_PATH: ""
+        with:
+          tool: just,cargo-llvm-cov
+
+      - name: Wait for Nix devshell
+        wait: devshell
 
       - name: Generate code coverage
         run: just test-coverage-codecov
