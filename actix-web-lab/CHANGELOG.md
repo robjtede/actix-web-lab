@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.29.2
+
+- No significant changes since `0.29.1`.
+
 ## 0.29.1
 
 - Normalize line endings in SSE data and comments, and report encoding errors through the response body.
