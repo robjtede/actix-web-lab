@@ -1,10 +1,8 @@
-use std::time::Duration;
+use std::{fmt::Write as _, time::Duration};
 
-use bytes::BytesMut;
 use bytestring::ByteString;
-use tokio_util::codec::Encoder as _;
 
-use crate::{Encoder, Message};
+use crate::{Error, Message};
 
 /// An SSE event.
 #[derive(Debug, Clone, PartialEq)]
@@ -24,7 +22,7 @@ impl Event {
     ///
     /// # Errors
     ///
-    /// Returns an error if the event cannot be encoded. See [`Encoder`] for field requirements.
+    /// Returns an error if the event cannot be encoded. See [`crate::Encoder`] for field requirements.
     ///
     /// # Examples
     ///
@@ -36,11 +34,83 @@ impl Event {
     /// # Ok::<_, russe::Error>(())
     /// ```
     pub fn into_bytestring(self) -> crate::Result<ByteString> {
-        let mut buf = BytesMut::new();
+        let mut dst = String::new();
 
-        Encoder::default().encode(self, &mut buf)?;
+        match self {
+            Event::Message(message) => {
+                if message
+                    .id
+                    .as_deref()
+                    .is_some_and(|id| id.contains(['\0', '\r', '\n']))
+                    || message
+                        .event
+                        .as_deref()
+                        .is_some_and(|event| event.contains(['\r', '\n']))
+                {
+                    return Err(Error::Invalid);
+                }
 
-        ByteString::try_from(buf.freeze()).map_err(|_| crate::Error::Invalid)
+                if let Some(id) = message.id {
+                    dst.push_str("id: ");
+                    dst.push_str(&id);
+                    dst.push('\n');
+                }
+
+                if let Some(event) = message.event {
+                    dst.push_str("event: ");
+                    dst.push_str(&event);
+                    dst.push('\n');
+                }
+
+                if let Some(retry) = message.retry {
+                    encode_retry(&mut dst, retry);
+                }
+
+                encode_lines(&mut dst, "data: ", &message.data);
+                dst.push('\n');
+            }
+
+            Event::Comment(comment) => {
+                encode_lines(&mut dst, ": ", &comment);
+                dst.push('\n');
+            }
+
+            Event::Retry(retry) => {
+                encode_retry(&mut dst, retry);
+                dst.push('\n');
+            }
+        }
+
+        Ok(dst.into())
+    }
+}
+
+fn encode_retry(dst: &mut String, retry: Duration) {
+    // Writing to a String cannot fail.
+    let _ = writeln!(dst, "retry: {}", retry.as_millis());
+}
+
+/// Prefixes each line, preserves empty lines, and converts CRLF and CR to LF.
+fn encode_lines(dst: &mut String, prefix: &str, mut text: &str) {
+    loop {
+        dst.push_str(prefix);
+
+        let Some(idx) = text.find(['\r', '\n']) else {
+            dst.push_str(text);
+            dst.push('\n');
+
+            break;
+        };
+
+        dst.push_str(&text[..idx]);
+        dst.push('\n');
+
+        let line_ending = text.as_bytes()[idx];
+        text = &text[idx + 1..];
+
+        if line_ending == b'\r' {
+            text = text.strip_prefix('\n').unwrap_or(text);
+        }
     }
 }
 

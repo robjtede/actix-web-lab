@@ -1,6 +1,4 @@
-use std::io::Write as _;
-
-use bytes::{BufMut as _, BytesMut};
+use bytes::BytesMut;
 
 use crate::{Error, Event};
 
@@ -33,80 +31,10 @@ impl tokio_util::codec::Encoder<Event> for Encoder {
     type Error = Error;
 
     fn encode(&mut self, item: Event, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        match item {
-            Event::Message(message) => {
-                if message
-                    .id
-                    .as_deref()
-                    .is_some_and(|id| id.contains(['\0', '\r', '\n']))
-                    || message
-                        .event
-                        .as_deref()
-                        .is_some_and(|event| event.contains(['\r', '\n']))
-                {
-                    return Err(Error::Invalid);
-                }
+        let encoded = item.into_bytestring()?;
+        dst.extend_from_slice(encoded.as_bytes());
 
-                if let Some(id) = message.id {
-                    dst.extend_from_slice(b"id: ");
-                    dst.extend_from_slice(id.as_bytes());
-                    dst.extend_from_slice(b"\n");
-                }
-
-                if let Some(event) = message.event {
-                    dst.extend_from_slice(b"event: ");
-                    dst.extend_from_slice(event.as_bytes());
-                    dst.extend_from_slice(b"\n");
-                }
-
-                if let Some(retry) = message.retry {
-                    writeln!(dst.writer(), "retry: {}", retry.as_millis())?;
-                }
-
-                encode_lines(dst, b"data: ", &message.data);
-                dst.extend_from_slice(b"\n");
-
-                Ok(())
-            }
-
-            Event::Comment(comment) => {
-                encode_lines(dst, b": ", &comment);
-                dst.extend_from_slice(b"\n");
-
-                Ok(())
-            }
-
-            Event::Retry(retry) => {
-                writeln!(dst.writer(), "retry: {}", retry.as_millis())?;
-                dst.extend_from_slice(b"\n");
-
-                Ok(())
-            }
-        }
-    }
-}
-
-/// Prefixes each line, preserves empty lines, and converts CRLF and CR to LF.
-fn encode_lines(dst: &mut BytesMut, prefix: &[u8], mut text: &str) {
-    loop {
-        dst.extend_from_slice(prefix);
-
-        let Some(idx) = text.find(['\r', '\n']) else {
-            dst.extend_from_slice(text.as_bytes());
-            dst.extend_from_slice(b"\n");
-
-            break;
-        };
-
-        dst.extend_from_slice(&text.as_bytes()[..idx]);
-        dst.extend_from_slice(b"\n");
-
-        let line_ending = text.as_bytes()[idx];
-        text = &text[idx + 1..];
-
-        if line_ending == b'\r' {
-            text = text.strip_prefix('\n').unwrap_or(text);
-        }
+        Ok(())
     }
 }
 
