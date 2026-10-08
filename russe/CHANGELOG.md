@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.1
+
 - Add `Event::into_bytestring()` to encode an SSE event into a `ByteString`.
 
 ## 0.1.0
