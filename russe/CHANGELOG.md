@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `Event::into_bytestring()` to encode an SSE event into a `ByteString`.
+
 ## 0.1.0
 
 - Preserve leading empty lines in decoded message data.
