@@ -65,7 +65,7 @@ dependencies = [
  "actix-web-lab",
  "blake2",
  "blake3",
- "digest 0.11.3",
+ "digest 0.10.7",
  "env_logger",
  "futures-core",
  "futures-util",
@@ -2703,7 +2703,7 @@ dependencies = [
 
 [[package]]
 name = "russe"
-version = "0.0.8"
+version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "bytes",
