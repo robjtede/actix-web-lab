@@ -9,6 +9,7 @@
 - Decode event streams with CRLF line endings.
 - Decode bare CR and mixed line endings, including delimiters split across reads.
 - Ignore unknown fields and empty frames while continuing to decode buffered events.
+- Decode fields without a colon as fields with an empty value.
 
 ## 0.0.8
 
