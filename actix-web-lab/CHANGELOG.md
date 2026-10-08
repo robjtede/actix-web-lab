@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Normalize line endings in SSE data and comments, and report encoding errors through the response body.
+
 ## 0.29.0
 
 - Change the associated future types of `Host`, `LocalData`, `Path`, `SwapData`, `LoadShed`, and `NormalizePath` to `std::future::Ready`.
