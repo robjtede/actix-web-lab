@@ -223,7 +223,10 @@ impl Event {
             Self::Comment(comment) => russe::Event::Comment(comment),
         };
 
-        event.into_bytes().map_err(Into::into)
+        event
+            .into_bytestring()
+            .map(ByteString::into_bytes)
+            .map_err(Into::into)
     }
 }
 
@@ -341,7 +344,10 @@ where
         if let Some(retry) = this.retry_interval.take() {
             cx.waker().wake_by_ref();
             return Poll::Ready(Some(
-                russe::Event::Retry(retry).into_bytes().map_err(Into::into),
+                russe::Event::Retry(retry)
+                    .into_bytestring()
+                    .map(ByteString::into_bytes)
+                    .map_err(Into::into),
             ));
         }
 
@@ -358,7 +364,8 @@ where
         {
             return Poll::Ready(Some(
                 russe::Event::Comment("keep-alive".into())
-                    .into_bytes()
+                    .into_bytestring()
+                    .map(ByteString::into_bytes)
                     .map_err(Into::into),
             ));
         }
