@@ -22,12 +22,9 @@ pub enum Event {
 impl Event {
     /// Encodes the event into bytes, including the final blank line.
     ///
-    /// Uses the same format and validation as [`Encoder`].
-    ///
     /// # Errors
     ///
-    /// Returns [`crate::Error::Invalid`] if an event name contains CR or LF, or an ID contains
-    /// NUL, CR, or LF.
+    /// Returns an error if the event cannot be encoded. See [`Encoder`] for field requirements.
     ///
     /// # Examples
     ///
