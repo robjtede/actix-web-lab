@@ -62,4 +62,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_PLZ_RELEASES_JSON: ${{ steps.release-plz.outputs.releases }}
-        run: x52-update-release-notes
+        run: x52-update-release-notes --then-undraft
