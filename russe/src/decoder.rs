@@ -130,13 +130,16 @@ impl tokio_util::codec::Decoder for Decoder {
                     }
 
                     b"retry" => {
+                        // SSE accepts only nonempty ASCII digit sequences for retry.
+                        if input.is_empty() || !input.iter().all(u8::is_ascii_digit) {
+                            continue;
+                        }
+
                         let input = str::from_utf8(&input).map_err(invalid_utf8)?;
 
-                        message.retry = Some(Duration::from_millis(
-                            input
-                                .parse::<u64>()
-                                .expect("retry should be an integer number of milliseconds"),
-                        ))
+                        if let Ok(millis) = input.parse::<u64>() {
+                            message.retry = Some(Duration::from_millis(millis));
+                        }
                     }
 
                     // comment
@@ -194,7 +197,7 @@ mod tests {
     use bytes::Bytes;
     use futures_test::stream::StreamTestExt as _;
     use futures_util::{StreamExt as _, stream};
-    use indoc::indoc;
+    use indoc::{formatdoc, indoc};
     use tokio_util::{
         codec::{Decoder as _, FramedRead},
         io::StreamReader,
@@ -505,6 +508,59 @@ mod tests {
 
             assert_eq!(event, Some(Event::Message(Message::data(expected))));
         }
+    }
+
+    #[quickcheck_macros::quickcheck]
+    fn arbitrary_retry_values_do_not_panic(mut value: Vec<u8>) {
+        for byte in &mut value {
+            if *byte == b'\r' || *byte == b'\n' {
+                *byte = b' ';
+            }
+        }
+
+        let mut input = BytesMut::from(b"retry: ".as_slice());
+        input.extend_from_slice(&value);
+        input.extend_from_slice(indoc! {b"
+
+            data: hello
+
+        "});
+
+        // Invalid UTF-8 may return an error, but a retry value must not cause a panic.
+        let _ = Decoder::default().decode(&mut input);
+    }
+
+    #[test]
+    fn ignores_invalid_retry_values() {
+        for retry in ["invalid", "", "-1", "+1", "1.5", " 1", "١"] {
+            let frame = formatdoc! {"
+                retry: {retry}
+                data: hello
+
+            "};
+            let mut input = BytesMut::from(frame.as_str());
+
+            let event = Decoder::default().decode(&mut input).unwrap();
+
+            assert_eq!(event, Some(Event::Message(Message::data("hello"))));
+        }
+
+        let mut input = BytesMut::from(indoc! {"
+            retry: 42
+            retry: invalid
+            data: hello
+
+        "});
+
+        let event = Decoder::default().decode(&mut input).unwrap();
+
+        assert_eq!(
+            event,
+            Some(Event::Message(Message {
+                retry: Some(Duration::from_millis(42)),
+                ..Message::data("hello")
+            })),
+        );
     }
 
     #[tokio::test]
