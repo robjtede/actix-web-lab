@@ -14,7 +14,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [package.metadata.cargo_check_external_types]
-allowed_external_types = ["bytestring::*", "tokio_util::*"]
+allowed_external_types = ["bytes::*", "bytestring::*", "tokio_util::*"]
 
 [features]
 awc-3 = []
