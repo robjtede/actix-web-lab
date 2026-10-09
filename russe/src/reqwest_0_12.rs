@@ -69,27 +69,37 @@ impl Manager {
         }
     }
 
-    /// Sends request, starts connection management, and returns stream of events.
+    /// Sends the request and returns a task handle and a receiver of events.
+    ///
+    /// Waits for response headers before starting the task that reads the event stream.
+    /// A failed request can be retried by calling this method again.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Http`] if the initial request fails.
+    /// Body and decoding errors are sent through the event receiver.
     ///
     /// # Panics
     ///
-    /// Panics if called more than once.
+    /// Panics if called after a successful send.
     pub async fn send(
         &mut self,
     ) -> Result<(JoinHandle<()>, UnboundedReceiver<Result<Event, Error>>), Error> {
-        let client = self.client.clone();
+        assert!(self.rx.is_some(), "The request has already been sent");
+
         let req = self.req.try_clone().unwrap();
+        let res = self
+            .client
+            .execute(req)
+            .await
+            .map_err(|source| Error::Http {
+                source: Box::new(source),
+            })?;
+
         let tx = self.tx.clone();
+        let rx = self.rx.take().unwrap();
 
         let task_handle = tokio::spawn(async move {
-            let res = match client.execute(req).await {
-                Ok(res) => res,
-                Err(err) => {
-                    let _ = tx.send(Err(io::Error::other(err).into()));
-                    return;
-                }
-            };
-
             let mut stream = res.sse_stream();
 
             while let Some(ev) = stream.next().await {
@@ -97,7 +107,7 @@ impl Manager {
             }
         });
 
-        Ok((task_handle, self.rx.take().unwrap()))
+        Ok((task_handle, rx))
     }
 
     /// Commits an event ID for this manager.
