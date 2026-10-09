@@ -48,7 +48,7 @@ impl Error {
 
 impl_more::impl_display_enum! {
     Error:
-    InvalidFieldValue { field, character, offset } => "invalid SSE {field}: {character:?} at byte {offset}",
+    InvalidFieldValue { field, character, offset } => "Invalid SSE {field}: {character:?} at byte {offset}",
     InvalidUtf8 { .. } => "Stream contained invalid UTF-8",
     Http { .. } => "HTTP request failed",
     Io { .. } => "I/O error",

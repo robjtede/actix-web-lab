@@ -159,22 +159,22 @@ mod tests {
     #[test]
     fn invalid_field_errors_report_details() {
         for (id, event, expected) in [
-            (Some("bad\0id"), None, "invalid SSE id: '\\0' at byte 3"),
+            (Some("bad\0id"), None, "Invalid SSE id: '\\0' at byte 3"),
             (
                 None,
                 Some("bad\nevent"),
-                "invalid SSE event: '\\n' at byte 3",
+                "Invalid SSE event: '\\n' at byte 3",
             ),
-            (Some("é\rid"), None, "invalid SSE id: '\\r' at byte 2"),
+            (Some("é\rid"), None, "Invalid SSE id: '\\r' at byte 2"),
             (
                 Some("bad\r\nid"),
                 Some("bad\nevent"),
-                "invalid SSE id: '\\r' at byte 3",
+                "Invalid SSE id: '\\r' at byte 3",
             ),
             (
                 None,
                 Some("\"bad\\name\n"),
-                "invalid SSE event: '\\n' at byte 9",
+                "Invalid SSE event: '\\n' at byte 9",
             ),
         ] {
             let message = Message {
