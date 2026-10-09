@@ -2788,7 +2788,9 @@ dependencies = [
 name = "russe"
 version = "0.2.0"
 dependencies = [
+ "actix-rt",
  "aho-corasick",
+ "awc",
  "bytes",
  "bytestring",
  "color-eyre",
