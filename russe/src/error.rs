@@ -1,6 +1,8 @@
 use core::{error::Error as StdError, str};
 use std::io;
 
+use truncate_safe::truncate;
+
 /// SSE request, encoding, or decoding error.
 #[derive(Debug)]
 #[non_exhaustive]
@@ -72,20 +74,20 @@ fn context_len(chars: impl Iterator<Item = char>) -> usize {
     // Reserve six bytes for ellipses and two for the escaped forbidden character.
     const MAX_ESCAPED_LEN: usize = 28;
 
-    let mut len = 0;
-    let mut escaped_len = 0;
+    let text: String = chars.take(MAX_ESCAPED_LEN).collect();
+    let mut context = truncate(&text, MAX_ESCAPED_LEN);
 
-    for ch in chars {
-        escaped_len += ch.escape_debug().map(char::len_utf8).sum::<usize>();
-
-        if escaped_len > MAX_ESCAPED_LEN {
-            break;
-        }
-
-        len += ch.len_utf8();
+    while context
+        .chars()
+        .flat_map(char::escape_debug)
+        .map(char::len_utf8)
+        .sum::<usize>()
+        > MAX_ESCAPED_LEN
+    {
+        context = truncate(context, context.len() - 1);
     }
 
-    len
+    context.len()
 }
 
 impl_more::impl_display_enum! {

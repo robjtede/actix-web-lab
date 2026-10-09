@@ -248,4 +248,32 @@ mod tests {
             assert_eq!(value.ends_with('…'), truncated_end);
         }
     }
+
+    #[test]
+    fn invalid_field_excerpts_preserve_utf8_and_escape_sequences() {
+        for (id, expected) in [
+            (
+                format!("{}\n{}", "é".repeat(20), "世".repeat(20)),
+                format!("…{}\\n{}…", "é".repeat(14), "世".repeat(9)),
+            ),
+            (
+                format!("{}\n{}", "\u{1}".repeat(20), r#"\""#.repeat(20)),
+                format!("…{}\\n{}…", "\\u{1}".repeat(5), r#"\\\""#.repeat(7)),
+            ),
+        ] {
+            let message = Message {
+                data: "hello".into(),
+                event: None,
+                id: Some(id.into()),
+                retry: None,
+            };
+
+            let err = Event::Message(message).into_bytestring().unwrap_err();
+            let Error::InvalidFieldValue { value, .. } = err else {
+                panic!("Unexpected error: {err:?}");
+            };
+
+            assert_eq!(value, expected);
+        }
+    }
 }
