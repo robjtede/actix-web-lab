@@ -10,7 +10,7 @@ pub enum Error {
 
     /// Stream contained invalid UTF-8.
     InvalidUtf8 {
-        /// Source erorr.
+        /// Source error.
         source: str::Utf8Error,
     },
 
