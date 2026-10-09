@@ -74,6 +74,7 @@ pub fn truncate(text: &str, max_len: usize) -> &str {
 /// assert_eq!(truncate_with_ellipsis("café", 5), "café");
 /// assert_eq!(truncate_with_ellipsis("café", 0), "…");
 /// ```
+#[must_use]
 pub fn truncate_with_ellipsis(text: &str, max_len: usize) -> Cow<'_, str> {
     truncate_with(text, max_len, "…")
 }
@@ -96,6 +97,7 @@ pub fn truncate_with_ellipsis(text: &str, max_len: usize) -> Cow<'_, str> {
 /// assert_eq!(truncate_with("café", 4, "..."), "caf...");
 /// assert_eq!(truncate_with("café", 5, "..."), "café");
 /// ```
+#[must_use]
 pub fn truncate_with<'a>(text: &'a str, max_len: usize, ellipsis: &str) -> Cow<'a, str> {
     let prefix = truncate(text, max_len);
 
