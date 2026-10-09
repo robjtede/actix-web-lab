@@ -4,7 +4,9 @@
 
 ## 0.3.0
 
-- No significant changes since `0.2.0`.
+- Add `field`, `character`, and `offset` fields to `Error::InvalidFieldValue`.
+- Add `Error::Http` with a boxed source error for initial HTTP request failures.
+- Make `Manager::send()` wait for response headers and return initial request errors directly in both Reqwest integrations. Allow retry after an initial request failure.
 
 ## 0.2.0
 
