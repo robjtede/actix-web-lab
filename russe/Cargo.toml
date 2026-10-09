@@ -18,13 +18,14 @@ all-features = true
 allowed_external_types = ["bytestring::*", "tokio_util::*"]
 
 [features]
-awc-3 = []
+awc-3 = ["dep:awc-3"]
 mime = ["dep:mime"]
 reqwest-0_12 = ["dep:reqwest-0_12"]
 reqwest-0_13 = ["dep:reqwest-0_13"]
 
 [dependencies]
 aho-corasick = "1"
+awc-3 = { package = "awc", version = "3", optional = true, default-features = false }
 bytes = "1"
 bytestring = "1.4"
 futures-util = "0.3.18"
@@ -42,6 +43,7 @@ tokio-util = { version = "0.7", features = ["codec"] }
 tracing = "0.1.41"
 
 [dev-dependencies]
+actix-rt = "2"
 color-eyre = "0.6"
 divan = "0.1"
 eyre = "0.6"
