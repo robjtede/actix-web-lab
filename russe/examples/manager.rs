@@ -19,7 +19,7 @@ async fn main() -> eyre::Result<()> {
 
     let mut manager = Manager::new(&client, req);
 
-    let (_task_handle, events) = manager.send().await.unwrap();
+    let (_task_handle, events) = manager.send().await?;
 
     let mut event_stream = UnboundedReceiverStream::new(events);
 

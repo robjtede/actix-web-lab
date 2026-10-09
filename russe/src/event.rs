@@ -38,16 +38,16 @@ impl Event {
 
         match self {
             Event::Message(message) => {
-                if message
-                    .id
-                    .as_deref()
-                    .is_some_and(|id| id.contains(['\0', '\r', '\n']))
-                    || message
-                        .event
-                        .as_deref()
-                        .is_some_and(|event| event.contains(['\r', '\n']))
+                if let Some(id) = message.id.as_deref()
+                    && let Some(offset) = id.find(['\0', '\r', '\n'])
                 {
-                    return Err(Error::InvalidFieldValue);
+                    return Err(Error::invalid_field_value("id", id, offset));
+                }
+
+                if let Some(event) = message.event.as_deref()
+                    && let Some(offset) = event.find(['\r', '\n'])
+                {
+                    return Err(Error::invalid_field_value("event", event, offset));
                 }
 
                 if let Some(id) = message.id {
@@ -151,8 +151,75 @@ mod tests {
 
             assert!(matches!(
                 Event::Message(message).into_bytestring(),
-                Err(crate::Error::InvalidFieldValue)
+                Err(crate::Error::InvalidFieldValue { .. })
             ));
+        }
+    }
+
+    #[test]
+    fn invalid_field_errors_report_details() {
+        for (id, event, expected) in [
+            (Some("bad\0id"), None, "Invalid SSE id: '\\0' at byte 3"),
+            (
+                None,
+                Some("bad\nevent"),
+                "Invalid SSE event: '\\n' at byte 3",
+            ),
+            (Some("é\rid"), None, "Invalid SSE id: '\\r' at byte 2"),
+            (
+                Some("bad\r\nid"),
+                Some("bad\nevent"),
+                "Invalid SSE id: '\\r' at byte 3",
+            ),
+            (
+                None,
+                Some("\"bad\\name\n"),
+                "Invalid SSE event: '\\n' at byte 9",
+            ),
+        ] {
+            let message = Message {
+                data: "hello".into(),
+                event: event.map(Into::into),
+                id: id.map(Into::into),
+                retry: None,
+            };
+
+            let err = Event::Message(message).into_bytestring().unwrap_err();
+
+            assert_eq!(err.to_string(), expected);
+        }
+    }
+
+    #[test]
+    fn invalid_field_errors_report_byte_offsets() {
+        for (id, expected_offset) in [
+            (format!("{}\n{}", "a".repeat(100), "z".repeat(100)), 100),
+            (format!("{}\n{}", "é".repeat(100), "世".repeat(100)), 200),
+            (
+                format!("{}\n{}", "\\".repeat(100), "\u{1}".repeat(100)),
+                100,
+            ),
+            (format!("\n{}", "世".repeat(100)), 0),
+            (format!("{}\n", "é".repeat(100)), 200),
+        ] {
+            let message = Message {
+                data: "hello".into(),
+                event: None,
+                id: Some(id.into()),
+                retry: None,
+            };
+
+            let err = Event::Message(message).into_bytestring().unwrap_err();
+            let Error::InvalidFieldValue {
+                field,
+                character,
+                offset,
+            } = &err
+            else {
+                panic!("Unexpected error: {err:?}");
+            };
+
+            assert_eq!((*field, *character, *offset), ("id", '\n', expected_offset));
         }
     }
 }

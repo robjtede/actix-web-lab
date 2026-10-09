@@ -466,7 +466,7 @@ mod tests {
 
             assert!(matches!(
                 err.downcast_ref::<russe::Error>(),
-                Some(russe::Error::InvalidFieldValue),
+                Some(russe::Error::InvalidFieldValue { .. }),
             ));
         }
     }

@@ -10,50 +10,31 @@ use russe::{
     Event, Message,
     reqwest_0_13::{Manager, ReqwestExt as _},
 };
-use tokio::{
-    io::{AsyncBufReadExt as _, AsyncWriteExt as _, BufReader},
-    net::TcpListener,
-    task::JoinHandle,
-};
 use tokio_stream::wrappers::UnboundedReceiverStream;
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{method, path},
+};
 
-async fn sse_server() -> (String, JoinHandle<()>) {
-    let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
-    let addr = listener.local_addr().unwrap();
+async fn sse_server() -> MockServer {
+    let server = MockServer::start().await;
 
-    let task = tokio::spawn(async move {
-        let (socket, _) = listener.accept().await.unwrap();
-        let mut socket = BufReader::new(socket);
-        let mut line = String::new();
+    Mock::given(method("GET"))
+        .and(path("/events"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            "id: 42\nevent: update\ndata: hello\n\n: heartbeat\n\n",
+            russe::MEDIA_TYPE_STR,
+        ))
+        .expect(1)
+        .mount(&server)
+        .await;
 
-        loop {
-            line.clear();
-            assert_ne!(socket.read_line(&mut line).await.unwrap(), 0);
-
-            if line == "\r\n" {
-                break;
-            }
-        }
-
-        let body = "id: 42\nevent: update\ndata: hello\n\n: heartbeat\n\n";
-        let response = format!(
-            "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
-            body.len(),
-        );
-
-        socket
-            .get_mut()
-            .write_all(response.as_bytes())
-            .await
-            .unwrap();
-    });
-
-    (format!("http://{addr}/events"), task)
+    server
 }
 
 #[tokio::test]
 async fn response_stream_decodes_sse_events() {
-    let (url, server) = sse_server().await;
+    let server = sse_server().await;
     let client = Client::builder()
         .no_proxy()
         .timeout(Duration::from_secs(5))
@@ -61,7 +42,7 @@ async fn response_stream_decodes_sse_events() {
         .unwrap();
 
     let events = client
-        .get(url)
+        .get(format!("{}/events", server.uri()))
         .send()
         .await
         .unwrap()
@@ -82,19 +63,20 @@ async fn response_stream_decodes_sse_events() {
             Event::Comment("heartbeat".into()),
         ],
     );
-
-    server.await.unwrap();
 }
 
 #[tokio::test]
 async fn manager_delivers_sse_events() {
-    let (url, server) = sse_server().await;
+    let server = sse_server().await;
     let client = Client::builder()
         .no_proxy()
         .timeout(Duration::from_secs(5))
         .build()
         .unwrap();
-    let req = client.get(url).build().unwrap();
+    let req = client
+        .get(format!("{}/events", server.uri()))
+        .build()
+        .unwrap();
     let mut manager = Manager::new(&client, req);
 
     let (task, events) = manager.send().await.unwrap();
@@ -122,5 +104,4 @@ async fn manager_delivers_sse_events() {
     );
 
     task.await.unwrap();
-    server.await.unwrap();
 }

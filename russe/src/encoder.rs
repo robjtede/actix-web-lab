@@ -193,7 +193,7 @@ mod tests {
             let result = Encoder::default().encode(Event::Message(message), &mut output);
 
             assert!(
-                matches!(result, Err(Error::InvalidFieldValue)),
+                matches!(result, Err(Error::InvalidFieldValue { .. })),
                 "got: {result:?}",
             );
             assert_eq!(output, "data: previous\n\n");
