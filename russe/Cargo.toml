@@ -28,6 +28,7 @@ aho-corasick = "1"
 bytes = "1"
 bytestring = "1.4"
 futures-util = "0.3.18"
+impl-more = "0.3.8"
 memchr = "2"
 mime = { version = "0.3.17", optional = true }
 reqwest-0_12 = { package = "reqwest", version = "0.12", optional = true, default-features = false, features = [

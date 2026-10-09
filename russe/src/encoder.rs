@@ -8,7 +8,8 @@ use crate::{Error, Event};
 /// CRLF and bare CR in message data and comments are converted to LF. Empty lines are preserved.
 /// Retry delays are written in whole milliseconds. Fractions of a millisecond are discarded.
 ///
-/// Returns [`Error::Invalid`] if an event name contains CR or LF, or an ID contains NUL, CR, or LF.
+/// Returns [`Error::InvalidFieldValue`] if an event name contains CR or LF,
+/// or an ID contains NUL, CR, or LF.
 /// These fields are checked before any bytes are added to the output buffer.
 ///
 /// # Examples
@@ -191,7 +192,10 @@ mod tests {
 
             let result = Encoder::default().encode(Event::Message(message), &mut output);
 
-            assert!(matches!(result, Err(Error::Invalid)), "got: {result:?}");
+            assert!(
+                matches!(result, Err(Error::InvalidFieldValue)),
+                "got: {result:?}",
+            );
             assert_eq!(output, "data: previous\n\n");
         }
     }

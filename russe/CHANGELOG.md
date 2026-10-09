@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add `Error::InvalidUtf8` enum variant.
+- Rename `Error::Invalid` to `Error::InvalidFieldValue`.
+- The `Error` enum now uses struct variants.
+
 ## 0.1.2
 
 - No significant changes since `0.1.1`.

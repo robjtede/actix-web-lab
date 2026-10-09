@@ -47,7 +47,7 @@ impl Event {
                         .as_deref()
                         .is_some_and(|event| event.contains(['\r', '\n']))
                 {
-                    return Err(Error::Invalid);
+                    return Err(Error::InvalidFieldValue);
                 }
 
                 if let Some(id) = message.id {
@@ -151,7 +151,7 @@ mod tests {
 
             assert!(matches!(
                 Event::Message(message).into_bytestring(),
-                Err(crate::Error::Invalid)
+                Err(crate::Error::InvalidFieldValue)
             ));
         }
     }

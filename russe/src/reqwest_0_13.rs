@@ -99,7 +99,15 @@ impl Manager {
         let tx = self.tx.clone();
 
         let task_handle = tokio::spawn(async move {
-            let mut stream = client.execute(req).await.unwrap().sse_stream();
+            let res = match client.execute(req).await {
+                Ok(res) => res,
+                Err(err) => {
+                    let _ = tx.send(Err(io::Error::other(err).into()));
+                    return;
+                }
+            };
+
+            let mut stream = res.sse_stream();
 
             while let Some(ev) = stream.next().await {
                 let _ = tx.send(ev);

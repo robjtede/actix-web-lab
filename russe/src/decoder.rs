@@ -1,4 +1,4 @@
-use std::{io, str, time::Duration};
+use std::{str, time::Duration};
 
 use aho_corasick::AhoCorasick;
 use bytes::{Buf as _, Bytes, BytesMut};
@@ -50,7 +50,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
             // Find a blank line, or wait for more data.
             let Some(delimiter) = self.event_finder.find(&*src) else {
-                tracing::trace!("not enough data in buffer {src:?}");
+                tracing::trace!(buffered_bytes = src.len(), "Not enough data in buffer");
                 return Ok(None);
             };
 
@@ -116,14 +116,14 @@ impl tokio_util::codec::Decoder for Decoder {
                     }
 
                     b"id" => {
-                        let id = ByteString::try_from(input).map_err(invalid_utf8)?;
+                        let id = ByteString::try_from(input)?;
 
                         message.id = Some(id);
                         message_event = true;
                     }
 
                     b"event" => {
-                        let event = ByteString::try_from(input).map_err(invalid_utf8)?;
+                        let event = ByteString::try_from(input)?;
 
                         message.event = Some(event);
                         message_event = true;
@@ -135,7 +135,7 @@ impl tokio_util::codec::Decoder for Decoder {
                             continue;
                         }
 
-                        let input = str::from_utf8(&input).map_err(invalid_utf8)?;
+                        let input = str::from_utf8(&input)?;
 
                         // Duration can hold more than u64::MAX milliseconds.
                         // Reject only values that exceed its seconds range.
@@ -161,7 +161,7 @@ impl tokio_util::codec::Decoder for Decoder {
             if !data_buf.is_empty() {
                 data_buf.truncate(data_buf.len() - 1);
 
-                let data = ByteString::try_from(data_buf).map_err(invalid_utf8)?;
+                let data = ByteString::try_from(data_buf)?;
 
                 message.data = data;
             }
@@ -169,7 +169,7 @@ impl tokio_util::codec::Decoder for Decoder {
             if !comment_buf.is_empty() {
                 comment_buf.truncate(comment_buf.len() - 1);
 
-                let comment = ByteString::try_from(comment_buf).map_err(invalid_utf8)?;
+                let comment = ByteString::try_from(comment_buf)?;
 
                 self.pending_event = if message_event {
                     Some(Event::Message(message))
@@ -192,13 +192,9 @@ impl tokio_util::codec::Decoder for Decoder {
     }
 }
 
-fn invalid_utf8(err: str::Utf8Error) -> io::Error {
-    io::Error::new(io::ErrorKind::InvalidData, err)
-}
-
 #[cfg(test)]
 mod tests {
-    use std::{io, pin::pin};
+    use std::{error::Error as _, io, pin::pin};
 
     use bytes::Bytes;
     use futures_test::stream::StreamTestExt as _;
@@ -715,7 +711,18 @@ mod tests {
         let mut event_stream = pin!(event_stream);
 
         let err = event_stream.next().await.unwrap().unwrap_err();
-        assert_eq!(err.to_string(), "I/O error");
+
+        let Error::InvalidUtf8 { source } = &err else {
+            panic!("expected invalid UTF-8 error, got: {err:?}");
+        };
+
+        assert_eq!(source.valid_up_to(), 7);
+        assert_eq!(source.error_len(), Some(1));
+        assert_eq!(
+            err.source().unwrap().downcast_ref::<str::Utf8Error>(),
+            Some(source),
+        );
+        assert_eq!(err.to_string(), "Stream contained invalid UTF-8");
 
         // no more events in the stream
         assert_none!(event_stream.next().await);

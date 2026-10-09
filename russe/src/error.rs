@@ -1,29 +1,38 @@
-use std::{fmt, io};
+use core::str;
+use std::io;
 
 /// SSE encoding or decoding error.
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum Error {
-    /// Invalid SSE format.
-    Invalid,
+    /// An event ID or event name contains a forbidden character.
+    InvalidFieldValue,
+
+    /// Stream contained invalid UTF-8.
+    InvalidUtf8 {
+        /// Source erorr.
+        source: str::Utf8Error,
+    },
 
     /// I/O error.
-    Io(io::Error),
+    Io {
+        /// Source error.
+        source: io::Error,
+    },
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            Error::Invalid => "Invalid SSE format",
-            Error::Io(_) => "I/O error",
-        })
-    }
+impl_more::impl_display_enum! {
+    Error:
+    InvalidFieldValue => "SSE field value contains a forbidden character",
+    InvalidUtf8 { .. } => "Stream contained invalid UTF-8",
+    Io { .. } => "I/O error",
 }
 
-impl std::error::Error for Error {}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Self {
-        Self::Io(err)
-    }
+impl_more::impl_error_enum! {
+    Error:
+    InvalidUtf8 { source } => source,
+    Io { source } => source,
 }
+
+impl_more::impl_enum_from!(str::Utf8Error => Error::InvalidUtf8 { source });
+impl_more::impl_enum_from!(io::Error => Error::Io { source });
