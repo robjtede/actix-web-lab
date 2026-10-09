@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `AwcExt` and `Manager` APIs for AWC 3 through the optional `awc-3` crate feature.
+
 ## 0.2.0
 
 - Add `Error::InvalidUtf8` enum variant.

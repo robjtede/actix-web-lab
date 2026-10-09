@@ -17,4 +17,12 @@
 
 Server-Sent Events (SSE) encoder and decoder.
 
+## HTTP client integrations
+
+Enable an optional feature for response streams and request managers:
+
+- `awc-3`: AWC 3.
+- `reqwest-0_12`: Reqwest 0.12.
+- `reqwest-0_13`: Reqwest 0.13.
+
 <!-- cargo-rdme end -->
