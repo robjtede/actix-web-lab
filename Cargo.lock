@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab"
-version = "0.29.3"
+version = "0.29.4"
 dependencies = [
  "actix-files",
  "actix-http",
@@ -391,7 +391,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab-derive"
-version = "0.29.3"
+version = "0.29.4"
 dependencies = [
  "actix-test",
  "actix-web",
@@ -2786,7 +2786,7 @@ dependencies = [
 
 [[package]]
 name = "russe"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "aho-corasick",
  "bytes",

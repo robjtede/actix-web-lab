@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.3.0
+
+- No significant changes since `0.2.0`.
+
 ## 0.2.0
 
 - Add `Error::InvalidUtf8` enum variant.
