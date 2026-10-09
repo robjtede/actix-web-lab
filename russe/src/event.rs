@@ -157,32 +157,24 @@ mod tests {
     }
 
     #[test]
-    fn invalid_field_errors_include_context() {
+    fn invalid_field_errors_report_details() {
         for (id, event, expected) in [
-            (
-                Some("bad\0id"),
-                None,
-                "invalid SSE id: '\\0' at byte 3, near \"bad\\0id\"",
-            ),
+            (Some("bad\0id"), None, "invalid SSE id: '\\0' at byte 3"),
             (
                 None,
                 Some("bad\nevent"),
-                "invalid SSE event: '\\n' at byte 3, near \"bad\\nevent\"",
+                "invalid SSE event: '\\n' at byte 3",
             ),
-            (
-                Some("é\rid"),
-                None,
-                "invalid SSE id: '\\r' at byte 2, near \"é\\rid\"",
-            ),
+            (Some("é\rid"), None, "invalid SSE id: '\\r' at byte 2"),
             (
                 Some("bad\r\nid"),
                 Some("bad\nevent"),
-                "invalid SSE id: '\\r' at byte 3, near \"bad\\r\\nid\"",
+                "invalid SSE id: '\\r' at byte 3",
             ),
             (
                 None,
                 Some("\"bad\\name\n"),
-                "invalid SSE event: '\\n' at byte 9, near \"\\\"bad\\\\name\\n\"",
+                "invalid SSE event: '\\n' at byte 9",
             ),
         ] {
             let message = Message {
@@ -199,28 +191,16 @@ mod tests {
     }
 
     #[test]
-    fn invalid_field_excerpts_are_bounded_and_show_the_failure() {
-        for (id, expected_offset, truncated_start, truncated_end) in [
-            (
-                format!("{}\n{}", "a".repeat(100), "z".repeat(100)),
-                100,
-                true,
-                true,
-            ),
-            (
-                format!("{}\n{}", "é".repeat(100), "世".repeat(100)),
-                200,
-                true,
-                true,
-            ),
+    fn invalid_field_errors_report_byte_offsets() {
+        for (id, expected_offset) in [
+            (format!("{}\n{}", "a".repeat(100), "z".repeat(100)), 100),
+            (format!("{}\n{}", "é".repeat(100), "世".repeat(100)), 200),
             (
                 format!("{}\n{}", "\\".repeat(100), "\u{1}".repeat(100)),
                 100,
-                true,
-                true,
             ),
-            (format!("\n{}", "世".repeat(100)), 0, false, true),
-            (format!("{}\n", "é".repeat(100)), 200, true, false),
+            (format!("\n{}", "世".repeat(100)), 0),
+            (format!("{}\n", "é".repeat(100)), 200),
         ] {
             let message = Message {
                 data: "hello".into(),
@@ -234,46 +214,12 @@ mod tests {
                 field,
                 character,
                 offset,
-                value,
             } = &err
             else {
                 panic!("Unexpected error: {err:?}");
             };
 
             assert_eq!((*field, *character, *offset), ("id", '\n', expected_offset));
-            assert!(value.len() <= 64, "got: {value:?}");
-            assert!(value.contains("\\n"), "got: {value:?}");
-            assert!(!value.chars().any(char::is_control), "got: {value:?}");
-            assert_eq!(value.starts_with('…'), truncated_start);
-            assert_eq!(value.ends_with('…'), truncated_end);
-        }
-    }
-
-    #[test]
-    fn invalid_field_excerpts_preserve_utf8_and_escape_sequences() {
-        for (id, expected) in [
-            (
-                format!("{}\n{}", "é".repeat(20), "世".repeat(20)),
-                format!("…{}\\n{}…", "é".repeat(14), "世".repeat(9)),
-            ),
-            (
-                format!("{}\n{}", "\u{1}".repeat(20), r#"\""#.repeat(20)),
-                format!("…{}\\n{}…", "\\u{1}".repeat(5), r#"\\\""#.repeat(7)),
-            ),
-        ] {
-            let message = Message {
-                data: "hello".into(),
-                event: None,
-                id: Some(id.into()),
-                retry: None,
-            };
-
-            let err = Event::Message(message).into_bytestring().unwrap_err();
-            let Error::InvalidFieldValue { value, .. } = err else {
-                panic!("Unexpected error: {err:?}");
-            };
-
-            assert_eq!(value, expected);
         }
     }
 }

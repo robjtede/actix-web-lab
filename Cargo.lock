@@ -2727,7 +2727,6 @@ dependencies = [
  "tokio-test",
  "tokio-util",
  "tracing",
- "truncate-safe",
 ]
 
 [[package]]
