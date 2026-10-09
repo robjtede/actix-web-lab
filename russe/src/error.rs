@@ -30,9 +30,9 @@ pub enum Error {
         source: str::Utf8Error,
     },
 
-    /// An HTTP request failed.
+    /// Initial HTTP request failed.
     Http {
-        /// Source error.
+        /// Boxed to support multiple HTTP clients.
         source: Box<dyn StdError + Send + Sync>,
     },
 
