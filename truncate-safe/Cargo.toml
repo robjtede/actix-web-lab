@@ -1,0 +1,13 @@
+[package]
+name = "truncate-safe"
+version = "0.1.0"
+description = "Truncate strings at UTF-8 character boundaries with an optional ellipsis"
+categories = ["text-processing"]
+keywords = ["string", "truncate", "utf8", "ellipsis"]
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true

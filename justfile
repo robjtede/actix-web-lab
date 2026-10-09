@@ -26,6 +26,7 @@ update-readmes:
     cd ./russe && cargo rdme --force
     cd ./err-report && cargo rdme --force
     cd ./collectools && cargo rdme --force
+    cd ./truncate-safe && cargo rdme --force
 
 # Downgrade dev-dependencies necessary to run MSRV checks/tests.
 [private]
