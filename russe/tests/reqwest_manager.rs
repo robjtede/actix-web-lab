@@ -8,6 +8,7 @@ macro_rules! manager_tests {
             use std::{error::Error as _, time::Duration};
 
             use ::$reqwest::Client;
+            use indoc::indoc;
             use russe::{Error, Event, $reqwest::Manager};
             use tokio::{
                 io::{AsyncBufReadExt as _, AsyncWriteExt as _, BufReader},
@@ -39,7 +40,13 @@ macro_rules! manager_tests {
 
                     socket
                         .get_mut()
-                        .write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: 1\r\nConnection: close\r\n\r\n")
+                        .write_all(indoc! {b"
+                            HTTP/1.1 200 OK\r
+                            Content-Type: text/event-stream\r
+                            Content-Length: 1\r
+                            Connection: close\r
+                            \r
+                        "})
                         .await
                         .unwrap();
                 });
@@ -79,12 +86,13 @@ macro_rules! manager_tests {
                     .expect_err("The initial request failure must return from send()");
 
                 assert!(matches!(err, Error::Http { .. }), "got: {err:?}");
-                assert!(err
-                    .source()
-                    .unwrap()
-                    .downcast_ref::<::$reqwest::Error>()
-                    .unwrap()
-                    .is_timeout());
+                assert!(
+                    err.source()
+                        .unwrap()
+                        .downcast_ref::<::$reqwest::Error>()
+                        .unwrap()
+                        .is_timeout()
+                );
             }
 
             #[tokio::test]
@@ -112,7 +120,8 @@ macro_rules! manager_tests {
                 Mock::given(method("GET"))
                     .and(path("/events"))
                     .respond_with(
-                        ResponseTemplate::new(200).set_body_raw(": ping\n\n", russe::MEDIA_TYPE_STR),
+                        ResponseTemplate::new(200)
+                            .set_body_raw(": ping\n\n", russe::MEDIA_TYPE_STR),
                     )
                     .expect(1)
                     .mount(&server)
