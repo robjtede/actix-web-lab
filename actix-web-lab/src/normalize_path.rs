@@ -271,7 +271,7 @@ pin_project! {
         Redirect { res: Option<ServiceResponse<()>>, },
         Service {
             #[pin] fut: S::Future,
-            _body: PhantomData<B>,
+            _body: PhantomData<fn() -> B>,
         },
     }
 }

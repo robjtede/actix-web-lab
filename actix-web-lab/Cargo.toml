@@ -28,6 +28,7 @@ allowed_external_types = [
   "arc_swap::*",
   "bytes::*",
   "bytestring::*",
+  "deser_core::*",
   "futures_core::*",
   "http::*",
   "mime::*",
@@ -41,6 +42,7 @@ default = ["derive"]
 derive = ["actix-web-lab-derive"]
 
 cbor = ["serde_cbor_2"]
+deser-0_10 = ["dep:deser-0_10", "dep:deser-json-0_10", "dep:deser-path-0_10"]
 msgpack = ["rmp-serde"]
 spa = ["actix-files"]
 
@@ -80,6 +82,15 @@ url = "2.1"
 # cbor
 serde_cbor_2 = { version = "0.13", optional = true }
 
+# deser-0_10
+deser-0_10 = { package = "deser", version = "0.10", optional = true, default-features = false, features = [
+  "std",
+] }
+deser-json-0_10 = { package = "deser-json", version = "0.10", optional = true, default-features = false, features = [
+  "std",
+] }
+deser-path-0_10 = { package = "deser-path", version = "0.10", optional = true }
+
 # msgpack
 rmp-serde = { version = "1", optional = true }
 
@@ -92,6 +103,7 @@ actix-web-lab-derive = { path = "../actix-web-lab-derive" }
 actix-web = { version = "4.15", features = ["rustls-0_23"] }
 async_zip = { version = "0.0.19", features = ["deflate", "tokio"] }
 base64 = "0.23"
+deser-0_10 = { package = "deser", version = "0.10", features = ["derive"] }
 digest = "0.11"
 ed25519-dalek = { version = "3", features = ["hazmat"] }
 env_logger = "0.11"
