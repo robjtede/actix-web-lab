@@ -5,8 +5,7 @@ use actix_web::{
     body::{BodyStream, MessageBody},
 };
 use bytes::{Bytes, BytesMut};
-use futures_core::Stream;
-use futures_util::TryStreamExt as _;
+use futures_util::{Stream, TryStreamExt as _};
 use mime::Mime;
 use pin_project_lite::pin_project;
 use serde::Serialize;
@@ -25,7 +24,7 @@ pin_project! {
     /// ```
     /// # use actix_web::Responder;
     /// # use actix_web_lab::respond::NdJson;
-    /// # use futures_core::Stream;
+    /// # use futures_util::Stream;
     /// fn streaming_data_source() -> impl Stream<Item = serde_json::Value> {
     ///     // get item stream from source
     ///     # futures_util::stream::empty()

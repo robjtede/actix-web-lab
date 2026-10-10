@@ -11,7 +11,7 @@ use actix_web::{
     FromRequest, HttpMessage, HttpRequest, ResponseError, dev::Payload, http::header, web,
 };
 use derive_more::{Display, Error};
-use futures_core::Stream as _;
+use futures_util::Stream as _;
 use http::StatusCode;
 use serde::de::DeserializeOwned;
 use tracing::debug;

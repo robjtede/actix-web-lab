@@ -8,8 +8,7 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
     error,
 };
-use futures_core::future::LocalBoxFuture;
-use futures_util::FutureExt as _;
+use futures_util::{FutureExt as _, future::LocalBoxFuture};
 
 /// A middleware to catch panics in wrapped handlers and middleware, returning empty 500 responses.
 ///

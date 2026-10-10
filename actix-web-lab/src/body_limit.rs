@@ -13,7 +13,7 @@ use actix_web::{
     dev::{self, Payload},
 };
 use derive_more::Display;
-use futures_core::Stream as _;
+use futures_util::Stream as _;
 
 use crate::header::ContentLength;
 

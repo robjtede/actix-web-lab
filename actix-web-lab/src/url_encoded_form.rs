@@ -15,7 +15,7 @@ use actix_web::{
     web,
 };
 use derive_more::{Display, Error};
-use futures_core::Stream as _;
+use futures_util::Stream as _;
 use serde::de::DeserializeOwned;
 use tracing::debug;
 

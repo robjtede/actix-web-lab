@@ -6,7 +6,7 @@ use std::{
 };
 
 use actix_web::{Error, FromRequest, HttpRequest, dev, error};
-use futures_core::future::LocalBoxFuture;
+use futures_util::future::LocalBoxFuture;
 use tokio::sync::OnceCell;
 use tracing::debug;
 

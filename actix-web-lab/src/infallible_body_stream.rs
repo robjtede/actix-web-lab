@@ -1,6 +1,6 @@
 use actix_http::body::{BodyStream, SizedStream};
 use bytes::Bytes;
-use futures_core::Stream;
+use futures_util::Stream;
 
 use crate::util::InfallibleStream;
 

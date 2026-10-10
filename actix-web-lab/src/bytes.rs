@@ -9,7 +9,7 @@ use std::{
 
 use actix_web::{FromRequest, HttpMessage, HttpRequest, ResponseError, dev, http::StatusCode, web};
 use derive_more::{Display, Error};
-use futures_core::Stream as _;
+use futures_util::Stream as _;
 use tracing::debug;
 
 /// Default bytes payload size limit of 4MiB.
