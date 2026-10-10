@@ -9,7 +9,7 @@ use actix_web::{
     body::EitherBody,
     dev::{Service, ServiceResponse, Transform},
 };
-use futures_util::future::{FutureExt as _, LocalBoxFuture};
+use futures_util::{FutureExt as _, future::LocalBoxFuture};
 use pin_project_lite::pin_project;
 
 /// Middleware for conditionally enabling other middleware in an [`Option`].
