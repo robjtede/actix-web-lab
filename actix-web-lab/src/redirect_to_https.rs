@@ -10,7 +10,7 @@ use actix_web::{
     http::header::TryIntoHeaderPair,
     web::Redirect,
 };
-use futures_core::future::LocalBoxFuture;
+use futures_util::future::LocalBoxFuture;
 
 use crate::{
     header::StrictTransportSecurity,

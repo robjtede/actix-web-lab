@@ -15,7 +15,7 @@ use actix_web::{
     http::StatusCode,
 };
 use ahash::AHashMap;
-use futures_core::future::LocalBoxFuture;
+use futures_util::future::LocalBoxFuture;
 use pin_project_lite::pin_project;
 
 type ErrorHandlerRes<B> = Result<ServiceResponse<EitherBody<B>>>;

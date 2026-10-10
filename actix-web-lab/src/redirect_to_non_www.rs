@@ -9,7 +9,7 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
     web::Redirect,
 };
-use futures_core::future::LocalBoxFuture;
+use futures_util::future::LocalBoxFuture;
 
 use crate::redirect_host::{HostAllowlist, reject_untrusted_host};
 

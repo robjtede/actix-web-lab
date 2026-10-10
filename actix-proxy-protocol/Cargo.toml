@@ -27,7 +27,7 @@ actix-http = "3"
 actix-rt = "2.6"
 actix-server = "2"
 bytes = "1"
-futures-util = { version = "0.3.7", default-features = false, features = ["sink", "async-await-macro"] }
+futures-util = { version = "0.3.31", default-features = false, features = ["sink", "async-await-macro"] }
 tokio = { version = "1.38.2", features = ["io-util", "rt-multi-thread", "macros", "fs"] }
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

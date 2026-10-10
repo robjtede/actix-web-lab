@@ -13,8 +13,7 @@ use actix_web::{
     web::{self, BufMut as _, BytesMut},
 };
 use actix_web_lab::respond::NdJson;
-use futures_core::Stream;
-use futures_util::{StreamExt as _, stream};
+use futures_util::{Stream, StreamExt as _, stream};
 use rand::{
     RngExt as _,
     distr::{Alphanumeric, SampleString as _},

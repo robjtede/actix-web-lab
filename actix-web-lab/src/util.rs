@@ -12,8 +12,7 @@ use std::{
 
 use actix_http::{BoxedPayloadStream, error::PayloadError};
 use actix_web::{dev, web::BufMut};
-use futures_core::Stream;
-use futures_util::StreamExt as _;
+use futures_util::{Stream, StreamExt as _};
 use local_channel::mpsc;
 
 /// Returns an effectively cloned payload that supports streaming efficiently.

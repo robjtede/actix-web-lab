@@ -12,7 +12,7 @@ use actix_web::{
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
 };
-use futures_core::ready;
+use futures_util::ready;
 use pin_project_lite::pin_project;
 
 /// Creates a middleware from an async function that is used as a mapping function for a

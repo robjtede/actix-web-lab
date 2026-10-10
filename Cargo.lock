@@ -360,7 +360,6 @@ dependencies = [
  "ed25519-dalek",
  "env_logger",
  "form_urlencoded",
- "futures-core",
  "futures-util",
  "hex",
  "hex-literal",
