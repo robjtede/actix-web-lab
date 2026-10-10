@@ -72,6 +72,8 @@ mod x_forwarded_prefix;
 
 // public API
 pub mod body;
+#[cfg(feature = "deser-0_10")]
+pub mod deser_0_10;
 pub mod extract;
 pub mod guard;
 pub mod header;

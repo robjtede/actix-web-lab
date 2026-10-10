@@ -155,11 +155,9 @@ pub enum UrlEncodedFormBody<T, const LIMIT: usize> {
         length: Option<usize>,
         payload: Payload,
         buf: web::BytesMut,
-        _res: PhantomData<T>,
+        _res: PhantomData<fn() -> T>,
     },
 }
-
-impl<T, const LIMIT: usize> Unpin for UrlEncodedFormBody<T, LIMIT> {}
 
 impl<T: DeserializeOwned, const LIMIT: usize> UrlEncodedFormBody<T, LIMIT> {
     /// Create a new future to decode a URL-encoded request payload.

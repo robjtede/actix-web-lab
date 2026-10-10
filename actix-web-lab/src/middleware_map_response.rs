@@ -86,7 +86,7 @@ where
 pub struct MapResService<S, F, B> {
     service: S,
     mw_fn: Rc<F>,
-    _phantom: PhantomData<(B,)>,
+    _phantom: PhantomData<fn() -> B>,
 }
 
 impl<S, F, Fut, B, B2> Service<ServiceRequest> for MapResService<S, F, B>

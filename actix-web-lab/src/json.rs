@@ -173,11 +173,9 @@ pub enum JsonBody<T, const LIMIT: usize> {
         // #[cfg(not(feature = "__compress"))]
         payload: Payload,
         buf: web::BytesMut,
-        _res: PhantomData<T>,
+        _res: PhantomData<fn() -> T>,
     },
 }
-
-impl<T, const LIMIT: usize> Unpin for JsonBody<T, LIMIT> {}
 
 impl<T: DeserializeOwned, const LIMIT: usize> JsonBody<T, LIMIT> {
     /// Create a new future to decode a JSON request payload.
