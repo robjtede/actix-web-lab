@@ -23,10 +23,12 @@ fmt: update-readmes
 # Update READMEs from crate root documentation.
 [group("lint")]
 update-readmes:
-    cd ./russe && cargo rdme --force
-    cd ./err-report && cargo rdme --force
-    cd ./collectools && cargo rdme --force
-    cd ./truncate-safe && cargo rdme --force
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    cargo metadata --no-deps --format-version=1 \
+        | jq -r '.packages[].name' \
+        | xargs -n 1 cargo rdme --force --workspace-project
 
 # Downgrade dev-dependencies necessary to run MSRV checks/tests.
 [private]
