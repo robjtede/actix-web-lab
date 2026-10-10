@@ -86,7 +86,7 @@ jobs:
           -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
       - name: Check workspace lint configuration
-        uses: x52dev/actions/check-workspace-lints@c51af23bd7bf53592813aeb411f5b39f4e67e982 # t3/move-inherited-workspace-lints
+        uses: x52dev/actions/check-workspace-lints@7c23eefaf1a2ca087750023b8f5b17a2d18b54a2 # t3/move-inherited-workspace-lints
 
   external-types:
     runs-on: ubuntu-latest
