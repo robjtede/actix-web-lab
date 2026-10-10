@@ -22,6 +22,7 @@ awc-3 = []
 mime = ["dep:mime"]
 reqwest-0_12 = ["dep:reqwest-0_12"]
 reqwest-0_13 = ["dep:reqwest-0_13"]
+ureq-3 = ["dep:ureq-3"]
 
 [dependencies]
 aho-corasick = "1"
@@ -40,6 +41,7 @@ reqwest-0_13 = { package = "reqwest", version = "0.13", optional = true, default
 tokio = { version = "1", features = ["sync"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 tracing = "0.1.41"
+ureq-3 = { package = "ureq", version = "3", optional = true, default-features = false }
 
 [dev-dependencies]
 color-eyre = "0.6"
