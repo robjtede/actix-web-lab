@@ -19,7 +19,7 @@ use tracing::debug;
 /// Default JSON payload size limit of 2MiB.
 pub const DEFAULT_JSON_LIMIT: usize = 2_097_152;
 
-/// JSON extractor with const-generic payload size limit.
+/// JSON extractor with const-generic payload size limit and error paths.
 ///
 /// `Json` is used to extract typed data from JSON request payloads.
 ///

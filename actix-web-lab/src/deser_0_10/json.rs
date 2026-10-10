@@ -18,14 +18,14 @@ use crate::{
     json::DEFAULT_JSON_LIMIT,
 };
 
-/// JSON extractor with const-generic payload size limit.
+/// JSON extractor with const-generic payload size limit and error paths (using [`deser`]).
 ///
 /// `DeserJson` is used to extract typed data from JSON request payloads with deser.
 /// Requires the `deser-0_10` feature.
 ///
 /// # Extractor
 /// To extract typed data from a request body, the inner type `T` must implement the
-/// [`::deser_0_10::de::DeserializeOwned`] trait.
+/// [`DeserializeOwned`] trait.
 ///
 /// Use the `LIMIT` const generic parameter to control the payload size limit. The default limit
 /// that is exported ([`DEFAULT_JSON_LIMIT`]) is 2MiB.
@@ -96,6 +96,9 @@ use crate::{
 /// Unsupported types, API or configuration errors, and deserialization I/O errors return
 /// HTTP 500. The status code uses [`::deser_0_10::Error::category`]. Unknown deserialization error
 /// categories return HTTP 500. Exceeding the payload byte limit returns HTTP 413.
+///
+/// [`deser`]: deser_0_10
+/// [`DeserializeOwned`]: ::deser_0_10::de::DeserializeOwned
 #[derive(Debug, Display)]
 pub struct DeserJson<T, const LIMIT: usize = DEFAULT_JSON_LIMIT>(pub T);
 

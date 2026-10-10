@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab"
-version = "0.29.4"
+version = "0.29.5"
 dependencies = [
  "actix-files",
  "actix-http",
