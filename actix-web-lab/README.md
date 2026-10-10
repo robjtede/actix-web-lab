@@ -1,7 +1,5 @@
 # actix-web-lab
 
-> Experimental extractors, middleware, and other extras for possible inclusion in Actix Web.
-
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-web-lab?label=latest)](https://crates.io/crates/actix-web-lab)
@@ -11,6 +9,32 @@
 [![dependency status](https://deps.rs/crate/actix-web-lab/0.29.4/status.svg)](https://deps.rs/crate/actix-web-lab/0.29.4)
 [![Download](https://img.shields.io/crates/d/actix-web-lab.svg)](https://crates.io/crates/actix-web-lab)
 [![codecov](https://codecov.io/gh/robjtede/actix-web-lab/branch/main/graph/badge.svg)](https://codecov.io/gh/robjtede/actix-web-lab)
+
+<!-- cargo-rdme start -->
+
+In-progress extractors and middleware for Actix Web.
+
+## What Is This Crate?
+This crate serves as a preview and test ground for upcoming features and ideas for Actix Web's
+built in library of extractors, middleware and other utilities.
+
+Any kind of feedback is welcome.
+
+## Complete Examples
+See [the `examples` folder][examples] for some complete examples of items in this crate.
+
+## Things To Know About This Crate
+- It will never reach v1.0.
+- Minimum Supported Rust Version (MSRV) is latest stable at the time of each release.
+- Breaking changes will likely happen on most 0.x version bumps.
+- Documentation might be limited for some items.
+- Items that graduate to Actix Web crate will be marked deprecated here for a reasonable amount
+  of time so you can migrate.
+- Migrating will often be as easy as dropping the `_lab` suffix from imports when migrating.
+
+[examples]: https://github.com/robjtede/actix-web-lab/tree/HEAD/actix-web-lab/examples
+
+<!-- cargo-rdme end -->
 
 <!-- prettier-ignore-end -->
 
@@ -93,12 +117,3 @@
 ### Other Utilities
 
 - `fork_request_payload`: effectively clone a request payload [(docs)](https://docs.rs/actix-web-lab/0.29.4/actix_web_lab/util/fn.fork_request_payload.html)
-
-## Things To Know About This Crate
-
-- It will never reach v1.0.
-- Minimum Supported Rust Version (MSRV) is latest stable at the time of each release.
-- Breaking changes will likely happen on most 0.x version bumps.
-- Documentation might be limited for some items.
-- Items that graduate to Actix Web crate will be marked deprecated here for a reasonable amount of time so you can migrate.
-- Migrating will often be as easy as dropping the `_lab` suffix from imports.

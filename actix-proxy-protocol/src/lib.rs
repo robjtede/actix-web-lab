@@ -1,4 +1,10 @@
-//! Actix networking integration for the PROXY protocol.
+//! Actix networking integration for the [PROXY protocol].
+//!
+//! Protocol parsing, serialization, and TLV types are provided by [`proxyproto`] and re-exported
+//! here for compatibility.
+//!
+//! [proxy protocol]: https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt
+//! [`proxyproto`]: https://crates.io/crates/proxyproto
 
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]

@@ -7,13 +7,12 @@
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/collectools.svg)
 ![Version](https://img.shields.io/badge/rustc-1.88+-ab6000.svg)
 
-<!-- prettier-ignore-end -->
-
 <!-- cargo-rdme start -->
 
 Collection traits and implementations for common collection types.
 
-Use `List` to read a collection's length and elements. Use `MutableList` to append elements and access them mutably.
+Use `List` to read a collection's length and elements. Use `MutableList` to append elements and
+access them mutably.
 
 These traits are implemented for:
 
@@ -49,3 +48,5 @@ assert_eq!(List::get(&values, 0), Some(&42));
 ```
 
 <!-- cargo-rdme end -->
+
+<!-- prettier-ignore-end -->

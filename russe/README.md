@@ -11,10 +11,10 @@
 [![Download](https://img.shields.io/crates/d/russe.svg)](https://crates.io/crates/russe)
 [![Chat on Discord](https://img.shields.io/discord/771444961383153695?label=chat&logo=discord)](https://discord.gg/NWpN5mmg3x)
 
-<!-- prettier-ignore-end -->
-
 <!-- cargo-rdme start -->
 
 Server-Sent Events (SSE) encoder and decoder.
 
 <!-- cargo-rdme end -->
+
+<!-- prettier-ignore-end -->

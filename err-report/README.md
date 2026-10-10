@@ -10,8 +10,6 @@
 [![Dependency Status](https://deps.rs/crate/err-report/0.1.4/status.svg)](https://deps.rs/crate/err-report/0.1.4)
 [![Download](https://img.shields.io/crates/d/err-report.svg)](https://crates.io/crates/err-report)
 
-<!-- prettier-ignore-end -->
-
 <!-- cargo-rdme start -->
 
 Clone of the unstable [`std::error::Report`] type.
@@ -42,3 +40,5 @@ assert_eq!(
 ```
 
 <!-- cargo-rdme end -->
+
+<!-- prettier-ignore-end -->
