@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "actix-client-ip-cloudflare"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "actix-web",
  "impl-more 0.3.8",
@@ -58,7 +58,7 @@ dependencies = [
 
 [[package]]
 name = "actix-hash"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -156,7 +156,7 @@ dependencies = [
 
 [[package]]
 name = "actix-proxy-protocol"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab"
-version = "0.29.5"
+version = "0.29.6"
 dependencies = [
  "actix-files",
  "actix-http",
@@ -393,7 +393,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab-derive"
-version = "0.29.4"
+version = "0.29.5"
 dependencies = [
  "actix-test",
  "actix-web",
@@ -902,7 +902,7 @@ checksum = "0c9ea0ac24bc397ab3c98583a3c9ba74fa56b09a4449bbe172b9b1ddb016027a"
 
 [[package]]
 name = "collectools"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "arrayvec",
  "smallvec",
@@ -1387,7 +1387,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "err-report"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "indoc",
 ]
@@ -2591,7 +2591,7 @@ dependencies = [
 
 [[package]]
 name = "proxyproto"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -2944,7 +2944,7 @@ dependencies = [
 
 [[package]]
 name = "russe"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "aho-corasick",
  "bytes",
@@ -3846,7 +3846,7 @@ dependencies = [
 
 [[package]]
 name = "truncate-safe"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "try-lock"

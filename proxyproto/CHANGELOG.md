@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.2.2
+
+- No significant changes since `0.2.1`.
+
 ## 0.2.1
 
 - Fix crc32c TLV algorithm.
