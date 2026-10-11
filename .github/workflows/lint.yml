@@ -85,8 +85,8 @@ jobs:
           cargo clippy --workspace --all-features --tests --examples --bins --
           -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
-      - name: Check workspace lints inherited
-        uses: $/check-workspace-lints-inherited
+      - name: Check workspace lint configuration
+        uses: x52dev/actions/check-workspace-lints@ce4829ef066791391e15fe72657179ca75d09e0f
 
   external-types:
     runs-on: ubuntu-latest
