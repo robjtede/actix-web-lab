@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.4.1
+
+- No significant changes since `0.4.0`.
+
 ## 0.4.0
 
 - Change the `TrustedClientIp` extractor's associated future type to `std::future::Ready`.

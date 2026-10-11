@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.29.6
+
+- No significant changes since `0.29.5`.
+
 ## 0.29.5
 
 - Add `deser_0_10::DeserJson`, a JSON extractor with payload size limits and deserialization error context, behind the `deser-0_10` feature.
