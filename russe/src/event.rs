@@ -1,4 +1,4 @@
-use std::{fmt::Write as _, time::Duration};
+use std::{fmt::Write, time::Duration};
 
 use bytestring::ByteString;
 
@@ -36,6 +36,12 @@ impl Event {
     pub fn into_bytestring(self) -> crate::Result<ByteString> {
         let mut dst = String::new();
 
+        self.encode_into(&mut dst)?;
+
+        Ok(dst.into())
+    }
+
+    pub(crate) fn encode_into(self, dst: &mut impl Write) -> crate::Result<()> {
         match self {
             Event::Message(message) => {
                 if let Some(id) = message.id.as_deref()
@@ -51,59 +57,59 @@ impl Event {
                 }
 
                 if let Some(id) = message.id {
-                    dst.push_str("id: ");
-                    dst.push_str(&id);
-                    dst.push('\n');
+                    let _ = dst.write_str("id: ");
+                    let _ = dst.write_str(&id);
+                    let _ = dst.write_char('\n');
                 }
 
                 if let Some(event) = message.event {
-                    dst.push_str("event: ");
-                    dst.push_str(&event);
-                    dst.push('\n');
+                    let _ = dst.write_str("event: ");
+                    let _ = dst.write_str(&event);
+                    let _ = dst.write_char('\n');
                 }
 
                 if let Some(retry) = message.retry {
-                    encode_retry(&mut dst, retry);
+                    encode_retry(dst, retry);
                 }
 
-                encode_lines(&mut dst, "data: ", &message.data);
-                dst.push('\n');
+                encode_lines(dst, "data: ", &message.data);
+                let _ = dst.write_char('\n');
             }
 
             Event::Comment(comment) => {
-                encode_lines(&mut dst, ": ", &comment);
-                dst.push('\n');
+                encode_lines(dst, ": ", &comment);
+                let _ = dst.write_char('\n');
             }
 
             Event::Retry(retry) => {
-                encode_retry(&mut dst, retry);
-                dst.push('\n');
+                encode_retry(dst, retry);
+                let _ = dst.write_char('\n');
             }
         }
 
-        Ok(dst.into())
+        Ok(())
     }
 }
 
-fn encode_retry(dst: &mut String, retry: Duration) {
-    // Writing to a String cannot fail.
+fn encode_retry(dst: &mut impl Write, retry: Duration) {
+    // Writing to String or BytesMut cannot fail.
     let _ = writeln!(dst, "retry: {}", retry.as_millis());
 }
 
 /// Prefixes each line, preserves empty lines, and converts CRLF and CR to LF.
-fn encode_lines(dst: &mut String, prefix: &str, mut text: &str) {
+fn encode_lines(dst: &mut impl Write, prefix: &str, mut text: &str) {
     loop {
-        dst.push_str(prefix);
+        let _ = dst.write_str(prefix);
 
         let Some(idx) = memchr::memchr2(b'\r', b'\n', text.as_bytes()) else {
-            dst.push_str(text);
-            dst.push('\n');
+            let _ = dst.write_str(text);
+            let _ = dst.write_char('\n');
 
             break;
         };
 
-        dst.push_str(&text[..idx]);
-        dst.push('\n');
+        let _ = dst.write_str(&text[..idx]);
+        let _ = dst.write_char('\n');
 
         let line_ending = text.as_bytes()[idx];
         text = &text[idx + 1..];
