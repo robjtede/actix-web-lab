@@ -141,10 +141,16 @@ fn encode_lines(dst: &mut impl Write, prefix: &str, mut text: &str) {
             break;
         };
 
-        let _ = dst.write_str(&text[..idx]);
-        let _ = dst.write_char('\n');
-
         let line_ending = text.as_bytes()[idx];
+
+        if line_ending == b'\n' {
+            // Copy the line and its LF in one write.
+            let _ = dst.write_str(&text[..=idx]);
+        } else {
+            let _ = dst.write_str(&text[..idx]);
+            let _ = dst.write_char('\n');
+        }
+
         text = &text[idx + 1..];
 
         if line_ending == b'\r' {
