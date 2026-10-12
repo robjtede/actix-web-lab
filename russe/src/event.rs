@@ -46,13 +46,13 @@ impl Event {
         match self {
             Event::Message(message) => {
                 if let Some(id) = message.id.as_deref()
-                    && let Some(offset) = id.find(['\0', '\r', '\n'])
+                    && let Some(offset) = memchr::memchr3(b'\0', b'\r', b'\n', id.as_bytes())
                 {
                     return Err(Error::invalid_field_value("id", id, offset));
                 }
 
                 if let Some(event) = message.event.as_deref()
-                    && let Some(offset) = event.find(['\r', '\n'])
+                    && let Some(offset) = memchr::memchr2(b'\r', b'\n', event.as_bytes())
                 {
                     return Err(Error::invalid_field_value("event", event, offset));
                 }
@@ -322,6 +322,8 @@ mod tests {
                 "Invalid SSE event: '\\n' at byte 3",
             ),
             (Some("é\rid"), None, "Invalid SSE id: '\\r' at byte 2"),
+            (Some("é\r\0id"), None, "Invalid SSE id: '\\r' at byte 2"),
+            (Some("é\0\rid"), None, "Invalid SSE id: '\\0' at byte 2"),
             (
                 Some("bad\r\nid"),
                 Some("bad\nevent"),

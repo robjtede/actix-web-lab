@@ -19,6 +19,16 @@ bench-build:
 bench-run:
     cargo codspeed run
 
+# Build benchmarks for local walltime measurements.
+[group("benchmark")]
+bench-build-walltime *args:
+    cargo codspeed build --locked -m walltime {{ args }}
+
+# Measure walltime and upload the results to CodSpeed.
+[group("benchmark")]
+bench-run-walltime *args:
+    codspeed run -m walltime -- cargo codspeed run -m walltime {{ args }}
+
 # Check project formatting.
 check: && clippy
     just --unstable --fmt --check
