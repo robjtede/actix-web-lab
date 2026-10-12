@@ -20,7 +20,9 @@ Message size arguments specify payload bytes. Cases include 32 B, 1 KiB, and 64 
 
 The direct decoder cases exclude parser construction and initial buffer allocation. The startup case measures parser construction. The existing `sse_events` case includes construction, input chunk allocation, and async stream handling.
 
-Encoder cases exclude input cloning. The new-buffer codec cases include output buffer allocation. The reused-buffer cases retain output capacity between events. Actix SSE body cases exclude input and channel setup. They measure body polling and encoding without collecting the response into another buffer.
+Most encoder cases exclude input cloning, but consuming an owned event still drops its fields during measurement. The `encode_codec_constructed_message` case includes construction and consumption of an owned event with three shared `ByteString` clones. The `encode_codec_borrowed_message` case borrows the same fields. Both cases include output buffer allocation. The `encode_codec_borrowed_message_reused_buffer` case excludes input construction, shared-field cloning and dropping, and output buffer allocation.
+
+The new-buffer codec cases include output buffer allocation. The reused-buffer cases retain output capacity between events. Actix SSE body cases exclude input and channel setup. They measure body polling and encoding without collecting the response into another buffer.
 
 ## Interpreting results
 
