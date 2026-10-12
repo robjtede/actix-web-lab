@@ -71,7 +71,8 @@ use crate::{
     util::InfallibleStream,
 };
 
-/// Server-sent events data message containing a `data` field and optional `id` and `event` fields.
+/// Server-sent events data message containing a `data` field and optional `id`, `event`, and `retry`
+/// fields.
 ///
 /// # Examples
 /// ```
@@ -106,6 +107,7 @@ use crate::{
 pub struct Data {
     id: Option<ByteString>,
     event: Option<ByteString>,
+    retry: Option<Duration>,
     data: ByteString,
 }
 
@@ -121,6 +123,7 @@ impl Data {
         Self {
             id: None,
             event: None,
+            retry: None,
             data: data.into(),
         }
     }
@@ -142,6 +145,7 @@ impl Data {
         Ok(Self {
             id: None,
             event: None,
+            retry: None,
             data: serde_json::to_string(&data)?.into(),
         })
     }
@@ -172,6 +176,25 @@ impl Data {
     pub fn set_event(&mut self, event: impl Into<ByteString>) {
         self.event = Some(event.into());
     }
+
+    /// Sets `retry` field, returning a new data message.
+    ///
+    /// This field updates the connection's reconnection delay in milliseconds. The delay remains
+    /// effective until another `retry` field replaces it. It does not retry individual message
+    /// delivery.
+    ///
+    /// See the [SSE parsing rules](https://html.spec.whatwg.org/multipage/server-sent-events.html#interpreting-an-event-stream).
+    pub fn retry(mut self, retry: Duration) -> Self {
+        self.retry = Some(retry);
+        self
+    }
+
+    /// Sets `retry` field.
+    ///
+    /// See [`Self::retry`] for how this field updates the connection's reconnection delay.
+    pub fn set_retry(&mut self, retry: Duration) {
+        self.retry = Some(retry);
+    }
 }
 
 impl From<Data> for Event {
@@ -184,7 +207,7 @@ impl From<Data> for Event {
 #[must_use]
 #[derive(Debug, Clone)]
 pub enum Event {
-    /// A `data` message with optional ID and event name.
+    /// A `data` message with optional ID, event name, and reconnection delay.
     ///
     /// Data messages looks like this in the response stream.
     /// ```plain
@@ -213,11 +236,16 @@ impl Event {
     /// Encodes the event in event-stream format.
     fn into_bytes(self) -> Result<Bytes, BoxError> {
         let event = match self {
-            Self::Data(Data { id, event, data }) => russe::Event::Message(russe::Message {
+            Self::Data(Data {
+                id,
+                event,
+                retry,
+                data,
+            }) => russe::Event::Message(russe::Message {
                 data,
                 event,
                 id,
-                retry: None,
+                retry,
             }),
 
             Self::Comment(comment) => russe::Event::Comment(comment),
@@ -299,7 +327,11 @@ impl<S> Sse<S> {
         self
     }
 
-    /// Queues the first event to inform the client of a custom retry period.
+    /// Queues an initial standalone `retry` frame to set the client's reconnection delay.
+    ///
+    /// The delay is sent in milliseconds and remains effective until another `retry` field replaces
+    /// it. It does not retry individual message delivery. Use [`Data::retry`] to update the delay in
+    /// a data message.
     ///
     /// Browsers default to retry every 3 seconds or so.
     pub fn with_retry_duration(mut self, retry: Duration) -> Self {
@@ -380,6 +412,7 @@ mod tests {
 
     use actix_web::{body, test::TestRequest};
     use futures_util::{FutureExt as _, StreamExt as _, future::poll_fn, stream, task::noop_waker};
+    use indoc::indoc;
     use tokio::time::sleep;
 
     use super::*;
@@ -416,6 +449,107 @@ mod tests {
             body::to_bytes(sse).await.unwrap(),
             ": foo\n\ndata: \ndata: \n\nid: 42\nevent: bar\ndata: foo\n\n",
         );
+    }
+
+    #[actix_web::test]
+    async fn message_retry_is_omitted_by_default() {
+        let events = stream::iter([
+            Data::new("payload").into(),
+            Data::new_json(serde_json::json!({ "bar": 42 }))
+                .unwrap()
+                .into(),
+        ]);
+        let sse = Sse::from_infallible_stream(events);
+
+        assert_eq!(
+            body::to_bytes(sse).await.unwrap(),
+            indoc! {r#"
+                data: payload
+
+                data: {"bar":42}
+
+            "#},
+        );
+    }
+
+    #[actix_web::test]
+    async fn message_retry_can_be_zero() {
+        let data = Data::new("payload")
+            .id("42")
+            .event("update")
+            .retry(Duration::ZERO);
+        let sse = Sse::from_infallible_stream(stream::iter([data.into()]));
+
+        assert_eq!(
+            body::to_bytes(sse).await.unwrap(),
+            indoc! {"
+                id: 42
+                event: update
+                retry: 0
+                data: payload
+
+            "},
+        );
+    }
+
+    #[actix_web::test]
+    async fn consecutive_messages_have_independent_retry_fields() {
+        let mut data = Data::new_json(serde_json::json!({ "bar": 42 }))
+            .unwrap()
+            .retry(Duration::from_secs(1));
+
+        data.set_retry(Duration::from_millis(2345));
+
+        let events = stream::iter([
+            Data::new("first").retry(Duration::from_secs(1)).into(),
+            data.into(),
+            Data::new("third").into(),
+        ]);
+        let sse = Sse::from_infallible_stream(events);
+
+        assert_eq!(
+            body::to_bytes(sse).await.unwrap(),
+            indoc! {r#"
+                retry: 1000
+                data: first
+
+                retry: 2345
+                data: {"bar":42}
+
+                data: third
+
+            "#},
+        );
+    }
+
+    #[actix_web::test]
+    async fn initial_retry_precedes_message_retry() {
+        let events = stream::iter([Data::new("payload")
+            .retry(Duration::from_millis(1234))
+            .into()]);
+        let mut sse =
+            Sse::from_infallible_stream(events).with_retry_duration(Duration::from_millis(42));
+
+        let initial = poll_fn(|cx| Pin::new(&mut sse).poll_next(cx)).await;
+        let message = poll_fn(|cx| Pin::new(&mut sse).poll_next(cx)).await;
+        let end = poll_fn(|cx| Pin::new(&mut sse).poll_next(cx)).await;
+
+        assert_eq!(
+            initial.unwrap().unwrap(),
+            indoc! {"
+                retry: 42
+
+            "},
+        );
+        assert_eq!(
+            message.unwrap().unwrap(),
+            indoc! {"
+                retry: 1234
+                data: payload
+
+            "},
+        );
+        assert!(end.is_none());
     }
 
     #[actix_web::test]

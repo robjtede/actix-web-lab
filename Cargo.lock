@@ -366,6 +366,7 @@ dependencies = [
  "hmac",
  "http 0.2.12",
  "impl-more 0.3.8",
+ "indoc",
  "itertools",
  "local-channel",
  "mime",
