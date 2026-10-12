@@ -1,5 +1,6 @@
 use std::{fmt::Write, time::Duration};
 
+use bytes::BytesMut;
 use bytestring::ByteString;
 
 use crate::{Error, Message};
@@ -41,7 +42,7 @@ impl Event {
         Ok(dst.into())
     }
 
-    pub(crate) fn encode_into(self, dst: &mut impl Write) -> crate::Result<()> {
+    pub(crate) fn encode_into(self, dst: &mut impl EncodeBuffer) -> crate::Result<()> {
         match self {
             Event::Message(message) => {
                 if let Some(id) = message.id.as_deref()
@@ -55,6 +56,15 @@ impl Event {
                 {
                     return Err(Error::invalid_field_value("event", event, offset));
                 }
+
+                // Reserve known lengths without a second scan of the data.
+                let capacity = message.data.len()
+                    + 8
+                    + message.id.as_ref().map_or(0, |id| id.len() + 5)
+                    + message.event.as_ref().map_or(0, |event| event.len() + 8)
+                    + message.retry.map_or(0, |_| RETRY_CAPACITY);
+
+                dst.reserve(capacity);
 
                 if let Some(id) = message.id {
                     let _ = dst.write_str("id: ");
@@ -77,17 +87,40 @@ impl Event {
             }
 
             Event::Comment(comment) => {
+                dst.reserve(comment.len() + 4);
+
                 encode_lines(dst, ": ", &comment);
                 let _ = dst.write_char('\n');
             }
 
             Event::Retry(retry) => {
+                dst.reserve(RETRY_CAPACITY + 1);
+
                 encode_retry(dst, retry);
                 let _ = dst.write_char('\n');
             }
         }
 
         Ok(())
+    }
+}
+
+// "retry: ", up to 23 decimal digits for Duration::MAX, and LF.
+const RETRY_CAPACITY: usize = 7 + 23 + 1;
+
+pub(crate) trait EncodeBuffer: Write {
+    fn reserve(&mut self, additional: usize);
+}
+
+impl EncodeBuffer for String {
+    fn reserve(&mut self, additional: usize) {
+        String::reserve(self, additional);
+    }
+}
+
+impl EncodeBuffer for BytesMut {
+    fn reserve(&mut self, additional: usize) {
+        BytesMut::reserve(self, additional);
     }
 }
 
@@ -172,6 +205,24 @@ mod tests {
                 expected.replace("data: ", ": "),
                 "input: {text:?}",
             );
+        }
+    }
+
+    #[test]
+    fn encodes_maximum_retry_in_messages_and_retry_events() {
+        for event in [
+            Event::Retry(Duration::MAX),
+            Event::Message(Message {
+                retry: Some(Duration::MAX),
+                ..Message::data("")
+            }),
+        ] {
+            let expected = match event {
+                Event::Retry(_) => "retry: 18446744073709551615999\n\n",
+                _ => "retry: 18446744073709551615999\ndata: \n\n",
+            };
+
+            assert_eq!(event.into_bytestring().unwrap(), expected);
         }
     }
 
