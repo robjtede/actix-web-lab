@@ -412,6 +412,7 @@ mod tests {
 
     use actix_web::{body, test::TestRequest};
     use futures_util::{FutureExt as _, StreamExt as _, future::poll_fn, stream, task::noop_waker};
+    use indoc::indoc;
     use tokio::time::sleep;
 
     use super::*;
@@ -462,7 +463,12 @@ mod tests {
 
         assert_eq!(
             body::to_bytes(sse).await.unwrap(),
-            "data: payload\n\ndata: {\"bar\":42}\n\n",
+            indoc! {r#"
+                data: payload
+
+                data: {"bar":42}
+
+            "#},
         );
     }
 
@@ -476,7 +482,13 @@ mod tests {
 
         assert_eq!(
             body::to_bytes(sse).await.unwrap(),
-            "id: 42\nevent: update\nretry: 0\ndata: payload\n\n",
+            indoc! {"
+                id: 42
+                event: update
+                retry: 0
+                data: payload
+
+            "},
         );
     }
 
@@ -497,7 +509,16 @@ mod tests {
 
         assert_eq!(
             body::to_bytes(sse).await.unwrap(),
-            "retry: 1000\ndata: first\n\nretry: 2345\ndata: {\"bar\":42}\n\ndata: third\n\n",
+            indoc! {r#"
+                retry: 1000
+                data: first
+
+                retry: 2345
+                data: {"bar":42}
+
+                data: third
+
+            "#},
         );
     }
 
@@ -513,8 +534,21 @@ mod tests {
         let message = poll_fn(|cx| Pin::new(&mut sse).poll_next(cx)).await;
         let end = poll_fn(|cx| Pin::new(&mut sse).poll_next(cx)).await;
 
-        assert_eq!(initial.unwrap().unwrap(), "retry: 42\n\n");
-        assert_eq!(message.unwrap().unwrap(), "retry: 1234\ndata: payload\n\n");
+        assert_eq!(
+            initial.unwrap().unwrap(),
+            indoc! {"
+                retry: 42
+
+            "},
+        );
+        assert_eq!(
+            message.unwrap().unwrap(),
+            indoc! {"
+                retry: 1234
+                data: payload
+
+            "},
+        );
         assert!(end.is_none());
     }
 
