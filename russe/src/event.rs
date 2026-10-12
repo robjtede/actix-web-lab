@@ -94,7 +94,7 @@ impl Event {
             }
 
             Event::Retry(retry) => {
-                dst.reserve(RETRY_CAPACITY + 1);
+                dst.reserve(RETRY_CAPACITY);
 
                 encode_retry(dst, retry);
                 let _ = dst.write_char('\n');
@@ -105,8 +105,8 @@ impl Event {
     }
 }
 
-// "retry: ", up to 23 decimal digits for Duration::MAX, and LF.
-const RETRY_CAPACITY: usize = 7 + 23 + 1;
+// Start with 16 bytes for common retry values; larger values can grow the buffer.
+const RETRY_CAPACITY: usize = 16;
 
 pub(crate) trait EncodeBuffer: Write {
     fn reserve(&mut self, additional: usize);
@@ -223,6 +223,28 @@ mod tests {
             };
 
             assert_eq!(event.into_bytestring().unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn encodes_retries_across_the_initial_capacity() {
+        for millis in [9_999_999, 10_000_000] {
+            let retry = Duration::from_millis(millis);
+
+            assert_eq!(
+                Event::Retry(retry).into_bytestring().unwrap(),
+                format!("retry: {millis}\n\n"),
+            );
+
+            let event = Event::Message(Message {
+                retry: Some(retry),
+                ..Message::data("")
+            });
+
+            assert_eq!(
+                event.into_bytestring().unwrap(),
+                format!("retry: {millis}\ndata: \n\n"),
+            );
         }
     }
 
