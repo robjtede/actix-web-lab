@@ -32,10 +32,7 @@ impl tokio_util::codec::Encoder<Event> for Encoder {
     type Error = Error;
 
     fn encode(&mut self, item: Event, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        let encoded = item.into_bytestring()?;
-        dst.extend_from_slice(encoded.as_bytes());
-
-        Ok(())
+        item.encode_into(dst)
     }
 }
 
@@ -181,6 +178,8 @@ mod tests {
             ("42", "bad\nevent"),
             ("42", "bad\revent"),
             ("42", "bad\r\nevent"),
+            ("é\0id", "bad\nevent"),
+            ("é", "世界\revent"),
         ] {
             let message = Message {
                 data: "payload".into(),
@@ -215,6 +214,29 @@ mod tests {
             .unwrap();
 
         assert_eq!(output, "id: \nevent: \nretry: 0\ndata: \n\n");
+    }
+
+    #[test]
+    fn appends_utf8_and_normalized_lines_to_existing_output() {
+        for event in [
+            Event::Message(Message::data("é\r\n世界\r🦀\n")),
+            Event::Comment("é\r\n世界\r🦀\n".into()),
+            Event::Retry(Duration::MAX),
+            Event::Message(Message {
+                id: Some("".into()),
+                event: Some("".into()),
+                retry: Some(Duration::MAX),
+                ..Message::data("")
+            }),
+        ] {
+            let expected = event.clone().into_bytestring().unwrap();
+            let mut output = BytesMut::from("data: previous\n\n");
+
+            Encoder::default().encode(event, &mut output).unwrap();
+
+            assert_eq!(&output[..16], b"data: previous\n\n");
+            assert_eq!(&output[16..], expected.as_bytes());
+        }
     }
 
     #[tokio::test]
