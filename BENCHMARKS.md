@@ -45,3 +45,16 @@ Exploratory local CodSpeed walltime measurements on 2026-10-12, Apple M4 Max, ma
 | 1 KiB                    | 967 ns | 81 ns | 11.94×  |
 
 [CodSpeed comparison](https://app.codspeed.io/robjtede/actix-web-lab/runs/compare/6accb46b11e2ad659290e191..6accb4c7051eb5e27d775fdf). These workload-specific gains are not additive.
+
+## Retry-formatting measurements
+
+Retry formatting uses `itoa` on the full `u128` result of `Duration::as_millis`. It preserves `Duration::MAX`, fractional-millisecond truncation, and both retry framing forms. The existing capacity-boundary and maximum-duration tests cover buffer growth.
+
+The reused-output benchmark covers zero, 1,500, and `u64::MAX` milliseconds. Exploratory local CodSpeed walltime measurements on the checkout before #532 use the best-time metric:
+
+| Workload                      | Before | After | Speedup |
+| ----------------------------- | ------ | ----- | ------- |
+| 1,500 ms, reused codec buffer | 18 ns  | 12 ns | 1.50×   |
+| 1,500 ms, ByteString output   | 27 ns  | 19 ns | 1.42×   |
+
+[CodSpeed comparison](https://app.codspeed.io/robjtede/actix-web-lab/runs/compare/6accb46b11e2ad659290e191..6accb511f5c7e17328322e43). The earlier field-validation measurements and these measurements isolate different changes; do not add their gains.

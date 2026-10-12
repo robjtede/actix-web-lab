@@ -146,8 +146,11 @@ impl EncodeBuffer for BytesMut {
 }
 
 fn encode_retry(dst: &mut impl Write, retry: Duration) {
-    // Writing to String or BytesMut cannot fail.
-    let _ = writeln!(dst, "retry: {}", retry.as_millis());
+    let mut buffer = itoa::Buffer::new();
+
+    let _ = dst.write_str("retry: ");
+    let _ = dst.write_str(buffer.format(retry.as_millis()));
+    let _ = dst.write_char('\n');
 }
 
 /// Prefixes each line, preserves empty lines, and converts CRLF and CR to LF.
