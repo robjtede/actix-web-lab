@@ -65,7 +65,7 @@ fn message(size: usize) -> (Event, String) {
     (32, 128),
     (1024, 128),
 ])]
-fn stream_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
+fn encode_stream_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
     let rt = tokio::runtime::Handle::current();
     let (event, expected) = message(size);
     let make_body = || Sse::from_infallible_stream(stream::iter(vec![event.clone(); count]));
@@ -85,7 +85,7 @@ fn stream_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
     (32, 128),
     (1024, 128),
 ])]
-fn receiver_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
+fn encode_receiver_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
     let rt = tokio::runtime::Handle::current();
     let (event, expected) = message(size);
     let make_body = || {
@@ -106,7 +106,7 @@ fn receiver_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
 }
 
 #[divan::bench(args = [1, 128])]
-fn pending_stream_body(b: Bencher<'_, '_>, count: usize) {
+fn encode_pending_stream_body(b: Bencher<'_, '_>, count: usize) {
     let rt = tokio::runtime::Handle::current();
     let (event, expected) = message(32);
     let make_body = || {
@@ -120,7 +120,7 @@ fn pending_stream_body(b: Bencher<'_, '_>, count: usize) {
 }
 
 #[divan::bench]
-fn retry_body(b: Bencher<'_, '_>) {
+fn encode_retry_body(b: Bencher<'_, '_>) {
     let rt = tokio::runtime::Handle::current();
     let make_body = || {
         Sse::from_infallible_stream(stream::empty::<Event>())
