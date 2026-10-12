@@ -95,7 +95,7 @@ fn encode_lines(dst: &mut String, prefix: &str, mut text: &str) {
     loop {
         dst.push_str(prefix);
 
-        let Some(idx) = text.find(['\r', '\n']) else {
+        let Some(idx) = memchr::memchr2(b'\r', b'\n', text.as_bytes()) else {
             dst.push_str(text);
             dst.push('\n');
 
@@ -136,6 +136,36 @@ mod tests {
 
         for (event, expected) in cases {
             assert_eq!(event.into_bytestring().unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn preserves_empty_lines_and_utf8_with_each_line_ending() {
+        for (text, expected) in [
+            ("", "data: \n\n"),
+            ("\r\n", "data: \ndata: \n\n"),
+            ("\r\r\n\n", "data: \ndata: \ndata: \ndata: \n\n"),
+            (
+                "é\r\n世界\r🦀\n",
+                "data: é\ndata: 世界\ndata: 🦀\ndata: \n\n",
+            ),
+            ("é\0世界", "data: é\0世界\n\n"),
+        ] {
+            let event = Event::Message(Message::data(text));
+
+            assert_eq!(
+                event.into_bytestring().unwrap(),
+                expected,
+                "input: {text:?}"
+            );
+
+            let event = Event::Comment(text.into());
+
+            assert_eq!(
+                event.into_bytestring().unwrap(),
+                expected.replace("data: ", ": "),
+                "input: {text:?}",
+            );
         }
     }
 
