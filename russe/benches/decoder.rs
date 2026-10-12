@@ -128,7 +128,7 @@ fn startup() -> Decoder {
     Decoder::default()
 }
 
-#[divan::bench(args = [32, 1024, 65536])]
+#[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
 fn message(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let input = format!("data: {data}\n\n");
@@ -141,7 +141,16 @@ fn message(b: Bencher<'_, '_>, size: usize) {
     );
 }
 
-#[divan::bench(args = [(32, 1), (32, 7), (1024, 1), (1024, 7), (65536, 7), (65536, 1024)])]
+#[divan::bench(args = [
+    (32, 1),
+    (32, 7),
+    (1000, 13),
+    (1024, 1),
+    (1024, 7),
+    (60000, 1500),
+    (65536, 7),
+    (65536, 1024),
+])]
 fn fragmented_message(b: Bencher<'_, '_>, (size, chunk_size): (usize, usize)) {
     let data = "x".repeat(size);
     let input = format!("data: {data}\n\n");

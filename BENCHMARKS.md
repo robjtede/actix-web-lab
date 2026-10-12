@@ -8,11 +8,15 @@ With `cargo-codspeed` installed, run `just bench-build` and `just bench-run` to 
 
 ## Workloads
 
-- `russe` decoder: parser startup, whole-buffer messages from 32 B to 64 KiB, fragmented messages, LF/CRLF/CR, Unicode and metadata, message batches, ignored frames, and an async stream that inserts `Pending` polls.
-- `russe` encoder: event formatting, multiline Unicode, comments, retry delays, codec output into a new buffer, and codec output into a reused buffer.
+- `russe` decoder: parser startup, whole-buffer messages from 32 B to 65,536 B, fragmented messages, LF/CRLF/CR, Unicode and metadata, message batches, ignored frames, and an async stream that inserts `Pending` polls.
+- `russe` encoder: event formatting, multiline Unicode, comments, retry delays, codec output into a new buffer, codec output into a reused buffer, and encoded frame sizes at powers of two.
 - Actix SSE body: direct streams, prefilled channels, streams that insert `Pending` polls, and initial retry events. Cases vary message size and batch size.
 
 Each workload checks expected events or bytes before measurement. Decoder and body benchmarks also reject errors while consuming the measured output.
+
+Message size arguments specify payload bytes. Cases include 32 B, 1 KiB, and 64 KiB, plus 1,000 B and 60,000 B. Fragment sizes also include 7 B, 13 B, 1 KiB, and 1,500 B. Batch counts include one message, 16 messages, and 128 messages.
+
+`codec_frame_size` specifies the complete encoded frame size instead. A plain data frame adds eight bytes (`data: ` and the final blank line), so its 32 B, 1,024 B, and 65,536 B cases use payloads of 24 B, 1,016 B, and 65,528 B. Metadata adds more framing bytes in the Actix SSE cases. Use memory profiles to see which cases change allocation counts or sizes.
 
 The direct decoder cases exclude parser construction and initial buffer allocation. The startup case measures parser construction. The existing `sse_events` case includes construction, input chunk allocation, and async stream handling.
 

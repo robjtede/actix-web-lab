@@ -56,7 +56,15 @@ fn message(size: usize) -> (Event, String) {
     (event, expected)
 }
 
-#[divan::bench(args = [(32, 1), (1024, 1), (65536, 1), (32, 128), (1024, 128)])]
+#[divan::bench(args = [
+    (32, 1),
+    (1000, 1),
+    (1024, 1),
+    (60000, 1),
+    (65536, 1),
+    (32, 128),
+    (1024, 128),
+])]
 fn stream_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
     let rt = tokio::runtime::Handle::current();
     let (event, expected) = message(size);
@@ -68,7 +76,15 @@ fn stream_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
         .bench_values(|body| rt.block_on(drain_body(body)));
 }
 
-#[divan::bench(args = [(32, 1), (1024, 1), (65536, 1), (32, 128), (1024, 128)])]
+#[divan::bench(args = [
+    (32, 1),
+    (1000, 1),
+    (1024, 1),
+    (60000, 1),
+    (65536, 1),
+    (32, 128),
+    (1024, 128),
+])]
 fn receiver_body(b: Bencher<'_, '_>, (size, count): (usize, usize)) {
     let rt = tokio::runtime::Handle::current();
     let (event, expected) = message(size);

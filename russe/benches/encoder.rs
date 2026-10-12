@@ -27,7 +27,7 @@ fn bench_event(b: Bencher<'_, '_>, event: Event, expected: &str) {
         .bench_values(|event| event.into_bytestring().unwrap());
 }
 
-#[divan::bench(args = [32, 1024, 65536])]
+#[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
 fn message(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let expected = format!("data: {data}\n\n");
@@ -68,8 +68,7 @@ fn retry(b: Bencher<'_, '_>) {
     );
 }
 
-#[divan::bench(args = [32, 1024, 65536])]
-fn codec_message(b: Bencher<'_, '_>, size: usize) {
+fn bench_codec_message(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let expected = format!("data: {data}\n\n");
     let event = Event::Message(data_message(data));
@@ -89,7 +88,18 @@ fn codec_message(b: Bencher<'_, '_>, size: usize) {
     });
 }
 
+#[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
+fn codec_message(b: Bencher<'_, '_>, size: usize) {
+    bench_codec_message(b, size);
+}
+
 #[divan::bench(args = [32, 1024, 65536])]
+fn codec_frame_size(b: Bencher<'_, '_>, frame_size: usize) {
+    // Include the data field prefix and final blank line in the frame size.
+    bench_codec_message(b, frame_size - "data: \n\n".len());
+}
+
+#[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
 fn codec_reused_buffer(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let expected = format!("data: {data}\n\n");
