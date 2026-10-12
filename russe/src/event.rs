@@ -123,6 +123,8 @@ pub(crate) trait EncodeBuffer: Write {
     fn reserve(&mut self, additional: usize);
 
     fn spare_capacity(&self) -> usize;
+
+    fn write_lines(&mut self, prefix: &str, text: &str);
 }
 
 impl EncodeBuffer for String {
@@ -132,6 +134,10 @@ impl EncodeBuffer for String {
 
     fn spare_capacity(&self) -> usize {
         self.capacity() - self.len()
+    }
+
+    fn write_lines(&mut self, prefix: &str, text: &str) {
+        encode_string_lines(self, prefix, text);
     }
 }
 
@@ -143,6 +149,10 @@ impl EncodeBuffer for BytesMut {
     fn spare_capacity(&self) -> usize {
         self.capacity() - self.len()
     }
+
+    fn write_lines(&mut self, prefix: &str, text: &str) {
+        encode_byte_lines(self, prefix.as_bytes(), text.as_bytes());
+    }
 }
 
 fn encode_retry(dst: &mut impl Write, retry: Duration) {
@@ -153,14 +163,18 @@ fn encode_retry(dst: &mut impl Write, retry: Duration) {
     let _ = dst.write_char('\n');
 }
 
+fn encode_lines(dst: &mut impl EncodeBuffer, prefix: &str, text: &str) {
+    dst.write_lines(prefix, text);
+}
+
 /// Prefixes each line, preserves empty lines, and converts CRLF and CR to LF.
-fn encode_lines(dst: &mut impl Write, prefix: &str, mut text: &str) {
+fn encode_string_lines(dst: &mut String, prefix: &str, mut text: &str) {
     loop {
-        let _ = dst.write_str(prefix);
+        dst.push_str(prefix);
 
         let Some(idx) = memchr::memchr2(b'\r', b'\n', text.as_bytes()) else {
-            let _ = dst.write_str(text);
-            let _ = dst.write_char('\n');
+            dst.push_str(text);
+            dst.push('\n');
 
             break;
         };
@@ -169,10 +183,10 @@ fn encode_lines(dst: &mut impl Write, prefix: &str, mut text: &str) {
 
         if line_ending == b'\n' {
             // Copy the line and its LF in one write.
-            let _ = dst.write_str(&text[..=idx]);
+            dst.push_str(&text[..=idx]);
         } else {
-            let _ = dst.write_str(&text[..idx]);
-            let _ = dst.write_char('\n');
+            dst.push_str(&text[..idx]);
+            dst.push('\n');
         }
 
         text = &text[idx + 1..];
@@ -181,6 +195,39 @@ fn encode_lines(dst: &mut impl Write, prefix: &str, mut text: &str) {
             text = text.strip_prefix('\n').unwrap_or(text);
         }
     }
+}
+
+/// Prefixes each line, preserves empty lines, and converts CRLF and CR to LF.
+fn encode_byte_lines(dst: &mut BytesMut, prefix: &[u8], bytes: &[u8]) {
+    let mut start = 0;
+
+    for idx in memchr::memchr2_iter(b'\r', b'\n', bytes) {
+        if idx < start {
+            continue;
+        }
+
+        dst.extend_from_slice(prefix);
+
+        let line_ending = bytes[idx];
+
+        if line_ending == b'\n' {
+            // Copy the line and its LF in one write.
+            dst.extend_from_slice(&bytes[start..=idx]);
+        } else {
+            dst.extend_from_slice(&bytes[start..idx]);
+            dst.extend_from_slice(b"\n");
+        }
+
+        start = idx + 1;
+
+        if line_ending == b'\r' && bytes.get(start) == Some(&b'\n') {
+            start += 1;
+        }
+    }
+
+    dst.extend_from_slice(prefix);
+    dst.extend_from_slice(&bytes[start..]);
+    dst.extend_from_slice(b"\n");
 }
 
 #[cfg(test)]
