@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Improve encoding performance by 2-3x.
+
 ## 0.3.0
 
 - Add `field`, `character`, and `offset` fields to `Error::InvalidFieldValue`.
