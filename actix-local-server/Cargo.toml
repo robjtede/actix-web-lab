@@ -1,0 +1,26 @@
+[package]
+name = "actix-local-server"
+version = "0.1.0"
+authors = ["Rob Ede <robjtede@icloud.com>"]
+description = "Run Actix TCP services on the current thread"
+keywords = ["actix", "server", "tcp", "network"]
+categories = ["network-programming", "asynchronous"]
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[package.metadata.cargo_check_external_types]
+allowed_external_types = ["actix_service::*", "tokio::*"]
+
+[dependencies]
+actix-service = "2"
+tokio = { version = "1.51", features = ["macros", "net", "rt"] }
+tracing = "0.1.41"
+
+[dev-dependencies]
+actix-http = "3.10"
+tokio = { version = "1.51", features = ["io-util", "rt-multi-thread", "sync", "time"] }
+
+[lints]
+workspace = true
