@@ -139,6 +139,27 @@ fn encode_codec_multiline_message_reused_buffer(b: Bencher<'_, '_>, lines: usize
     });
 }
 
+#[divan::bench(args = [0, 1500, u64::MAX])]
+fn encode_codec_retry_reused_buffer(b: Bencher<'_, '_>, millis: u64) {
+    let event = Event::Retry(Duration::from_millis(millis));
+    let expected = format!("retry: {millis}\n\n");
+    let mut output = BytesMut::with_capacity(expected.len());
+    let mut encoder = Encoder::default();
+
+    encoder.encode(event.clone(), &mut output).unwrap();
+    assert_eq!(output.as_ref(), expected.as_bytes());
+
+    b.bench_local(|| {
+        output.clear();
+        encoder
+            .encode(black_box(event.clone()), &mut output)
+            .unwrap();
+        black_box(output.as_ref());
+
+        output.len()
+    });
+}
+
 fn main() {
     divan::main();
 }
