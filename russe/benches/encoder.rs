@@ -54,6 +54,35 @@ fn encode_into_bytestring_multiline_message(b: Bencher<'_, '_>) {
     );
 }
 
+#[divan::bench(args = [6, 32, 1024])]
+fn encode_codec_message_fields_reused_buffer(b: Bencher<'_, '_>, size: usize) {
+    let field = ByteString::from("x".repeat(size));
+    let event = Event::Message(Message {
+        data: "payload".into(),
+        event: Some(field.clone()),
+        retry: None,
+        id: Some(field),
+    });
+    let expected = format!(
+        "id: {}\nevent: {}\ndata: payload\n\n",
+        "x".repeat(size),
+        "x".repeat(size)
+    );
+    let mut output = BytesMut::with_capacity(expected.len());
+    let mut encoder = Encoder::default();
+
+    encoder.encode(event.clone(), &mut output).unwrap();
+    assert_eq!(output.as_ref(), expected.as_bytes());
+
+    b.with_inputs(|| event.clone()).bench_local_values(|event| {
+        output.clear();
+        encoder.encode(event, &mut output).unwrap();
+        black_box(output.as_ref());
+
+        output.len()
+    });
+}
+
 #[divan::bench]
 fn encode_into_bytestring_comment(b: Bencher<'_, '_>) {
     bench_event(b, Event::Comment("keep-alive".into()), ": keep-alive\n\n");
