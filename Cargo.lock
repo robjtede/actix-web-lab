@@ -3051,6 +3051,7 @@ dependencies = [
  "futures-util",
  "impl-more 0.3.8",
  "indoc",
+ "itoa",
  "memchr",
  "mime",
  "quickcheck",
