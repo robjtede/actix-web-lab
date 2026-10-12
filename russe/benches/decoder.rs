@@ -124,12 +124,12 @@ fn bench_decode(b: Bencher<'_, '_>, input: &str, expected: &[Event], chunk_size:
 }
 
 #[divan::bench]
-fn startup() -> Decoder {
+fn decode_startup() -> Decoder {
     Decoder::default()
 }
 
 #[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
-fn message(b: Bencher<'_, '_>, size: usize) {
+fn decode_message(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let input = format!("data: {data}\n\n");
 
@@ -151,7 +151,7 @@ fn message(b: Bencher<'_, '_>, size: usize) {
     (65536, 7),
     (65536, 1024),
 ])]
-fn fragmented_message(b: Bencher<'_, '_>, (size, chunk_size): (usize, usize)) {
+fn decode_fragmented_message(b: Bencher<'_, '_>, (size, chunk_size): (usize, usize)) {
     let data = "x".repeat(size);
     let input = format!("data: {data}\n\n");
 
@@ -159,7 +159,7 @@ fn fragmented_message(b: Bencher<'_, '_>, (size, chunk_size): (usize, usize)) {
 }
 
 #[divan::bench(args = ["lf", "crlf", "cr"])]
-fn line_endings(b: Bencher<'_, '_>, name: &str) {
+fn decode_line_endings(b: Bencher<'_, '_>, name: &str) {
     let ending = match name {
         "lf" => "\n",
         "crlf" => "\r\n",
@@ -182,7 +182,7 @@ fn line_endings(b: Bencher<'_, '_>, name: &str) {
 }
 
 #[divan::bench(args = [1, 16, 128])]
-fn message_batch(b: Bencher<'_, '_>, count: usize) {
+fn decode_message_batch(b: Bencher<'_, '_>, count: usize) {
     let input = "data: payload\n\n".repeat(count);
     let expected = vec![Event::Message(data_message("payload")); count];
 
@@ -190,7 +190,7 @@ fn message_batch(b: Bencher<'_, '_>, count: usize) {
 }
 
 #[divan::bench]
-fn ignored_frames(b: Bencher<'_, '_>) {
+fn decode_ignored_frames(b: Bencher<'_, '_>) {
     let input = format!(
         "{}data: payload\n\n",
         "unknown: ignored\nretry: invalid\n\n\n\n".repeat(64),
@@ -222,7 +222,7 @@ async fn decode_stream(input: &str, mut consume: impl FnMut(Event)) -> usize {
 }
 
 #[divan::bench]
-fn sse_events(b: Bencher<'_, '_>) {
+fn decode_sse_events(b: Bencher<'_, '_>) {
     let rt = tokio::runtime::Handle::current();
     let mut actual = Vec::new();
 

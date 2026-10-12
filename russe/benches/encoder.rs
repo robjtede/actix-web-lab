@@ -28,7 +28,7 @@ fn bench_event(b: Bencher<'_, '_>, event: Event, expected: &str) {
 }
 
 #[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
-fn message(b: Bencher<'_, '_>, size: usize) {
+fn encode_message(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let expected = format!("data: {data}\n\n");
 
@@ -36,7 +36,7 @@ fn message(b: Bencher<'_, '_>, size: usize) {
 }
 
 #[divan::bench]
-fn multiline_message(b: Bencher<'_, '_>) {
+fn encode_multiline_message(b: Bencher<'_, '_>) {
     let expected = format!(
         "id: 42\nevent: update\nretry: 1500\n{}\n",
         "data: café\ndata: 世界\ndata: \ndata: next\n".repeat(64) + "data: \n",
@@ -55,12 +55,12 @@ fn multiline_message(b: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn comment(b: Bencher<'_, '_>) {
+fn encode_comment(b: Bencher<'_, '_>) {
     bench_event(b, Event::Comment("keep-alive".into()), ": keep-alive\n\n");
 }
 
 #[divan::bench]
-fn retry(b: Bencher<'_, '_>) {
+fn encode_retry(b: Bencher<'_, '_>) {
     bench_event(
         b,
         Event::Retry(Duration::from_millis(1500)),
@@ -89,18 +89,18 @@ fn bench_codec_message(b: Bencher<'_, '_>, size: usize) {
 }
 
 #[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
-fn codec_message(b: Bencher<'_, '_>, size: usize) {
+fn encode_codec_message(b: Bencher<'_, '_>, size: usize) {
     bench_codec_message(b, size);
 }
 
 #[divan::bench(args = [32, 1024, 65536])]
-fn codec_frame_size(b: Bencher<'_, '_>, frame_size: usize) {
+fn encode_codec_frame_size(b: Bencher<'_, '_>, frame_size: usize) {
     // Include the data field prefix and final blank line in the frame size.
     bench_codec_message(b, frame_size - "data: \n\n".len());
 }
 
 #[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
-fn codec_reused_buffer(b: Bencher<'_, '_>, size: usize) {
+fn encode_codec_reused_buffer(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let expected = format!("data: {data}\n\n");
     let event = Event::Message(data_message(data));
