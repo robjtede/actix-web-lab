@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `sse::Data::{retry, set_retry}` methods to set the connection's reconnection delay in individual data messages.
+
 ## 0.29.5
 
 - Add `deser_0_10::DeserJson`, a JSON extractor with payload size limits and deserialization error context, behind the `deser-0_10` feature.
