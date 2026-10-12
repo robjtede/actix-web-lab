@@ -119,6 +119,26 @@ fn encode_codec_message_reused_buffer(b: Bencher<'_, '_>, size: usize) {
     });
 }
 
+#[divan::bench(args = [64, 4096])]
+fn encode_codec_multiline_message_reused_buffer(b: Bencher<'_, '_>, lines: usize) {
+    let data = "0123456789abcde\n".repeat(lines);
+    let expected = "data: 0123456789abcde\n".repeat(lines) + "data: \n\n";
+    let event = Event::Message(data_message(data));
+    let mut output = BytesMut::with_capacity(expected.len());
+    let mut encoder = Encoder::default();
+
+    encoder.encode(event.clone(), &mut output).unwrap();
+    assert_eq!(output.as_ref(), expected.as_bytes());
+
+    b.with_inputs(|| event.clone()).bench_local_values(|event| {
+        output.clear();
+        encoder.encode(event, &mut output).unwrap();
+        black_box(output.as_ref());
+
+        output.len()
+    });
+}
+
 fn main() {
     divan::main();
 }
