@@ -57,12 +57,23 @@ impl Event {
                     return Err(Error::invalid_field_value("event", event, offset));
                 }
 
-                // Reserve known lengths without a second scan of the data.
+                // Start with the known payload and field lengths.
                 let capacity = message.data.len()
                     + 8
                     + message.id.as_ref().map_or(0, |id| id.len() + 5)
                     + message.event.as_ref().map_or(0, |event| event.len() + 8)
                     + message.retry.map_or(0, |_| RETRY_CAPACITY);
+
+                // For data larger than 1 KiB, sample 128 bytes for short lines.
+                // Round the reservation so added prefixes use power-of-two growth.
+                let capacity = if message.data.len() > 1024
+                    && dst.spare_capacity() < capacity
+                    && memchr::memchr2(b'\r', b'\n', &message.data.as_bytes()[..128]).is_some()
+                {
+                    capacity.checked_next_power_of_two().unwrap_or(capacity)
+                } else {
+                    capacity
+                };
 
                 dst.reserve(capacity);
 
@@ -94,7 +105,7 @@ impl Event {
             }
 
             Event::Retry(retry) => {
-                dst.reserve(RETRY_CAPACITY + 1);
+                dst.reserve(RETRY_CAPACITY);
 
                 encode_retry(dst, retry);
                 let _ = dst.write_char('\n');
@@ -105,22 +116,32 @@ impl Event {
     }
 }
 
-// "retry: ", up to 23 decimal digits for Duration::MAX, and LF.
-const RETRY_CAPACITY: usize = 7 + 23 + 1;
+// Start with 16 bytes for common retry values; larger values can grow the buffer.
+const RETRY_CAPACITY: usize = 16;
 
 pub(crate) trait EncodeBuffer: Write {
     fn reserve(&mut self, additional: usize);
+
+    fn spare_capacity(&self) -> usize;
 }
 
 impl EncodeBuffer for String {
     fn reserve(&mut self, additional: usize) {
         String::reserve(self, additional);
     }
+
+    fn spare_capacity(&self) -> usize {
+        self.capacity() - self.len()
+    }
 }
 
 impl EncodeBuffer for BytesMut {
     fn reserve(&mut self, additional: usize) {
         BytesMut::reserve(self, additional);
+    }
+
+    fn spare_capacity(&self) -> usize {
+        self.capacity() - self.len()
     }
 }
 
@@ -230,6 +251,48 @@ mod tests {
 
             assert_eq!(event.into_bytestring().unwrap(), expected);
         }
+    }
+
+    #[test]
+    fn encodes_retries_across_the_initial_capacity() {
+        for millis in [9_999_999, 10_000_000] {
+            let retry = Duration::from_millis(millis);
+
+            assert_eq!(
+                Event::Retry(retry).into_bytestring().unwrap(),
+                format!("retry: {millis}\n\n"),
+            );
+
+            let event = Event::Message(Message {
+                retry: Some(retry),
+                ..Message::data("")
+            });
+
+            assert_eq!(
+                event.into_bytestring().unwrap(),
+                format!("retry: {millis}\ndata: \n\n"),
+            );
+        }
+    }
+
+    #[test]
+    fn encodes_multiline_data_with_uneven_line_lengths() {
+        let short_lines = "\n".repeat(128);
+        let long_line = "é世界".repeat(256);
+        let data = format!("{short_lines}{long_line}\r\n");
+        let expected = format!("{}data: {long_line}\ndata: \n\n", "data: \n".repeat(128),);
+        let event = Event::Message(Message::data(data));
+
+        assert_eq!(event.clone().into_bytestring().unwrap(), expected);
+
+        let mut dst = BytesMut::from("previous event\n\n");
+
+        event.encode_into(&mut dst).unwrap();
+
+        assert_eq!(
+            dst.as_ref(),
+            format!("previous event\n\n{expected}").as_bytes()
+        );
     }
 
     #[test]
