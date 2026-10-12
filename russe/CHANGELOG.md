@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.1
+
 - Improve encoding performance by 2-3x.
 
 ## 0.3.0
