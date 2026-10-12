@@ -3,6 +3,22 @@ import '.toolchain/rust.just'
 _list:
     @just --list
 
+# Validate benchmark outputs without collecting timings.
+[group("benchmark")]
+bench-test:
+    cargo bench -p russe --bench decoder --bench encoder --all-features --locked -- --test
+    cargo bench -p actix-web-lab --bench sse --all-features --locked -- --test
+
+# Build benchmarks for CPU and memory reporting.
+[group("benchmark")]
+bench-build:
+    cargo codspeed build --all-features --locked -m simulation -m memory
+
+# Run the benchmarks built with CodSpeed.
+[group("benchmark")]
+bench-run:
+    cargo codspeed run
+
 # Check project formatting.
 check: && clippy
     just --unstable --fmt --check

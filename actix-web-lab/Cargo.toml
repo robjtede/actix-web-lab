@@ -104,8 +104,10 @@ async_zip = { version = "0.0.19", features = ["deflate", "tokio"] }
 base64 = "0.23"
 deser-0_10 = { package = "deser", version = "0.10", features = ["derive"] }
 digest = "0.11"
+divan = { package = "codspeed-divan-compat", version = "4" }
 ed25519-dalek = { version = "3", features = ["hazmat"] }
 env_logger = "0.11"
+futures-test = "0.3"
 futures-util = { version = "0.3.31", default-features = false, features = ["std", "io"] }
 hex = "0.4"
 hex-literal = "1"
@@ -132,6 +134,10 @@ required-features = ["msgpack"]
 [[example]]
 name = "spa"
 required-features = ["spa"]
+
+[[bench]]
+name = "sse"
+harness = false
 
 [lints]
 workspace = true
