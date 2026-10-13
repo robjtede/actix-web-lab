@@ -48,7 +48,10 @@ impl FromRequest for TrustedClientIp {
             None => return ready(Err(bad_req("trusted IPs not in app data"))),
         };
 
-        let peer_ip = PeerAddr::extract(req).into_inner().unwrap().0.ip();
+        let peer_ip = match PeerAddr::extract(req).into_inner() {
+            Ok(peer_addr) => peer_addr.0.ip(),
+            Err(err) => return ready(Err(err.into())),
+        };
 
         if trusted_ips.contains(peer_ip) {
             ready(Ok(Self(client_ip)))
@@ -80,6 +83,21 @@ mod tests {
             .to_http_request();
 
         TrustedClientIp::extract(&req).into_inner().unwrap_err();
+    }
+
+    #[test]
+    fn missing_peer_addr() {
+        let req = TestRequest::default()
+            .insert_header(("CF-Connecting-IP", "4.5.6.7"))
+            .app_data(sample_trusted_ips())
+            .to_http_request();
+
+        let err = TrustedClientIp::extract(&req).into_inner().unwrap_err();
+
+        assert_eq!(
+            err.as_response_error().status_code(),
+            actix_web::http::StatusCode::INTERNAL_SERVER_ERROR
+        );
     }
 
     #[test]
