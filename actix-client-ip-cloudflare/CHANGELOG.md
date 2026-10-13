@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix a panic in `TrustedClientIp` when the request has no peer address. Return HTTP 500 instead.
+
 ## 0.4.0
 
 - Change the `TrustedClientIp` extractor's associated future type to `std::future::Ready`.
