@@ -3,6 +3,7 @@ resolver = "2"
 members = [
   "actix-client-ip-cloudflare",
   "actix-hash",
+  "actix-local-server",
   "actix-web-lab-derive",
   "actix-web-lab",
   "actix-proxy-protocol",
