@@ -7,7 +7,7 @@ name = "actix-client-ip-cloudflare"
 version = "0.4.1"
 dependencies = [
  "actix-web",
- "impl-more 0.3.8",
+ "impl-more 0.3.10",
  "ipnetwork",
  "reqwest 0.13.4",
  "rustls",
@@ -73,7 +73,7 @@ dependencies = [
  "md-5",
  "md4",
  "pin-project-lite",
- "sha1",
+ "sha1 0.10.7",
  "sha2 0.10.9",
  "sha3",
  "subtle",
@@ -111,7 +111,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "rand 0.10.3",
- "sha1",
+ "sha1 0.11.0",
  "smallvec",
  "tokio",
  "tokio-util",
@@ -304,7 +304,7 @@ dependencies = [
  "foldhash",
  "futures-core",
  "futures-util",
- "impl-more 0.3.8",
+ "impl-more 0.3.10",
  "itoa",
  "language-tags",
  "log",
@@ -367,7 +367,7 @@ dependencies = [
  "hex-literal",
  "hmac",
  "http 0.2.12",
- "impl-more 0.3.8",
+ "impl-more 0.3.10",
  "indoc",
  "itertools 0.15.0",
  "local-channel",
@@ -2075,9 +2075,9 @@ checksum = "e8a5a9a0ff0086c7a148acb942baaabeadf9504d10400b5a05645853729b9cd2"
 
 [[package]]
 name = "impl-more"
-version = "0.3.8"
+version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30c0cddce6b7505483307994f60d97c4b156020e1504d0cf1f05a21b1b325e64"
+checksum = "2d3a73c82a0b0747dba739b380c046a140b5ae747234bf701df3460282da7193"
 
 [[package]]
 name = "indenter"
@@ -3049,7 +3049,7 @@ dependencies = [
  "eyre",
  "futures-test",
  "futures-util",
- "impl-more 0.3.8",
+ "impl-more 0.3.10",
  "indoc",
  "itoa",
  "memchr",
@@ -3363,6 +3363,17 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "sha1"
+version = "0.10.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a978451301f4db1d02937a4ab3ccce137717b81826e79b7d49ffe3244a13c3b8"
+dependencies = [
+ "cfg-if",
+ "cpufeatures 0.2.17",
+ "digest 0.10.7",
 ]
 
 [[package]]
