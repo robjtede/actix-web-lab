@@ -13,6 +13,7 @@ struct Test {
     two: String,
 }
 
+/// Returns a MessagePack response with positional fields.
 #[get("/")]
 async fn index() -> impl Responder {
     MessagePack(Test {
@@ -21,6 +22,7 @@ async fn index() -> impl Responder {
     })
 }
 
+/// Returns a MessagePack response with named fields.
 #[get("/named")]
 async fn named() -> impl Responder {
     MessagePackNamed(Test {

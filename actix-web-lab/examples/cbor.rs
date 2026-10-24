@@ -13,6 +13,7 @@ struct Test {
     two: String,
 }
 
+/// Returns a CBOR response.
 #[get("/")]
 async fn index() -> impl Responder {
     Cbor(Test {

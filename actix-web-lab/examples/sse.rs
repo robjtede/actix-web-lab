@@ -8,6 +8,7 @@ use futures_util::stream;
 use time::format_description::well_known::Rfc3339;
 use tokio::time::sleep;
 
+/// Serves the event stream demo page.
 #[get("/")]
 async fn index() -> impl Responder {
     Html::new(include_str!("./assets/sse.html").to_string())
@@ -54,6 +55,7 @@ fn common_countdown(n: i32) -> impl Responder {
     sse::Sse::from_stream(countdown_stream).with_retry_duration(Duration::from_secs(5))
 }
 
+/// Streams the current timestamp every ten seconds.
 #[get("/time")]
 async fn timestamp() -> impl Responder {
     let (sender, receiver) = tokio::sync::mpsc::channel(2);

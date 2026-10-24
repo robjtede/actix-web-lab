@@ -11,6 +11,7 @@ use actix_web::{App, HttpResponse, HttpServer, Responder, get, http::header::Con
 use actix_web_lab::body;
 use tracing::info;
 
+/// Streams byte chunks sent from a blocking task.
 #[get("/")]
 async fn index() -> impl Responder {
     let (mut body_tx, body) = body::channel::<io::Error>();
