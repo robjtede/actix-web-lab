@@ -67,6 +67,7 @@ where
     Ok(())
 }
 
+/// Streams the example assets as a ZIP archive.
 #[get("/")]
 async fn index() -> impl Responder {
     let (wrt, body) = body::writer();
@@ -95,6 +96,7 @@ async fn index() -> impl Responder {
         .body(body)
 }
 
+/// Streams a countdown as plain text.
 #[get("/plain")]
 async fn plaintext() -> impl Responder {
     let (mut wrt, body) = body::writer();

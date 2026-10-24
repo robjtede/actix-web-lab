@@ -5,6 +5,7 @@ mod util;
 use actix_client_ip_cloudflare::{CfConnectingIp, TrustedClientIp, fetch_trusted_cf_ips};
 use actix_web::{App, HttpServer, Responder, get, web::Header};
 
+/// Returns the client IP from the raw header.
 #[get("/raw-header")]
 async fn header(Header(client_ip): Header<CfConnectingIp>) -> impl Responder {
     match client_ip {
@@ -13,6 +14,7 @@ async fn header(Header(client_ip): Header<CfConnectingIp>) -> impl Responder {
     }
 }
 
+/// Returns the client IP after checking the trusted proxy ranges.
 #[get("/client-ip")]
 async fn trusted_client_ip(client_ip: TrustedClientIp) -> impl Responder {
     format!("Trusted client IP: {client_ip}")
