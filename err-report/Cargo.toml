@@ -1,6 +1,6 @@
 [package]
 name = "err-report"
-version = "0.1.4"
+version = "0.1.5"
 description = "Clone of the unstable `std::error::Report` type"
 categories = ["value-formatting", "rust-patterns"]
 keywords = ["error", "error-report", "error-chain", "diagnostics"]
