@@ -2,6 +2,18 @@
 //!
 //! Analogous to the `web` module in Actix Web.
 
+pub use crate::group::{Group, GroupMiddleware, GroupService};
+
+/// Creates a group of services with common middleware and no path prefix.
+///
+/// Pass an array or vector for children of the same type, or a tuple for children
+/// of different types. Use [`Group::new()`] to start with an empty group.
+///
+/// See [`Group`] for supported children, registration, and middleware behavior.
+pub fn group(services: impl GroupService) -> Group {
+    Group::new().service(services)
+}
+
 #[cfg(feature = "spa")]
 pub use crate::spa::Spa;
 
