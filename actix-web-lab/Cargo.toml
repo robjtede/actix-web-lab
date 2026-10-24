@@ -50,6 +50,7 @@ spa = ["actix-files"]
 actix-web-lab-derive = { path = "../actix-web-lab-derive", version = "=0.29.4", optional = true }
 
 actix-http = "3.10"
+actix-local-server = { path = "../actix-local-server", version = "0.1" }
 actix-router = "0.5"
 actix-service = "2"
 actix-web = { version = "4.15", default-features = false }
@@ -73,7 +74,7 @@ serde = "1"
 serde_html_form = "0.4"
 serde_json = "1"
 serde_path_to_error = "0.1"
-tokio = { version = "1.38.2", features = ["sync", "macros"] }
+tokio = { version = "1.51", features = ["sync", "macros", "net"] }
 tokio-stream = "0.1.17"
 tracing = { version = "0.1.41", features = ["log"] }
 url = "2.1"
@@ -120,7 +121,7 @@ serde = { version = "1", features = ["derive"] }
 sha2 = "0.11"
 static_assertions = "1.1"
 time = { version = "0.3", features = ["formatting"] }
-tokio = { version = "1.38.2", features = ["full"] }
+tokio = { version = "1.51", features = ["full"] }
 tokio-util = { version = "0.7", features = ["compat"] }
 
 [[example]]
