@@ -5,7 +5,7 @@
 [![crates.io](https://img.shields.io/crates/v/truncate-safe?label=latest)](https://crates.io/crates/truncate-safe)
 [![Documentation](https://docs.rs/truncate-safe/badge.svg)](https://docs.rs/truncate-safe)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/truncate-safe.svg)
-![Version](https://img.shields.io/badge/rustc-1.88+-ab6000.svg)
+![Version](https://img.shields.io/badge/rustc-1.90+-ab6000.svg)
 
 <!-- cargo-rdme start -->
 

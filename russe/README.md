@@ -4,7 +4,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/russe?label=latest)](https://crates.io/crates/russe)
 [![Documentation](https://docs.rs/russe/badge.svg?version=0.3.1)](https://docs.rs/russe/0.3.1)
-![Version](https://img.shields.io/badge/rustc-1.88+-ab6000.svg)
+![Version](https://img.shields.io/badge/rustc-1.90+-ab6000.svg)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/russe.svg)
 <br />
 [![Dependency Status](https://deps.rs/crate/russe/0.3.1/status.svg)](https://deps.rs/crate/russe/0.3.1)

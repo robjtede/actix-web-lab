@@ -5,7 +5,7 @@
 [![crates.io](https://img.shields.io/crates/v/collectools?label=latest)](https://crates.io/crates/collectools)
 [![Documentation](https://docs.rs/collectools/badge.svg)](https://docs.rs/collectools)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/collectools.svg)
-![Version](https://img.shields.io/badge/rustc-1.88+-ab6000.svg)
+![Version](https://img.shields.io/badge/rustc-1.90+-ab6000.svg)
 
 <!-- cargo-rdme start -->
 
