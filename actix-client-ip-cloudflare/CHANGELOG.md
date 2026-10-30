@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.4.2
+
+- No significant changes since `0.4.1`.
+
 ## 0.4.1
 
 - Fix a panic in `TrustedClientIp` when the request has no peer address. Return HTTP 500 instead.
