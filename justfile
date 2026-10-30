@@ -29,6 +29,10 @@ bench-build-walltime *args:
 bench-run-walltime *args:
     codspeed run -m walltime -- cargo codspeed run -m walltime {{ args }}
 
+# Check security advisories.
+check-advisories:
+    cargo deny --log-level warn --workspace --all-features check advisories
+
 # Check project formatting.
 check: && clippy
     just --unstable --fmt --check
