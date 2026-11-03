@@ -36,25 +36,50 @@
 //! assert_eq!(List::get(&values, 0), Some(&42));
 //! ```
 
-#![allow(missing_docs)]
-
 mod arrayvec;
 mod smallvec;
 mod tinyvec;
 mod vec;
 
+/// Read access to an ordered collection of elements.
 pub trait List<T> {
+    /// Returns the number of elements in the collection.
     fn len(&self) -> usize;
 
+    /// Returns `true` if the collection has no elements.
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
+    /// Returns a reference to the element at `idx`, or `None` if the index is out of bounds.
     fn get(&self, idx: usize) -> Option<&T>;
 }
 
+/// Mutable access to an ordered collection of elements.
+///
+/// # Examples
+///
+/// ```
+/// use collectools::{List, MutableList};
+///
+/// let mut values = vec![1];
+///
+/// *MutableList::get_mut(&mut values, 0).unwrap() = 2;
+/// MutableList::append(&mut values, 3);
+///
+/// assert_eq!(values, [2, 3]);
+/// assert_eq!(List::get(&values, 2), None);
+/// assert_eq!(MutableList::get_mut(&mut values, 2), None);
+/// ```
 pub trait MutableList<T>: List<T> {
+    /// Adds an element to the end of the collection.
+    ///
+    /// # Panics
+    ///
+    /// The fixed-capacity implementations for `arrayvec::ArrayVec` and `tinyvec::ArrayVec`
+    /// panic if the collection is full.
     fn append(&mut self, element: T);
 
+    /// Returns a mutable reference to the element at `idx`, or `None` if the index is out of bounds.
     fn get_mut(&mut self, idx: usize) -> Option<&mut T>;
 }
