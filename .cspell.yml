@@ -7,7 +7,6 @@ words:
   - cbor
   - clippy
   - codecov
-  - collectools
   - corasick
   - dalek
   - deque
