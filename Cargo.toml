@@ -6,11 +6,8 @@ members = [
   "actix-web-lab-derive",
   "actix-web-lab",
   "actix-proxy-protocol",
-  "collectools",
-  "err-report",
   "proxyproto",
   "russe",
-  "truncate-safe",
 ]
 
 [workspace.package]
