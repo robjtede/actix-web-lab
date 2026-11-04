@@ -3,10 +3,10 @@
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-proxy-protocol?label=latest)](https://crates.io/crates/actix-proxy-protocol)
-[![Documentation](https://docs.rs/actix-proxy-protocol/badge.svg?version=0.2.0)](https://docs.rs/actix-proxy-protocol/0.2.0)
+[![Documentation](https://docs.rs/actix-proxy-protocol/badge.svg?version=0.2.1)](https://docs.rs/actix-proxy-protocol/0.2.1)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/actix-proxy-protocol.svg)
 <br />
-[![dependency status](https://deps.rs/crate/actix-proxy-protocol/0.2.0/status.svg)](https://deps.rs/crate/actix-proxy-protocol/0.2.0)
+[![dependency status](https://deps.rs/crate/actix-proxy-protocol/0.2.1/status.svg)](https://deps.rs/crate/actix-proxy-protocol/0.2.1)
 [![Download](https://img.shields.io/crates/d/actix-proxy-protocol.svg)](https://crates.io/crates/actix-proxy-protocol)
 [![codecov](https://codecov.io/gh/robjtede/actix-proxy-protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/robjtede/actix-proxy-protocol)
 

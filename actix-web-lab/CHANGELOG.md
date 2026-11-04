@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.29.6
+
 - Add `sse::Data::{retry, set_retry}` methods to set the connection's reconnection delay in individual data messages.
 
 ## 0.29.5
