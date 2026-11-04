@@ -16,6 +16,10 @@ name = "actix-hash"
 git_tag_name = "hash-v{{ version }}"
 
 [[package]]
+name = "actix-local-server"
+git_tag_name = "local-server-v{{ version }}"
+
+[[package]]
 name = "actix-proxy-protocol"
 git_tag_name = "proxy-protocol-v{{ version }}"
 
