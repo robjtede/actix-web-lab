@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "actix-client-ip-cloudflare"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "actix-web",
  "impl-more 0.3.10",
@@ -59,14 +59,14 @@ dependencies = [
 
 [[package]]
 name = "actix-hash"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "actix-http",
  "actix-web",
  "actix-web-lab",
  "blake2",
  "blake3",
- "digest 0.11.3",
+ "digest 0.10.7",
  "env_logger",
  "futures-core",
  "futures-util",
@@ -157,7 +157,7 @@ dependencies = [
 
 [[package]]
 name = "actix-proxy-protocol"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -339,7 +339,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab"
-version = "0.29.5"
+version = "0.29.6"
 dependencies = [
  "actix-files",
  "actix-http",
@@ -398,7 +398,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-lab-derive"
-version = "0.29.4"
+version = "0.29.6"
 dependencies = [
  "actix-test",
  "actix-web",
@@ -2672,7 +2672,7 @@ dependencies = [
 
 [[package]]
 name = "proxyproto"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -3025,7 +3025,7 @@ dependencies = [
 
 [[package]]
 name = "russe"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "aho-corasick",
  "bytes",
