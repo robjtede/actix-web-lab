@@ -12,6 +12,8 @@ mod message;
 pub mod reqwest_0_12;
 #[cfg(feature = "reqwest-0_13")]
 pub mod reqwest_0_13;
+#[cfg(feature = "ureq-3")]
+pub mod ureq_3;
 
 pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, message::Message};
 
