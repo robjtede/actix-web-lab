@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.5.2
+
+- No significant changes since `0.5.1`.
+
 ## 0.5.1
 
 - Require `blake3` version `<1.8.4` which upgraded `digest` to `0.11` in a breaking way.
