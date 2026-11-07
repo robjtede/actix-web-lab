@@ -8,7 +8,7 @@
 <br />
 [![dependency status](https://deps.rs/crate/actix-web-lab/0.29.5/status.svg)](https://deps.rs/crate/actix-web-lab/0.29.5)
 [![Download](https://img.shields.io/crates/d/actix-web-lab.svg)](https://crates.io/crates/actix-web-lab)
-[![codecov](https://codecov.io/gh/robjtede/actix-web-lab/branch/main/graph/badge.svg)](https://codecov.io/gh/robjtede/actix-web-lab)
+[![codecov](https://codecov.io/gh/actix/actix-web-lab/branch/main/graph/badge.svg)](https://codecov.io/gh/actix/actix-web-lab)
 
 <!-- cargo-rdme start -->
 
@@ -32,7 +32,7 @@ See [the `examples` folder][examples] for some complete examples of items in thi
   of time so you can migrate.
 - Migrating will often be as easy as dropping the `_lab` suffix from imports when migrating.
 
-[examples]: https://github.com/robjtede/actix-web-lab/tree/HEAD/actix-web-lab/examples
+[examples]: https://github.com/actix/actix-web-lab/tree/HEAD/actix-web-lab/examples
 
 <!-- cargo-rdme end -->
 
@@ -40,7 +40,7 @@ See [the `examples` folder][examples] for some complete examples of items in thi
 
 ## Features
 
-**[Feature Voting &rarr;](https://github.com/robjtede/actix-web-lab/discussions/7)**
+**[Feature Voting &rarr;](https://github.com/actix/actix-web-lab/discussions/7)**
 
 ### Responders
 
