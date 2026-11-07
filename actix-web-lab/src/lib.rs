@@ -18,7 +18,7 @@
 //!   of time so you can migrate.
 //! - Migrating will often be as easy as dropping the `_lab` suffix from imports when migrating.
 //!
-//! [examples]: https://github.com/robjtede/actix-web-lab/tree/HEAD/actix-web-lab/examples
+//! [examples]: https://github.com/actix/actix-web-lab/tree/HEAD/actix-web-lab/examples
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 

@@ -21,7 +21,7 @@ else
 fi
 
 gh issue list \
-    --repo="robjtede/actix-web-lab" \
+    --repo="actix/actix-web-lab" \
     --limit=999 \
     --search="is:issue is:open label:poll sort:reactions-+1-desc" \
     --json="title,url,reactionGroups" \

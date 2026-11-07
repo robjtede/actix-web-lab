@@ -11,7 +11,7 @@ members = [
 ]
 
 [workspace.package]
-repository = "https://github.com/robjtede/actix-web-lab"
+repository = "https://github.com/actix/actix-web-lab"
 license = "MIT OR Apache-2.0"
 edition = "2024"
 rust-version = "1.90"
