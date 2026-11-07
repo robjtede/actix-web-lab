@@ -66,7 +66,7 @@ dependencies = [
  "actix-web-lab",
  "blake2",
  "blake3",
- "digest 0.11.3",
+ "digest 0.10.7",
  "env_logger",
  "futures-core",
  "futures-util",
@@ -228,9 +228,9 @@ dependencies = [
 
 [[package]]
 name = "actix-test"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "439022b5a7b5dac10798465029a9566e8e0cca7a6014541ed277b695691fac5f"
+checksum = "bbef9145442592875315cf6bdf5bfe018abfd8419d31d767c40fd3f8cae4086e"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -607,9 +607,9 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "awc"
-version = "3.8.2"
+version = "3.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7dc0207013c5059ddce268fe12045bd12b2e919318ee660c891bfe297a54f1f"
+checksum = "781f1d79630fba4f17edf409d32dafd8f85432e9574d3159e6c8e8dd1f750d20"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -631,7 +631,7 @@ dependencies = [
  "mime",
  "percent-encoding",
  "pin-project-lite",
- "rand 0.9.4",
+ "rand 0.10.3",
  "serde",
  "serde_json",
  "serde_urlencoded",
