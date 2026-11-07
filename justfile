@@ -6,7 +6,7 @@ _list:
 # Validate benchmark outputs without collecting timings.
 [group("benchmark")]
 bench-test:
-    cargo bench -p russe --bench decoder --bench encoder --all-features --locked -- --test
+    cargo bench -p russe --bench borrowed_encoder --bench decoder --bench encoder --all-features --locked -- --test
     cargo bench -p actix-web-lab --bench sse --all-features --locked -- --test
 
 # Build benchmarks for CPU and memory reporting.
